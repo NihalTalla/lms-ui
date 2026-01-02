@@ -1,0 +1,343 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, Video } from 'lucide-react';
+import { batches, courses } from '../lib/data';
+
+interface TrainerDashboardProps {
+  onNavigate: (page: string, data?: any) => void;
+}
+
+export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
+  const activeBatches = batches.length;
+  const totalStudents = batches.reduce((sum, batch) => sum + batch.students, 0);
+  const pendingGrading = 8;
+  const unansweredQuestions = 3;
+  const activeTests = 2;
+
+  const recentSubmissions = [
+    { id: 1, student: 'Emma Wilson', problem: 'Two Sum', status: 'pending', time: '10 min ago' },
+    { id: 2, student: 'Liam Martinez', problem: 'Merge Intervals', status: 'pending', time: '25 min ago' },
+    { id: 3, student: 'Olivia Taylor', problem: 'Valid Parentheses', status: 'graded', time: '1 hour ago' },
+  ];
+
+  const activeTestSessions = [
+    { id: 1, testName: 'DSA Midterm', batch: 'DSA Batch - Fall 2025', students: 12, status: 'active', flagged: 2 },
+    { id: 2, testName: 'Algorithm Quiz', batch: 'Web Dev Batch - Fall 2025', students: 8, status: 'active', flagged: 0 },
+  ];
+
+  const flaggedQuestions = [
+    { id: 1, student: 'Emma Wilson', question: 'How to optimize the two-pointer approach?', time: '2 hours ago' },
+    { id: 2, student: 'Liam Martinez', question: 'Clarification on merge sort implementation', time: '5 hours ago' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-3xl font-bold text-neutral-900">Trainer Dashboard</h2>
+        <p className="text-neutral-600 mt-1">
+          Monitor student progress, manage tests, and track performance
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-neutral-600 font-medium">Active Batches</p>
+                <h3 className="mt-1 text-2xl font-bold">{activeBatches}</h3>
+              </div>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
+                <Users className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-neutral-600 font-medium">Total Students</p>
+                <h3 className="mt-1 text-2xl font-bold">{totalStudents}</h3>
+              </div>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(20, 184, 166, 0.1)' }}>
+                <Users className="w-6 h-6" style={{ color: 'var(--color-secondary)' }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-neutral-600 font-medium">Active Tests</p>
+                <h3 className="mt-1 text-2xl font-bold">{activeTests}</h3>
+              </div>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                <FileCode className="w-6 h-6" style={{ color: 'var(--color-warning)' }} />
+              </div>
+            </div>
+            <Button variant="link" className="p-0 h-auto mt-2 text-sm" onClick={() => onNavigate('tests')}>
+              View Tests →
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-neutral-600 font-medium">Pending Grading</p>
+                <h3 className="mt-1 text-2xl font-bold">{pendingGrading}</h3>
+              </div>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+                <FileCode className="w-6 h-6" style={{ color: 'var(--color-danger)' }} />
+              </div>
+            </div>
+            <Button variant="link" className="p-0 h-auto mt-2 text-sm" onClick={() => onNavigate('grading')}>
+              View Queue →
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Active Test Sessions */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Active Test Sessions</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => onNavigate('tests')}>
+                  View All
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {activeTestSessions.map((test) => (
+                  <div
+                    key={test.id}
+                    className="flex items-center justify-between p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
+                        <Video className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
+                      </div>
+                      <div>
+                        <p className="font-medium">{test.testName}</p>
+                        <p className="text-sm text-neutral-600">{test.batch}</p>
+                        <div className="flex items-center gap-4 mt-1 text-xs text-neutral-500">
+                          <span>{test.students} students</span>
+                          {test.flagged > 0 && (
+                            <span className="text-red-600 font-medium">{test.flagged} flagged</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-green-100 text-green-700">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Active
+                      </Badge>
+                      <Button size="sm" variant="outline" onClick={() => onNavigate('tests', test)}>
+                        <Eye className="w-4 h-4 mr-1" />
+                        Monitor
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Submissions */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Recent Submissions</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => onNavigate('grading')}>
+                  View All
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentSubmissions.map((submission) => (
+                  <div
+                    key={submission.id}
+                    className="flex items-center justify-between p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarFallback style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
+                          {submission.student.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{submission.student}</p>
+                        <p className="text-sm text-neutral-600">{submission.problem}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-neutral-500">{submission.time}</span>
+                      {submission.status === 'pending' ? (
+                        <Badge variant="outline" style={{ borderColor: 'var(--color-warning)', color: 'var(--color-warning)' }}>
+                          <Clock className="w-3 h-3 mr-1" />
+                          Pending
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-green-100 text-green-700">
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          Graded
+                        </Badge>
+                      )}
+                      <Button size="sm" variant="outline">Review</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Flagged Questions */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" style={{ color: 'var(--color-danger)' }} />
+                  <CardTitle>Flagged Questions</CardTitle>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => onNavigate('messages')}>
+                  View All
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {flaggedQuestions.map((question) => (
+                  <div
+                    key={question.id}
+                    className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback style={{ backgroundColor: 'var(--color-secondary)', color: 'white' }}>
+                            {question.student.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-sm">{question.student}</p>
+                          <p className="text-xs text-neutral-500">{question.time}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" style={{ borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}>
+                        Urgent
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-neutral-700 mb-3">{question.question}</p>
+                    <Button size="sm" style={{ backgroundColor: 'var(--color-primary)' }}>
+                      Reply
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* My Batches */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle>My Batches</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {batches.map((batch) => {
+                const course = courses.find(c => c.id === batch.courseId);
+                return (
+                  <div
+                    key={batch.id}
+                    className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 transition-colors cursor-pointer"
+                    onClick={() => onNavigate('batches', batch)}
+                  >
+                    <h4 className="text-sm font-medium mb-1">{batch.name}</h4>
+                    <p className="text-xs text-neutral-600 mb-3">{course?.title}</p>
+                    <div className="flex items-center justify-between text-xs text-neutral-600">
+                      <div className="flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        {batch.students} students
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {batch.schedule.split('-')[0].trim()}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('tests')}>
+                <FileCode className="w-4 h-4 mr-2" />
+                Create Test
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('leaderboard')}>
+                <TrendingUp className="w-4 h-4 mr-2" />
+                View Leaderboard
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <Calendar className="w-4 h-4 mr-2" />
+                Schedule Session
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Sessions */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle>Upcoming Sessions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="p-3 rounded-lg bg-neutral-50">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }} />
+                  <p className="text-sm font-medium">Trees & Graphs</p>
+                </div>
+                <p className="text-xs text-neutral-600">Monday, 6:00 PM - 8:00 PM</p>
+                <p className="text-xs text-neutral-500 mt-1">DSA Batch - Fall 2025</p>
+              </div>
+              <div className="p-3 rounded-lg bg-neutral-50">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-secondary)' }} />
+                  <p className="text-sm font-medium">React Hooks Deep Dive</p>
+                </div>
+                <p className="text-xs text-neutral-600">Tuesday, 7:00 PM - 9:00 PM</p>
+                <p className="text-xs text-neutral-500 mt-1">Web Dev Batch - Fall 2025</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+

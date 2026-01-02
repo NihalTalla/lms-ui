@@ -1,0 +1,365 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Trophy, Medal, Award, TrendingUp, Flame, Code, CheckCircle2, Download, FileSpreadsheet } from 'lucide-react';
+import { useAuth } from '../lib/auth-context';
+import { batches } from '../lib/data';
+import { toast } from 'sonner@2.0.3';
+
+export function Leaderboard() {
+  const { currentUser } = useAuth();
+  const [selectedBatch, setSelectedBatch] = useState<string>('all');
+  
+  const canViewAllBatches = currentUser && ['admin', 'faculty', 'trainer'].includes(currentUser.role);
+  
+  const globalLeaderboard = [
+    { rank: 1, name: 'Sophia Chen', points: 3250, solved: 42, streak: 15, badges: 8, change: 0 },
+    { rank: 2, name: 'Alex Kumar', points: 3180, solved: 40, streak: 12, badges: 7, change: 1 },
+    { rank: 3, name: 'Emma Wilson', points: 2950, solved: 38, streak: 7, badges: 6, change: -1 },
+    { rank: 4, name: 'Liam Martinez', points: 2840, solved: 36, streak: 10, badges: 5, change: 2 },
+    { rank: 5, name: 'Olivia Taylor', points: 2720, solved: 34, streak: 5, badges: 5, change: 0 },
+    { rank: 6, name: 'Noah Anderson', points: 2650, solved: 33, streak: 8, badges: 4, change: -2 },
+    { rank: 7, name: 'Ava Brown', points: 2580, solved: 32, streak: 6, badges: 4, change: 1 },
+    { rank: 8, name: 'Ethan Davis', points: 2450, solved: 30, streak: 4, badges: 3, change: 0 },
+    { rank: 9, name: 'Isabella Garcia', points: 2380, solved: 29, streak: 9, badges: 4, change: 3 },
+    { rank: 10, name: 'Mason Lee', points: 2290, solved: 28, streak: 11, badges: 3, change: -1 },
+  ];
+
+  const weeklyLeaderboard = [
+    { rank: 1, name: 'Liam Martinez', points: 580, solved: 8, change: 'up' },
+    { rank: 2, name: 'Emma Wilson', points: 520, solved: 7, change: 'new' },
+    { rank: 3, name: 'Sophia Chen', points: 480, solved: 6, change: 'down' },
+  ];
+
+  const achievementBadges = [
+    { name: 'Speed Solver', icon: '⚡', description: 'Solve 5 problems in under 30 minutes', rarity: 'rare' },
+    { name: 'Streak Master', icon: '🔥', description: 'Maintain a 30-day solving streak', rarity: 'epic' },
+    { name: 'First Blood', icon: '🎯', description: 'First to solve a newly released problem', rarity: 'legendary' },
+    { name: 'Night Owl', icon: '🦉', description: 'Solve 10 problems after midnight', rarity: 'common' },
+    { name: 'Perfectionist', icon: '✨', description: 'Solve 20 problems on first attempt', rarity: 'rare' },
+  ];
+
+  const getRankIcon = (rank: number) => {
+    if (rank === 1) return <Trophy className="w-5 h-5 text-yellow-500" />;
+    if (rank === 2) return <Medal className="w-5 h-5 text-gray-400" />;
+    if (rank === 3) return <Medal className="w-5 h-5 text-amber-600" />;
+    return <span className="w-5 h-5 flex items-center justify-center text-sm text-neutral-600">{rank}</span>;
+  };
+
+  const getRarityColor = (rarity: string) => {
+    switch (rarity) {
+      case 'common': return 'bg-neutral-100 text-neutral-700';
+      case 'rare': return 'bg-blue-100 text-blue-700';
+      case 'epic': return 'bg-purple-100 text-purple-700';
+      case 'legendary': return 'bg-yellow-100 text-yellow-700';
+      default: return 'bg-neutral-100 text-neutral-700';
+    }
+  };
+
+  const exportToCSV = () => {
+    const data = selectedBatch === 'all' ? globalLeaderboard : globalLeaderboard;
+    const csvContent = [
+      ['Rank', 'Name', 'Points', 'Solved', 'Streak', 'Badges'].join(','),
+      ...data.map(user => [
+        user.rank,
+        user.name,
+        user.points,
+        user.solved,
+        user.streak,
+        user.badges
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leaderboard_${selectedBatch === 'all' ? 'all_batches' : selectedBatch}_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    toast.success('Leaderboard exported successfully!');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-neutral-900">Leaderboard</h2>
+          <p className="text-neutral-600 mt-1">
+            {canViewAllBatches 
+              ? 'View rankings across all batches and export data'
+              : 'Compete with fellow learners and track your progress'}
+          </p>
+        </div>
+        {canViewAllBatches && (
+          <div className="flex items-center gap-3">
+            <Select value={selectedBatch} onValueChange={setSelectedBatch}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select Batch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Batches</SelectItem>
+                {batches.map(batch => (
+                  <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={exportToCSV} style={{ backgroundColor: 'var(--color-primary)' }}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Current User Stats */}
+      <Card style={{ borderColor: 'var(--color-primary)', borderWidth: 2 }}>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-primary)' }}>
+                <Trophy className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="mb-1">Your Rank: #12</h3>
+                <p className="text-neutral-600">Emma Wilson</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-6">
+              <div>
+                <p className="text-sm text-neutral-600">Points</p>
+                <p className="font-mono">1,850</p>
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600">Solved</p>
+                <p className="font-mono">23</p>
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600">Streak</p>
+                <div className="flex items-center gap-1">
+                  <Flame className="w-4 h-4" style={{ color: 'var(--color-warning)' }} />
+                  <p className="font-mono">7</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600">Badges</p>
+                <p className="font-mono">4</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Leaderboard */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Rankings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="global">
+              <TabsList className="mb-4">
+                <TabsTrigger value="global">Global</TabsTrigger>
+                <TabsTrigger value="weekly">This Week</TabsTrigger>
+                <TabsTrigger value="batch">My Batch</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="global" className="space-y-2">
+                {globalLeaderboard.map((user, index) => (
+                  <div
+                    key={user.rank}
+                    className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
+                      user.rank <= 3 
+                        ? 'bg-gradient-to-r from-yellow-50 to-transparent border border-yellow-200' 
+                        : index === 2 // Emma Wilson (current user)
+                        ? 'bg-purple-50 border border-purple-200'
+                        : 'bg-neutral-50 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-10 flex justify-center">
+                        {getRankIcon(user.rank)}
+                      </div>
+
+                      <Avatar>
+                        <AvatarFallback style={{ 
+                          backgroundColor: user.rank <= 3 ? 'var(--color-primary)' : 'var(--color-neutral-200)',
+                          color: user.rank <= 3 ? 'white' : 'var(--color-neutral-700)'
+                        }}>
+                          {user.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{user.name}</p>
+                          {index === 2 && <Badge variant="outline">You</Badge>}
+                        </div>
+                        <div className="flex items-center gap-4 mt-1 text-sm text-neutral-600">
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {user.solved} solved
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Flame className="w-3 h-3" />
+                            {user.streak} day streak
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Award className="w-3 h-3" />
+                            {user.badges} badges
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                      <div className="text-right">
+                        <p className="font-mono">{user.points.toLocaleString()}</p>
+                        <p className="text-xs text-neutral-600">points</p>
+                      </div>
+                      {user.change !== 0 && (
+                        <div className={`flex items-center gap-1 ${user.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <TrendingUp className={`w-4 h-4 ${user.change < 0 ? 'rotate-180' : ''}`} />
+                          <span className="text-sm">{Math.abs(user.change)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </TabsContent>
+
+              <TabsContent value="weekly" className="space-y-2">
+                {weeklyLeaderboard.map((user) => (
+                  <div
+                    key={user.rank}
+                    className="flex items-center justify-between p-4 rounded-lg bg-neutral-50 hover:bg-neutral-100"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 flex justify-center">
+                        {getRankIcon(user.rank)}
+                      </div>
+                      <Avatar>
+                        <AvatarFallback style={{ backgroundColor: 'var(--color-secondary)', color: 'white' }}>
+                          {user.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{user.name}</p>
+                        <p className="text-sm text-neutral-600">{user.solved} problems this week</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <p className="font-mono">{user.points} pts</p>
+                      {user.change === 'new' && <Badge className="bg-green-100 text-green-700">New</Badge>}
+                      {user.change === 'up' && <TrendingUp className="w-4 h-4 text-green-600" />}
+                      {user.change === 'down' && <TrendingUp className="w-4 h-4 text-red-600 rotate-180" />}
+                    </div>
+                  </div>
+                ))}
+              </TabsContent>
+
+              <TabsContent value="batch">
+                <p className="text-sm text-neutral-600 text-center py-8">
+                  Batch leaderboard coming soon
+                </p>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        {/* Achievements */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Achievements</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {achievementBadges.map((badge) => (
+                <div
+                  key={badge.name}
+                  className="p-3 rounded-lg border border-neutral-200 hover:border-neutral-300 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">{badge.icon}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm">{badge.name}</p>
+                        <Badge variant="outline" className={getRarityColor(badge.rarity)}>
+                          {badge.rarity}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-neutral-600">{badge.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Progress This Month</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-neutral-600">Problems Solved</span>
+                  <span className="font-mono">8 / 15</span>
+                </div>
+                <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full" 
+                    style={{ 
+                      width: '53%',
+                      backgroundColor: 'var(--color-primary)' 
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-neutral-600">Learning Hours</span>
+                  <span className="font-mono">24 / 40</span>
+                </div>
+                <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full" 
+                    style={{ 
+                      width: '60%',
+                      backgroundColor: 'var(--color-secondary)' 
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-neutral-600">Streak Goal</span>
+                  <span className="font-mono">7 / 30</span>
+                </div>
+                <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full" 
+                    style={{ 
+                      width: '23%',
+                      backgroundColor: 'var(--color-warning)' 
+                    }}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
