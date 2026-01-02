@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Users, BookOpen, Activity, TrendingUp, UserPlus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AdminDashboardProps {
   onNavigate: (page: string, data?: any) => void;
@@ -65,68 +66,68 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-600">Total Users</p>
-                <h3 className="mt-1">{totalUsers}</h3>
-                <p className="text-xs text-green-600 mt-1">+{monthlyGrowth}% this month</p>
+{/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('users')}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-neutral-600">Total Users</p>
+                  <h3 className="mt-1">{totalUsers}</h3>
+                  <p className="text-xs text-green-600 mt-1">+{monthlyGrowth}% this month</p>
+                </div>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
+                  <Users className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
-                <Users className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-600">Active Courses</p>
-                <h3 className="mt-1">{activeCourses}</h3>
-                <p className="text-xs text-neutral-600 mt-1">Across 8 categories</p>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('courses')}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-neutral-600">Active Courses</p>
+                  <h3 className="mt-1">{activeCourses}</h3>
+                  <p className="text-xs text-neutral-600 mt-1">Across 8 categories</p>
+                </div>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(20, 184, 166, 0.1)' }}>
+                  <BookOpen className="w-6 h-6" style={{ color: 'var(--color-secondary)' }} />
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(20, 184, 166, 0.1)' }}>
-                <BookOpen className="w-6 h-6" style={{ color: 'var(--color-secondary)' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-600">System Health</p>
-                <h3 className="mt-1">{systemHealth}%</h3>
-                <p className="text-xs text-green-600 mt-1">All systems operational</p>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => toast.success('All systems operational')}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-neutral-600">System Health</p>
+                  <h3 className="mt-1">{systemHealth}%</h3>
+                  <p className="text-xs text-green-600 mt-1">All systems operational</p>
+                </div>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                  <Activity className="w-6 h-6" style={{ color: 'var(--color-accent)' }} />
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-                <Activity className="w-6 h-6" style={{ color: 'var(--color-accent)' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-600">Monthly Growth</p>
-                <h3 className="mt-1">+{monthlyGrowth}%</h3>
-                <p className="text-xs text-neutral-600 mt-1">User acquisition rate</p>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('analytics')}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-neutral-600">Monthly Growth</p>
+                  <h3 className="mt-1">+{monthlyGrowth}%</h3>
+                  <p className="text-xs text-neutral-600 mt-1">User acquisition rate</p>
+                </div>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                  <TrendingUp className="w-6 h-6" style={{ color: 'var(--color-warning)' }} />
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
-                <TrendingUp className="w-6 h-6" style={{ color: 'var(--color-warning)' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

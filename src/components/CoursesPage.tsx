@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { BookOpen, Clock, Users, Award, ArrowRight, Star, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { courses } from '../lib/data';
 import { useAuth } from '../lib/auth-context';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface CoursesPageProps {
   onNavigate: (page: string, data?: any) => void;
@@ -276,11 +276,11 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
+<div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline" onClick={() => toast.info(`Viewing ${course.title} details`)}>
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -456,15 +456,15 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                   ))}
                 </div>
 
-                <div className="flex gap-2">
-                  <Button className="flex-1" style={{ backgroundColor: 'var(--color-primary)' }}>
-                    Continue Learning
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                  <Button variant="outline">
-                    View Details
-                  </Button>
-                </div>
+<div className="flex gap-2">
+                    <Button className="flex-1" style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => toast.success('Continuing learning...')}>
+                      Continue Learning
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                    <Button variant="outline" onClick={() => toast.info('View course details')}>
+                      View Details
+                    </Button>
+                  </div>
               </CardContent>
             </Card>
           ))}
@@ -551,9 +551,9 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                   ))}
                 </div>
 
-                <Button variant="outline" className="w-full">
-                  Enroll Now
-                </Button>
+<Button variant="outline" className="w-full" onClick={() => toast.success(`Enrolled in ${course.title}!`)}>
+                    Enroll Now
+                  </Button>
               </CardContent>
             </Card>
           ))}

@@ -38,6 +38,10 @@ export function UserManagement({ onNavigate }: UserManagementProps) {
   const [moveUserDialogOpen, setMoveUserDialogOpen] = useState(false);
   const [userToMove, setUserToMove] = useState<any>(null);
   const [targetBatch, setTargetBatch] = useState('');
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
+  const [newUserData, setNewUserData] = useState({ name: '', email: '', role: '', password: '' });
+  const [editUserData, setEditUserData] = useState({ name: '', email: '', role: '' });
 
   const allUsers = [
     ...users,
@@ -142,57 +146,85 @@ export function UserManagement({ onNavigate }: UserManagementProps) {
             Manage users, roles, and permissions across the platform
           </p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button style={{ backgroundColor: 'var(--color-primary)' }}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add User
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-              <DialogDescription>
-                Create a new user account on the platform
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" placeholder="John Doe" />
+<Dialog>
+            <DialogTrigger asChild>
+              <Button style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => setAddUserDialogOpen(true)}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add User
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Add New User</DialogTitle>
+                <DialogDescription>
+                  Create a new user account on the platform
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input 
+                    id="name" 
+                    placeholder="John Doe" 
+                    value={newUserData.name}
+                    onChange={(e) => setNewUserData({ ...newUserData, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="john.doe@example.com" 
+                    value={newUserData.email}
+                    onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select value={newUserData.role} onValueChange={(v) => setNewUserData({ ...newUserData, role: v })}>
+                    <SelectTrigger id="role">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="faculty">Faculty/Trainer</SelectItem>
+                      <SelectItem value="student">Student</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Temporary Password</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={newUserData.password}
+                    onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1" 
+                    style={{ backgroundColor: 'var(--color-primary)' }}
+                    onClick={() => {
+                      if (!newUserData.name || !newUserData.email || !newUserData.role) {
+                        toast.error('Please fill all required fields');
+                        return;
+                      }
+                      toast.success(`User "${newUserData.name}" created successfully`);
+                      setNewUserData({ name: '', email: '', role: '', password: '' });
+                    }}
+                  >
+                    Create User
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    Cancel
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john.doe@example.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select>
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="faculty">Faculty/Trainer</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Temporary Password</Label>
-                <Input id="password" type="password" placeholder="••••••••" />
-              </div>
-              <div className="flex gap-2">
-                <Button className="flex-1" style={{ backgroundColor: 'var(--color-primary)' }}>
-                  Create User
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
       </div>
 
       {/* Stats */}
@@ -372,10 +404,14 @@ export function UserManagement({ onNavigate }: UserManagementProps) {
                     </div>
                   )}
 
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Edit className="w-4 h-4" />
-                    </Button>
+<div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => {
+                        setSelectedUser(user);
+                        setEditUserData({ name: user.name, email: user.email, role: user.role });
+                        setEditUserDialogOpen(true);
+                      }}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
                     {user.role === 'student' && (
                       <Button 
                         variant="outline" 
@@ -403,47 +439,57 @@ export function UserManagement({ onNavigate }: UserManagementProps) {
                             Manage user {user.name}
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-2">
-                          <Button variant="outline" className="w-full justify-start">
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Profile
-                          </Button>
-                          <Button variant="outline" className="w-full justify-start">
-                            <Mail className="w-4 h-4 mr-2" />
-                            Send Email
-                          </Button>
-                          {user.role === 'student' && (
+<div className="space-y-2">
+                            <Button variant="outline" className="w-full justify-start" onClick={() => {
+                              setSelectedUser(user);
+                              setEditUserData({ name: user.name, email: user.email, role: user.role });
+                              setEditUserDialogOpen(true);
+                            }}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit Profile
+                            </Button>
+                            <Button variant="outline" className="w-full justify-start" onClick={() => {
+                              toast.success(`Email sent to ${user.email}`);
+                            }}>
+                              <Mail className="w-4 h-4 mr-2" />
+                              Send Email
+                            </Button>
+                            {user.role === 'student' && (
+                              <Button 
+                                variant="outline" 
+                                className="w-full justify-start"
+                                onClick={() => {
+                                  setUserToMove(user);
+                                  setMoveUserDialogOpen(true);
+                                }}
+                              >
+                                <MoveRight className="w-4 h-4 mr-2" />
+                                Move User to Batch
+                              </Button>
+                            )}
+                            <Button variant="outline" className="w-full justify-start" onClick={() => {
+                              toast.success(`Role change dialog for ${user.name}`);
+                            }}>
+                              <Shield className="w-4 h-4 mr-2" />
+                              Change Role
+                            </Button>
                             <Button 
                               variant="outline" 
-                              className="w-full justify-start"
-                              onClick={() => {
-                                setUserToMove(user);
-                                setMoveUserDialogOpen(true);
-                              }}
+                              className="w-full justify-start border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                              onClick={() => toast.warning(`${user.name}'s account has been suspended`)}
                             >
-                              <MoveRight className="w-4 h-4 mr-2" />
-                              Move User to Batch
+                              <Ban className="w-4 h-4 mr-2" />
+                              Suspend Account
                             </Button>
-                          )}
-                          <Button variant="outline" className="w-full justify-start">
-                            <Shield className="w-4 h-4 mr-2" />
-                            Change Role
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            className="w-full justify-start border-yellow-500 text-yellow-600 hover:bg-yellow-50"
-                          >
-                            <Ban className="w-4 h-4 mr-2" />
-                            Suspend Account
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            className="w-full justify-start border-red-500 text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete User
-                          </Button>
-                        </div>
+                            <Button 
+                              variant="outline" 
+                              className="w-full justify-start border-red-500 text-red-600 hover:bg-red-50"
+                              onClick={() => toast.error(`${user.name}'s account has been deleted`)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete User
+                            </Button>
+                          </div>
                       </DialogContent>
                     </Dialog>
                   </div>
@@ -509,8 +555,76 @@ export function UserManagement({ onNavigate }: UserManagementProps) {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+</DialogContent>
+        </Dialog>
+
+        {/* Edit User Dialog */}
+        <Dialog open={editUserDialogOpen} onOpenChange={setEditUserDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>
+                Update user information for {selectedUser?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input 
+                  id="edit-name" 
+                  value={editUserData.name}
+                  onChange={(e) => setEditUserData({ ...editUserData, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input 
+                  id="edit-email" 
+                  type="email" 
+                  value={editUserData.email}
+                  onChange={(e) => setEditUserData({ ...editUserData, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Role</Label>
+                <Select value={editUserData.role} onValueChange={(v) => setEditUserData({ ...editUserData, role: v })}>
+                  <SelectTrigger id="edit-role">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="faculty">Faculty</SelectItem>
+                    <SelectItem value="trainer">Trainer</SelectItem>
+                    <SelectItem value="student">Student</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  className="flex-1" 
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  onClick={() => {
+                    toast.success(`User "${editUserData.name}" updated successfully`);
+                    setEditUserDialogOpen(false);
+                    setSelectedUser(null);
+                  }}
+                >
+                  Save Changes
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setEditUserDialogOpen(false);
+                    setSelectedUser(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }

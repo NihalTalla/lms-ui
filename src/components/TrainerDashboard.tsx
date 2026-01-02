@@ -1,16 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, Video } from 'lucide-react';
 import { batches, courses } from '../lib/data';
+import { toast } from 'sonner';
 
 interface TrainerDashboardProps {
   onNavigate: (page: string, data?: any) => void;
 }
 
 export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
+  const [replyText, setReplyText] = useState('');
+  const [sessionData, setSessionData] = useState({ title: '', date: '', time: '', batch: '' });
+  
   const activeBatches = batches.length;
   const totalStudents = batches.reduce((sum, batch) => sum + batch.students, 0);
   const pendingGrading = 8;
@@ -200,7 +212,10 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
                           Graded
                         </Badge>
                       )}
-                      <Button size="sm" variant="outline">Review</Button>
+                      <Button size="sm" variant="outline" onClick={() => {
+                          toast.success(`Reviewing ${submission.student}'s submission`);
+                          onNavigate('grading');
+                        }}>Review</Button>
                     </div>
                   </div>
                 ))}
@@ -244,10 +259,13 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
                         Urgent
                       </Badge>
                     </div>
-                    <p className="text-sm text-neutral-700 mb-3">{question.question}</p>
-                    <Button size="sm" style={{ backgroundColor: 'var(--color-primary)' }}>
-                      Reply
-                    </Button>
+<p className="text-sm text-neutral-700 mb-3">{question.question}</p>
+                      <Button size="sm" style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => {
+                        setSelectedQuestion(question);
+                        setReplyDialogOpen(true);
+                      }}>
+                        Reply
+                      </Button>
                   </div>
                 ))}
               </div>
@@ -303,10 +321,10 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
                 <TrendingUp className="w-4 h-4 mr-2" />
                 View Leaderboard
               </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Calendar className="w-4 h-4 mr-2" />
-                Schedule Session
-              </Button>
+<Button variant="outline" className="w-full justify-start" onClick={() => setScheduleDialogOpen(true)}>
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Schedule Session
+                </Button>
             </CardContent>
           </Card>
 
@@ -336,8 +354,121 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
           </Card>
         </div>
       </div>
+
+      {/* Schedule Session Dialog */}
+      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule Live Session</DialogTitle>
+            <DialogDescription>Create a new live session for your batch</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Session Title</Label>
+              <Input 
+                placeholder="e.g., Trees & Graphs Deep Dive" 
+                value={sessionData.title}
+                onChange={(e) => setSessionData({ ...sessionData, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Batch</Label>
+              <Select value={sessionData.batch} onValueChange={(v) => setSessionData({ ...sessionData, batch: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select batch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Date</Label>
+                <Input 
+                  type="date" 
+                  value={sessionData.date}
+                  onChange={(e) => setSessionData({ ...sessionData, date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Time</Label>
+                <Input 
+                  type="time" 
+                  value={sessionData.time}
+                  onChange={(e) => setSessionData({ ...sessionData, time: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                className="flex-1" 
+                style={{ backgroundColor: 'var(--color-primary)' }}
+                onClick={() => {
+                  if (!sessionData.title || !sessionData.batch || !sessionData.date) {
+                    toast.error('Please fill all required fields');
+                    return;
+                  }
+                  toast.success(`Session "${sessionData.title}" scheduled successfully`);
+                  setScheduleDialogOpen(false);
+                  setSessionData({ title: '', date: '', time: '', batch: '' });
+                }}
+              >
+                Schedule Session
+              </Button>
+              <Button variant="outline" onClick={() => setScheduleDialogOpen(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reply to Question Dialog */}
+      <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reply to Question</DialogTitle>
+            <DialogDescription>
+              Responding to {selectedQuestion?.student}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 bg-neutral-50 rounded-lg">
+              <p className="text-sm font-medium mb-1">{selectedQuestion?.student}</p>
+              <p className="text-sm text-neutral-600">{selectedQuestion?.question}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Your Reply</Label>
+              <Textarea 
+                placeholder="Type your response..." 
+                rows={4}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                className="flex-1" 
+                style={{ backgroundColor: 'var(--color-primary)' }}
+                onClick={() => {
+                  if (!replyText) {
+                    toast.error('Please enter a reply');
+                    return;
+                  }
+                  toast.success(`Reply sent to ${selectedQuestion?.student}`);
+                  setReplyDialogOpen(false);
+                  setReplyText('');
+                  setSelectedQuestion(null);
+                }}
+              >
+                Send Reply
+              </Button>
+              <Button variant="outline" onClick={() => setReplyDialogOpen(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-

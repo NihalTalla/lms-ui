@@ -1,17 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Trophy, Clock, CheckCircle2, TrendingUp, ArrowRight, Calendar, Code, Users, Flame } from 'lucide-react';
 import { problems, courses, batches } from '../lib/data';
+import { toast } from 'sonner';
 
 interface StudentDashboardProps {
   onNavigate: (page: string, data?: any) => void;
 }
 
 export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
+  const [sessionDetailsOpen, setSessionDetailsOpen] = useState(false);
   const studentProgress = 65;
   const currentStreak = 7;
   const solvedProblems = 23;
@@ -140,12 +143,15 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
                     Instructor: {upcomingSession.instructor}
                   </div>
                 </div>
-                <div className="flex gap-3">
-                  <Button style={{ backgroundColor: 'var(--color-primary)' }}>
-                    Join Session
-                  </Button>
-                  <Button variant="outline">View Details</Button>
-                </div>
+<div className="flex gap-3">
+                    <Button style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => {
+                      toast.success('Joining session... Please wait');
+                      setTimeout(() => toast.info('Live session will start in 2 days'), 1000);
+                    }}>
+                      Join Session
+                    </Button>
+                    <Button variant="outline" onClick={() => setSessionDetailsOpen(true)}>View Details</Button>
+                  </div>
               </div>
             </CardContent>
           </Card>
@@ -355,10 +361,65 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+</CardContent>
+            </Card>
+          </div>
         </div>
+
+        {/* Session Details Dialog */}
+        <Dialog open={sessionDetailsOpen} onOpenChange={setSessionDetailsOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Session Details</DialogTitle>
+              <DialogDescription>Upcoming live session information</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-4 bg-neutral-50 rounded-lg space-y-3">
+                <h4 className="font-semibold">{upcomingSession.title}</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-neutral-500" />
+                    <span>{upcomingSession.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-neutral-500" />
+                    <span>{upcomingSession.time}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-neutral-500" />
+                    <span>Instructor: {upcomingSession.instructor}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h5 className="font-medium text-sm">Topics Covered</h5>
+                <ul className="text-sm text-neutral-600 list-disc list-inside space-y-1">
+                  <li>Binary Trees & Binary Search Trees</li>
+                  <li>Tree Traversals (DFS, BFS)</li>
+                  <li>Graph Representations</li>
+                  <li>Graph Algorithms Introduction</li>
+                </ul>
+              </div>
+              <div className="space-y-2">
+                <h5 className="font-medium text-sm">Prerequisites</h5>
+                <p className="text-sm text-neutral-600">Complete "Introduction to Trees" module before the session.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  className="flex-1" 
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  onClick={() => {
+                    toast.success('Added to calendar');
+                    setSessionDetailsOpen(false);
+                  }}
+                >
+                  Add to Calendar
+                </Button>
+                <Button variant="outline" onClick={() => setSessionDetailsOpen(false)}>Close</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-    </div>
-  );
-}
+    );
+  }

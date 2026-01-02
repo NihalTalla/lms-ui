@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Label } from './ui/label';
 import { 
   Clock, 
   CheckCircle2, 
@@ -20,6 +22,7 @@ import {
   ThumbsDown,
   MessageSquare
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface GradingQueueProps {
   onNavigate: (page: string, data?: any) => void;
@@ -29,6 +32,10 @@ export function GradingQueue({ onNavigate }: GradingQueueProps) {
   const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [messageText, setMessageText] = useState('');
+  const [feedbackText, setFeedbackText] = useState('');
+  const [scoreValue, setScoreValue] = useState('');
 
   const pendingSubmissions = [
     {
@@ -152,9 +159,18 @@ export function GradingQueue({ onNavigate }: GradingQueueProps) {
   };
 
   const handleGradeSubmission = (submission: any, status: 'accept' | 'reject') => {
-    // Handle grading logic
-    console.log('Grading submission:', submission.id, status);
+    if (status === 'accept') {
+      if (!scoreValue) {
+        toast.error('Please enter a score');
+        return;
+      }
+      toast.success(`Submission accepted! Score: ${scoreValue}/100`);
+    } else {
+      toast.warning(`Revision requested for ${submission.student}`);
+    }
     setSelectedSubmission(null);
+    setFeedbackText('');
+    setScoreValue('');
   };
 
   return (
@@ -365,46 +381,56 @@ export function GradingQueue({ onNavigate }: GradingQueueProps) {
                   </div>
                 </div>
 
-                {/* Feedback Form */}
-                <div>
-                  <h4 className="text-sm mb-2">Feedback</h4>
-                  <Textarea
-                    placeholder="Provide detailed feedback on the code quality, efficiency, and best practices..."
-                    rows={4}
-                    className="resize-none"
-                  />
-                </div>
+{/* Feedback Form */}
+                  <div>
+                    <h4 className="text-sm mb-2">Feedback</h4>
+                    <Textarea
+                      placeholder="Provide detailed feedback on the code quality, efficiency, and best practices..."
+                      rows={4}
+                      className="resize-none"
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                    />
+                  </div>
 
-                {/* Grade Input */}
-                <div>
-                  <h4 className="text-sm mb-2">Score</h4>
-                  <Input type="number" min="0" max="100" placeholder="Enter score (0-100)" className="w-32" />
-                </div>
+                  {/* Grade Input */}
+                  <div>
+                    <h4 className="text-sm mb-2">Score</h4>
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      max="100" 
+                      placeholder="Enter score (0-100)" 
+                      className="w-32"
+                      value={scoreValue}
+                      onChange={(e) => setScoreValue(e.target.value)} 
+                    />
+                  </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <Button
-                    className="flex-1"
-                    style={{ backgroundColor: 'var(--color-accent)' }}
-                    onClick={() => handleGradeSubmission(selectedSubmission, 'accept')}
-                  >
-                    <ThumbsUp className="w-4 h-4 mr-2" />
-                    Accept & Grade
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    style={{ borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
-                    onClick={() => handleGradeSubmission(selectedSubmission, 'reject')}
-                  >
-                    <ThumbsDown className="w-4 h-4 mr-2" />
-                    Request Revision
-                  </Button>
-                  <Button variant="outline">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Message Student
-                  </Button>
-                </div>
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <Button
+                      className="flex-1"
+                      style={{ backgroundColor: 'var(--color-accent)' }}
+                      onClick={() => handleGradeSubmission(selectedSubmission, 'accept')}
+                    >
+                      <ThumbsUp className="w-4 h-4 mr-2" />
+                      Accept & Grade
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      style={{ borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
+                      onClick={() => handleGradeSubmission(selectedSubmission, 'reject')}
+                    >
+                      <ThumbsDown className="w-4 h-4 mr-2" />
+                      Request Revision
+                    </Button>
+                    <Button variant="outline" onClick={() => setMessageDialogOpen(true)}>
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Message Student
+                    </Button>
+                  </div>
               </CardContent>
             </Card>
           )}
@@ -461,8 +487,49 @@ export function GradingQueue({ onNavigate }: GradingQueueProps) {
               </Card>
             ))}
           </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
+</TabsContent>
+        </Tabs>
+
+        {/* Message Student Dialog */}
+        <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Message Student</DialogTitle>
+              <DialogDescription>
+                Send a message to {selectedSubmission?.student}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Message</Label>
+                <Textarea 
+                  placeholder="Type your message..." 
+                  rows={4}
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  className="flex-1" 
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  onClick={() => {
+                    if (!messageText) {
+                      toast.error('Please enter a message');
+                      return;
+                    }
+                    toast.success(`Message sent to ${selectedSubmission?.student}`);
+                    setMessageDialogOpen(false);
+                    setMessageText('');
+                  }}
+                >
+                  Send Message
+                </Button>
+                <Button variant="outline" onClick={() => setMessageDialogOpen(false)}>Cancel</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }

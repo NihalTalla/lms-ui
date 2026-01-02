@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Plus, Eye, Edit, Trash2, Video, AlertCircle, CheckCircle2, Clock, Users, FileCode } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface Test {
   id: string;
@@ -291,16 +291,16 @@ export function TestManagement() {
                           Monitor
                         </Button>
                       )}
-                      <Button size="sm" variant="outline">
-                        <Eye className="w-4 h-4 mr-1" />
-                        View
-                      </Button>
-                      {isAdmin && (
-                        <>
-                          <Button size="sm" variant="outline">
-                            <Edit className="w-4 h-4 mr-1" />
-                            Edit
-                          </Button>
+<Button size="sm" variant="outline" onClick={() => toast.info(`Viewing ${test.title} details`)}>
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
+                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => toast.info(`Editing ${test.title}`)}>
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
                           <Button
                             size="sm"
                             variant="outline"

@@ -6,13 +6,18 @@ import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { ScrollArea } from './ui/scroll-area';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Label } from './ui/label';
 import { Send, Paperclip, Search, Plus, CheckCircle2, Clock, AlertCircle, Check, CheckCheck } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
+import { toast } from 'sonner';
 
 export function Messages() {
   const { currentUser } = useAuth();
   const [selectedThread, setSelectedThread] = useState<number>(0);
   const [messageInput, setMessageInput] = useState('');
+  const [newQuestionDialogOpen, setNewQuestionDialogOpen] = useState(false);
+  const [newQuestion, setNewQuestion] = useState({ title: '', content: '' });
 
   // Simulated conversations data - organized by student for faculty view
   const conversations = [
@@ -79,8 +84,10 @@ export function Messages() {
 
   const handleSendMessage = () => {
     if (messageInput.trim()) {
-      // Handle send message
+      toast.success('Message sent successfully');
       setMessageInput('');
+    } else {
+      toast.error('Please enter a message');
     }
   };
 
@@ -224,9 +231,9 @@ export function Messages() {
             {/* Message Input */}
             <div className="p-4 bg-neutral-50 border-t border-neutral-200">
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="flex-shrink-0">
-                  <Paperclip className="w-4 h-4" />
-                </Button>
+<Button variant="outline" size="icon" className="flex-shrink-0" onClick={() => toast.info('Attach file feature coming soon')}>
+                    <Paperclip className="w-4 h-4" />
+                  </Button>
                 <Input
                   placeholder="Type a message..."
                   value={messageInput}
@@ -295,10 +302,10 @@ export function Messages() {
             Ask questions and get help from instructors
           </p>
         </div>
-        <Button style={{ backgroundColor: 'var(--color-primary)' }}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Question
-        </Button>
+<Button style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => setNewQuestionDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Question
+          </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
@@ -409,11 +416,11 @@ export function Messages() {
             </div>
           </ScrollArea>
 
-          <CardContent className="border-t pt-4">
-            <div className="flex gap-2">
-              <Button variant="outline" size="icon">
-                <Paperclip className="w-4 h-4" />
-              </Button>
+<CardContent className="border-t pt-4">
+              <div className="flex gap-2">
+                <Button variant="outline" size="icon" onClick={() => toast.info('Attach file feature coming soon')}>
+                  <Paperclip className="w-4 h-4" />
+                </Button>
               <Input
                 placeholder="Type your message..."
                 value={messageInput}
@@ -430,9 +437,58 @@ export function Messages() {
                 Send
               </Button>
             </div>
-          </CardContent>
-        </Card>
+</CardContent>
+          </Card>
+        </div>
+
+        {/* New Question Dialog */}
+        <Dialog open={newQuestionDialogOpen} onOpenChange={setNewQuestionDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Ask a New Question</DialogTitle>
+              <DialogDescription>
+                Post your question and an instructor will respond
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Question Title</Label>
+                <Input 
+                  placeholder="e.g., Help with Two-Pointer Approach" 
+                  value={newQuestion.title}
+                  onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Question Details</Label>
+                <Textarea 
+                  placeholder="Describe your question in detail..." 
+                  rows={4}
+                  value={newQuestion.content}
+                  onChange={(e) => setNewQuestion({ ...newQuestion, content: e.target.value })}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  className="flex-1" 
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  onClick={() => {
+                    if (!newQuestion.title || !newQuestion.content) {
+                      toast.error('Please fill all fields');
+                      return;
+                    }
+                    toast.success('Question posted successfully! An instructor will respond soon.');
+                    setNewQuestionDialogOpen(false);
+                    setNewQuestion({ title: '', content: '' });
+                  }}
+                >
+                  Post Question
+                </Button>
+                <Button variant="outline" onClick={() => setNewQuestionDialogOpen(false)}>Cancel</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-    </div>
-  );
-}
+    );
+  }
