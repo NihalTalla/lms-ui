@@ -249,40 +249,44 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Current Batch */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Current Batch</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-base">{batches[0].name}</h4>
-                  <p className="text-sm text-neutral-600 mt-1">{courses[0].title}</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-neutral-600">Progress</span>
-                    <span>{studentProgress}%</span>
+{/* Current Batch */}
+            <Card 
+              className="cursor-pointer hover:shadow-md transition-all duration-200"
+              onClick={() => onNavigate('problems')}
+            >
+              <CardHeader>
+                <CardTitle>Current Batch</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-base">{batches[0].name}</h4>
+                    <p className="text-sm text-neutral-600 mt-1">{courses[0].title}</p>
                   </div>
-                  <Progress value={studentProgress} />
-                </div>
-                <div className="pt-2 space-y-2 text-sm text-neutral-600">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    {batches[0].schedule}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-neutral-600">Progress</span>
+                      <span>{studentProgress}%</span>
+                    </div>
+                    <Progress value={studentProgress} />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    {batches[0].students} students
+                  <div className="pt-2 space-y-2 text-sm text-neutral-600">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      {batches[0].schedule}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      {batches[0].students} students
+                    </div>
                   </div>
+                  <Button style={{ backgroundColor: 'var(--color-primary)' }} className="w-full">
+                    View Problems
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </div>
-                <Button variant="outline" className="w-full">
-                  View Batch Details
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
           {/* Leaderboard */}
           <Card>
