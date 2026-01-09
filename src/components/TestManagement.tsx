@@ -12,18 +12,10 @@ import { Plus, Eye, Edit, Trash2, Video, AlertCircle, CheckCircle2, Clock, Users
 import { useAuth } from '../lib/auth-context';
 import { toast } from 'sonner';
 
-interface Test {
-  id: string;
-  title: string;
-  batchId: string;
-  batchName: string;
-  duration: number; // in minutes
-  questions: number;
-  status: 'draft' | 'scheduled' | 'active' | 'completed';
-  startDate?: string;
-  endDate?: string;
-  students: number;
-  flagged: number;
+interface TestCase {
+  input: string;
+  expectedOutput: string;
+  isHidden: boolean;
 }
 
 interface TestQuestion {
@@ -32,7 +24,21 @@ interface TestQuestion {
   description: string;
   difficulty: 'easy' | 'medium' | 'hard';
   points: number;
-  testCases: number;
+  testCases: TestCase[];
+}
+
+interface Test {
+  id: string;
+  title: string;
+  batchId: string;
+  batchName: string;
+  duration: number; // in minutes
+  questions: TestQuestion[];
+  status: 'draft' | 'scheduled' | 'active' | 'completed';
+  startDate?: string;
+  endDate?: string;
+  students: number;
+  flagged: number;
 }
 
 export function TestManagement() {
@@ -47,29 +53,62 @@ export function TestManagement() {
       batchId: 'batch-1',
       batchName: 'DSA Batch - Fall 2025',
       duration: 120,
-      questions: 5,
+      questions: [
+        {
+          id: 'q1',
+          title: 'Two Sum',
+          description: 'Given an array of integers...',
+          difficulty: 'easy',
+          points: 20,
+          testCases: [
+            { input: '[2,7,11,15], 9', expectedOutput: '[0,1]', isHidden: false },
+            { input: '[3,2,4], 6', expectedOutput: '[1,2]', isHidden: true },
+          ],
+        }
+      ],
       status: 'active',
       startDate: '2025-01-15T10:00:00',
       endDate: '2025-01-15T12:00:00',
       students: 12,
       flagged: 2,
     },
+  ]);
+
+  const [questionBank] = useState<TestQuestion[]>([
     {
-      id: 'test-2',
-      title: 'Algorithm Quiz',
-      batchId: 'batch-2',
-      batchName: 'Web Dev Batch - Fall 2025',
-      duration: 60,
-      questions: 3,
-      status: 'scheduled',
-      startDate: '2025-01-20T14:00:00',
-      endDate: '2025-01-20T15:00:00',
-      students: 8,
-      flagged: 0,
+      id: 'bank-1',
+      title: 'Reverse Linked List',
+      description: 'Given the head of a singly linked list...',
+      difficulty: 'medium',
+      points: 30,
+      testCases: [
+        { input: '1->2->3', expectedOutput: '3->2->1', isHidden: false },
+      ],
+    },
+    {
+      id: 'bank-2',
+      title: 'Valid Parentheses',
+      description: 'Given a string s containing just the characters...',
+      difficulty: 'easy',
+      points: 15,
+      testCases: [
+        { input: '()[]{}', expectedOutput: 'true', isHidden: false },
+      ],
     },
   ]);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [selectedQuestions, setSelectedQuestions] = useState<TestQuestion[]>([]);
+  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  
+  const [newQuestion, setNewQuestion] = useState<Partial<TestQuestion>>({
+    title: '',
+    description: '',
+    difficulty: 'easy',
+    points: 10,
+    testCases: [],
+  });
+
   const [newTest, setNewTest] = useState({
     title: '',
     batchId: '',
@@ -78,9 +117,60 @@ export function TestManagement() {
     endDate: '',
   });
 
+  const handleAddExistingQuestion = (question: TestQuestion) => {
+    if (selectedQuestions.find(q => q.id === question.id)) {
+      toast.error('Question already added to test');
+      return;
+    }
+    setSelectedQuestions([...selectedQuestions, question]);
+    toast.success('Question added from bank');
+  };
+
+  const handleAddNewQuestion = () => {
+    if (!newQuestion.title || !newQuestion.description) {
+      toast.error('Please fill in question title and description');
+      return;
+    }
+    
+    const question: TestQuestion = {
+      id: `new-q-${Date.now()}`,
+      title: newQuestion.title as string,
+      description: newQuestion.description as string,
+      difficulty: newQuestion.difficulty as any,
+      points: newQuestion.points as number,
+      testCases: newQuestion.testCases as TestCase[],
+    };
+
+    setSelectedQuestions([...selectedQuestions, question]);
+    setNewQuestion({ title: '', description: '', difficulty: 'easy', points: 10, testCases: [] });
+    setIsAddingQuestion(false);
+    toast.success('New question created and added');
+  };
+
+  const handleAddTestCase = () => {
+    const testCases = [...(newQuestion.testCases || []), { input: '', expectedOutput: '', isHidden: false }];
+    setNewQuestion({ ...newQuestion, testCases });
+  };
+
+  const handleUpdateTestCase = (index: number, field: keyof TestCase, value: any) => {
+    const testCases = [...(newQuestion.testCases || [])];
+    testCases[index] = { ...testCases[index], [field]: value };
+    setNewQuestion({ ...newQuestion, testCases });
+  };
+
+  const handleRemoveTestCase = (index: number) => {
+    const testCases = (newQuestion.testCases || []).filter((_, i) => i !== index);
+    setNewQuestion({ ...newQuestion, testCases });
+  };
+
   const handleCreateTest = () => {
     if (!newTest.title || !newTest.batchId) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (selectedQuestions.length === 0) {
+      toast.error('Please add at least one question to the test');
       return;
     }
     
@@ -90,7 +180,7 @@ export function TestManagement() {
       batchId: newTest.batchId,
       batchName: 'Selected Batch',
       duration: newTest.duration,
-      questions: 0,
+      questions: selectedQuestions,
       status: 'draft',
       startDate: newTest.startDate,
       endDate: newTest.endDate,
@@ -101,6 +191,7 @@ export function TestManagement() {
     setTests([...tests, test]);
     setIsCreateDialogOpen(false);
     setNewTest({ title: '', batchId: '', duration: 120, startDate: '', endDate: '' });
+    setSelectedQuestions([]);
     toast.success('Test created successfully!');
   };
 
@@ -159,74 +250,236 @@ export function TestManagement() {
                 Create Test
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Create New Test</DialogTitle>
-                <DialogDescription>
-                  Create a new coding test with multiple questions and proctoring features
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div>
-                  <Label htmlFor="title">Test Title</Label>
-                  <Input
-                    id="title"
-                    value={newTest.title}
-                    onChange={(e) => setNewTest({ ...newTest, title: e.target.value })}
-                    placeholder="e.g., DSA Midterm Exam"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="batch">Select Batch</Label>
-                  <Select value={newTest.batchId} onValueChange={(value) => setNewTest({ ...newTest, batchId: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a batch" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="batch-1">DSA Batch - Fall 2025</SelectItem>
-                      <SelectItem value="batch-2">Web Dev Batch - Fall 2025</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="duration">Duration (minutes)</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      value={newTest.duration}
-                      onChange={(e) => setNewTest({ ...newTest, duration: parseInt(e.target.value) || 120 })}
-                    />
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create New Test</DialogTitle>
+                  <DialogDescription>
+                    Create a new coding test with multiple questions and proctoring features
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-6 py-4">
+                  {/* Basic Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Test Title</Label>
+                      <Input
+                        id="title"
+                        value={newTest.title}
+                        onChange={(e) => setNewTest({ ...newTest, title: e.target.value })}
+                        placeholder="e.g., DSA Midterm Exam"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="batch">Select Batch</Label>
+                      <Select value={newTest.batchId} onValueChange={(value) => setNewTest({ ...newTest, batchId: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a batch" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="batch-1">DSA Batch - Fall 2025</SelectItem>
+                          <SelectItem value="batch-2">Web Dev Batch - Fall 2025</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="duration">Duration (minutes)</Label>
+                      <Input
+                        id="duration"
+                        type="number"
+                        value={newTest.duration}
+                        onChange={(e) => setNewTest({ ...newTest, duration: parseInt(e.target.value) || 120 })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="startDate">Start Date & Time</Label>
+                      <Input
+                        id="startDate"
+                        type="datetime-local"
+                        value={newTest.startDate}
+                        onChange={(e) => setNewTest({ ...newTest, startDate: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="endDate">End Date & Time</Label>
+                      <Input
+                        id="endDate"
+                        type="datetime-local"
+                        value={newTest.endDate}
+                        onChange={(e) => setNewTest({ ...newTest, endDate: e.target.value })}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="startDate">Start Date & Time</Label>
-                    <Input
-                      id="startDate"
-                      type="datetime-local"
-                      value={newTest.startDate}
-                      onChange={(e) => setNewTest({ ...newTest, startDate: e.target.value })}
-                    />
+
+                  <hr />
+
+                  {/* Selected Questions */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Questions ({selectedQuestions.length})</h3>
+                      <div className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Plus className="w-4 h-4 mr-2" />
+                              From Bank
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>Question Bank</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              {questionBank.map((q) => (
+                                <Card key={q.id}>
+                                  <CardContent className="p-4 flex items-center justify-between">
+                                    <div>
+                                      <h4 className="font-medium">{q.title}</h4>
+                                      <div className="flex gap-2 mt-1">
+                                        <Badge variant="outline">{q.difficulty}</Badge>
+                                        <span className="text-sm text-neutral-500">{q.points} pts</span>
+                                      </div>
+                                    </div>
+                                    <Button size="sm" onClick={() => handleAddExistingQuestion(q)}>
+                                      Add
+                                    </Button>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+
+                        <Button variant="outline" size="sm" onClick={() => setIsAddingQuestion(true)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          New Question
+                        </Button>
+                      </div>
+                    </div>
+
+                    {selectedQuestions.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedQuestions.map((q, idx) => (
+                          <div key={q.id} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border">
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-neutral-400">#{idx + 1}</span>
+                              <div>
+                                <p className="font-medium">{q.title}</p>
+                                <p className="text-xs text-neutral-500">{q.difficulty} • {q.points} points</p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedQuestions(selectedQuestions.filter(sq => sq.id !== q.id))}>
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 border-2 border-dashed rounded-lg bg-neutral-50 text-neutral-500">
+                        No questions added yet. Add from bank or create a new one.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* New Question Form */}
+                  {isAddingQuestion && (
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardHeader>
+                        <CardTitle className="text-md">Create New Question</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Question Title</Label>
+                            <Input 
+                              value={newQuestion.title} 
+                              onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
+                              placeholder="e.g., Bubble Sort Implementation"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Difficulty</Label>
+                            <Select 
+                              value={newQuestion.difficulty} 
+                              onValueChange={(v) => setNewQuestion({ ...newQuestion, difficulty: v as any })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="easy">Easy</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="hard">Hard</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Description</Label>
+                          <Textarea 
+                            value={newQuestion.description}
+                            onChange={(e) => setNewQuestion({ ...newQuestion, description: e.target.value })}
+                            placeholder="Detailed problem description..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label>Test Cases</Label>
+                            <Button type="button" variant="outline" size="sm" onClick={handleAddTestCase}>
+                              <Plus className="w-3 h-3 mr-1" /> Add Case
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            {newQuestion.testCases?.map((tc, idx) => (
+                              <div key={idx} className="p-3 bg-white rounded-md border space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Input 
+                                    placeholder="Input" 
+                                    value={tc.input} 
+                                    onChange={(e) => handleUpdateTestCase(idx, 'input', e.target.value)}
+                                  />
+                                  <Input 
+                                    placeholder="Expected Output" 
+                                    value={tc.expectedOutput} 
+                                    onChange={(e) => handleUpdateTestCase(idx, 'expectedOutput', e.target.value)}
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <input 
+                                      type="checkbox" 
+                                      id={`hidden-${idx}`}
+                                      checked={tc.isHidden}
+                                      onChange={(e) => handleUpdateTestCase(idx, 'isHidden', e.target.checked)}
+                                    />
+                                    <Label htmlFor={`hidden-${idx}`} className="text-xs cursor-pointer">Hidden Case</Label>
+                                  </div>
+                                  <Button variant="ghost" size="sm" onClick={() => handleRemoveTestCase(idx)}>
+                                    <Trash2 className="w-3 h-3 text-red-500" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2 mt-4">
+                          <Button variant="ghost" size="sm" onClick={() => setIsAddingQuestion(false)}>Cancel</Button>
+                          <Button size="sm" onClick={handleAddNewQuestion}>Add to Test</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-4 border-t">
+                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateTest} style={{ backgroundColor: 'var(--color-primary)' }}>
+                      Create Test
+                    </Button>
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="endDate">End Date & Time</Label>
-                  <Input
-                    id="endDate"
-                    type="datetime-local"
-                    value={newTest.endDate}
-                    onChange={(e) => setNewTest({ ...newTest, endDate: e.target.value })}
-                  />
-                </div>
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateTest} style={{ backgroundColor: 'var(--color-primary)' }}>
-                    Create Test
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
+              </DialogContent>
+
           </Dialog>
         )}
       </div>
@@ -260,9 +513,10 @@ export function TestManagement() {
                 <TableRow key={test.id}>
                   <TableCell className="font-medium">{test.title}</TableCell>
                   <TableCell>{test.batchName}</TableCell>
-                  <TableCell>{test.duration} min</TableCell>
-                  <TableCell>{test.questions}</TableCell>
-                  <TableCell>
+                    <TableCell>{test.duration} min</TableCell>
+                    <TableCell>{test.questions.length}</TableCell>
+                    <TableCell>
+
                     <div className="flex items-center gap-1">
                       <Users className="w-4 h-4 text-neutral-500" />
                       {test.students}
