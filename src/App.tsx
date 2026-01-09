@@ -17,6 +17,10 @@ import { GradingQueue } from './components/GradingQueue';
 import { BatchManagement } from './components/BatchManagement';
 import { ManageInstitutions } from './components/ManageInstitutions';
 import { BatchYears } from './components/BatchYears';
+import { TrainerInvitation } from './components/TrainerInvitation';
+import { Billing } from './components/Billing';
+import { CodingContest } from './components/CodingContest';
+import { AssessmentsManagement } from './components/AssessmentsManagement';
 import { UserManagement } from './components/UserManagement';
 import { AnalyticsPage } from './components/AnalyticsPage';
 import { AttendancePage } from './components/AttendancePage';
@@ -94,6 +98,10 @@ function AppContent() {
         {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} />}
         {currentPage === 'manage-institutions' && <ManageInstitutions />}
         {currentPage === 'batch-years' && <BatchYears />}
+        {currentPage === 'trainer-invitation' && <TrainerInvitation />}
+        {currentPage === 'billing' && <Billing />}
+        {currentPage === 'coding-contest' && <CodingContest />}
+        {currentPage === 'assessments-management' && <AssessmentsManagement />}
         {currentPage === 'grading' && <GradingQueue onNavigate={handleNavigate} />}
         {currentPage === 'users' && <UserManagement onNavigate={handleNavigate} />}
         {currentPage === 'analytics' && <AnalyticsPage onNavigate={handleNavigate} />}

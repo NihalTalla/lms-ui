@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../lib/auth-context';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { Search, Settings, LogOut, Code2, Home, BookOpen, FileCode, MessageSquare, Award, Users, BarChart3, Calendar, User, AlertCircle, ChevronDown } from 'lucide-react';
+import { Search, Settings, LogOut, Code2, Home, BookOpen, FileCode, MessageSquare, Award, Users, BarChart3, Calendar, User, AlertCircle, ChevronDown, Trophy, CreditCard, Send, ClipboardList, TrendingUp } from 'lucide-react';
 import { Input } from './ui/input';
 import {
   DropdownMenu,
@@ -23,9 +23,11 @@ interface LayoutProps {
 export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
   const { currentUser, logout } = useAuth();
 
-  if (!currentUser) return null;
+    if (!currentUser) return null;
 
     const [isInstitutionsOpen, setIsInstitutionsOpen] = React.useState(false);
+    const [isAssessmentsOpen, setIsAssessmentsOpen] = React.useState(false);
+
 
     const getNavItems = () => {
       const common = [
@@ -62,10 +64,14 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         return [
           ...common,
           { id: 'users', label: 'Users', icon: Users },
-          { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-          { id: 'leaderboard', label: 'Leaderboard', icon: Award },
-          { id: 'tests', label: 'Tests', icon: FileCode },
-        ];
+            { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+            { id: 'leaderboard', label: 'Leaderboard', icon: Award },
+            { id: 'trainer-invitation', label: 'Trainer Invitation', icon: Send },
+            { id: 'billing', label: 'Billing', icon: CreditCard },
+            { id: 'coding-contest', label: 'Coding Contest', icon: Trophy },
+            { id: 'tests', label: 'Tests', icon: FileCode },
+          ];
+
       }
     };
 
@@ -208,45 +214,89 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                     <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isInstitutionsOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
-                  {isInstitutionsOpen && (
-                    <div className="pl-4 space-y-1">
-                      <button
-                        onClick={() => onNavigate('manage-institutions')}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                          currentPage === 'manage-institutions'
-                            ? 'bg-neutral-100 text-neutral-900 font-medium'
-                            : 'text-neutral-600 hover:bg-neutral-50'
-                        }`}
-                      >
-                        <BookOpen className="w-4 h-4" />
-                        <span className="text-sm">Manage Institutions</span>
-                      </button>
-                      <button
-                        onClick={() => onNavigate('batch-years')}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                          currentPage === 'batch-years'
-                            ? 'bg-neutral-100 text-neutral-900 font-medium'
-                            : 'text-neutral-600 hover:bg-neutral-50'
-                        }`}
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                        <span className="text-sm">Batch Years</span>
-                      </button>
-                      <button
-                        onClick={() => onNavigate('batches')}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                          currentPage === 'batches'
-                            ? 'bg-neutral-100 text-neutral-900 font-medium'
-                            : 'text-neutral-600 hover:bg-neutral-50'
-                        }`}
-                      >
-                        <Users className="w-4 h-4" />
-                        <span className="text-sm">Batches</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    {isInstitutionsOpen && (
+                      <div className="pl-4 space-y-1">
+                        <button
+                          onClick={() => onNavigate('manage-institutions')}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                            currentPage === 'manage-institutions'
+                              ? 'bg-neutral-100 text-neutral-900 font-medium'
+                              : 'text-neutral-600 hover:bg-neutral-50'
+                          }`}
+                        >
+                          <BookOpen className="w-4 h-4" />
+                          <span className="text-sm">Manage Institutions</span>
+                        </button>
+                        <button
+                          onClick={() => onNavigate('batch-years')}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                            currentPage === 'batch-years'
+                              ? 'bg-neutral-100 text-neutral-900 font-medium'
+                              : 'text-neutral-600 hover:bg-neutral-50'
+                          }`}
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          <span className="text-sm">Batch Years</span>
+                        </button>
+                        <button
+                          onClick={() => onNavigate('batches')}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                            currentPage === 'batches'
+                              ? 'bg-neutral-100 text-neutral-900 font-medium'
+                              : 'text-neutral-600 hover:bg-neutral-50'
+                          }`}
+                        >
+                          <Users className="w-4 h-4" />
+                          <span className="text-sm">Batches</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Assessments Dropdown for Admin */}
+                {currentUser.role === 'admin' && (
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => setIsAssessmentsOpen(!isAssessmentsOpen)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-neutral-700 hover:bg-neutral-100 uppercase text-xs font-bold tracking-wider`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <ClipboardList className="w-4 h-4" />
+                        ASSESSMENTS
+                      </span>
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isAssessmentsOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isAssessmentsOpen && (
+                      <div className="pl-4 space-y-1">
+                        <button
+                          onClick={() => onNavigate('assessments-management')}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                            currentPage === 'assessments-management'
+                              ? 'bg-neutral-100 text-neutral-900 font-medium'
+                              : 'text-neutral-600 hover:bg-neutral-50'
+                          }`}
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          <span className="text-sm">Reports</span>
+                        </button>
+                        <button
+                          onClick={() => onNavigate('assessments-management')}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                            currentPage === 'assessments-management'
+                              ? 'bg-neutral-100 text-neutral-900 font-medium'
+                              : 'text-neutral-600 hover:bg-neutral-50'
+                          }`}
+                        >
+                          <TrendingUp className="w-4 h-4" />
+                          <span className="text-sm">Progress</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
             </nav>
 
           {/* Bottom Profile & Logout Section */}
