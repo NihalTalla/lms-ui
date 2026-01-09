@@ -51,6 +51,16 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
 
   const [activeTopicIndex, setActiveTopicIndex] = useState<number | null>(null);
 
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [viewCourse, setViewCourse] = useState<any>(null);
+
+  const handleTopicToggleLock = (topicIndex: number) => {
+    const updatedTopics = [...newCourse.topics];
+    updatedTopics[topicIndex].isLocked = !updatedTopics[topicIndex].isLocked;
+    setNewCourse({ ...newCourse, topics: updatedTopics });
+    toast.success(`Topic ${updatedTopics[topicIndex].isLocked ? 'locked' : 'unlocked'}`);
+  };
+
   const handleAddTopic = () => {
     if (!currentTopic.title || !currentTopic.content) {
       toast.error('Please fill in topic title and content');
@@ -61,6 +71,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       title: currentTopic.title,
       content: currentTopic.content,
       questions: [],
+      isLocked: false,
     };
     setNewCourse({ ...newCourse, topics: [...newCourse.topics, topic] });
     setCurrentTopic({ title: '', content: '' });
@@ -140,6 +151,9 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       duration: course.duration,
       lessons: course.lessons,
       tags: course.tags.join(', '),
+      institutionId: course.institutionId || '',
+      batchId: course.batchId || '',
+      topics: course.topics || [],
     });
     setIsEditDialogOpen(true);
   };
@@ -157,6 +171,9 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
             duration: newCourse.duration,
             lessons: newCourse.lessons,
             tags: newCourse.tags.split(',').map(t => t.trim()).filter(t => t),
+            institutionId: newCourse.institutionId,
+            batchId: newCourse.batchId,
+            topics: newCourse.topics,
           }
         : c
     );
@@ -164,6 +181,17 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
     setCourseList(updated);
     setIsEditDialogOpen(false);
     setSelectedCourse(null);
+    setNewCourse({ 
+      title: '', 
+      description: '', 
+      level: 'beginner', 
+      duration: '', 
+      lessons: 0, 
+      tags: '', 
+      institutionId: '', 
+      batchId: '', 
+      topics: [] 
+    });
     toast.success('Course updated successfully!');
   };
 
@@ -327,9 +355,27 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                         {newCourse.topics.map((topic, tIdx) => (
                           <AccordionItem key={topic.id} value={topic.id}>
                             <AccordionTrigger className="text-sm py-2">
-                              {topic.title} ({topic.questions.length} Questions)
+                              <div className="flex items-center gap-2">
+                                {topic.isLocked ? (
+                                  <Lock className="w-3 h-3 text-red-500" />
+                                ) : (
+                                  <Unlock className="w-3 h-3 text-green-500" />
+                                )}
+                                {topic.title} ({topic.questions.length} Questions)
+                              </div>
                             </AccordionTrigger>
                             <AccordionContent className="space-y-4 pt-2">
+                              <div className="flex items-center justify-between bg-neutral-100 p-2 rounded mb-2">
+                                <span className="text-xs font-medium">Topic Status: {topic.isLocked ? 'Locked' : 'Unlocked'}</span>
+                                <Button 
+                                  variant="ghost" 
+                                  size="xs" 
+                                  className="h-6 text-[10px]"
+                                  onClick={() => handleTopicToggleLock(tIdx)}
+                                >
+                                  {topic.isLocked ? 'Unlock Topic' : 'Lock Topic'}
+                                </Button>
+                              </div>
                               <p className="text-xs text-neutral-600 italic">{topic.content}</p>
                               
                               <div className="border-t pt-2 space-y-2">
@@ -470,7 +516,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" onClick={() => toast.info(`Viewing ${course.title} details`)}>
+                          <Button size="sm" variant="outline" onClick={() => { setViewCourse(course); setIsViewDialogOpen(true); }}>
                             <Eye className="w-4 h-4 mr-1" />
                             View
                           </Button>
@@ -501,85 +547,225 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       )}
 
       {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Course</DialogTitle>
-            <DialogDescription>
-              Update course information
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="edit-title">Course Title</Label>
-              <Input
-                id="edit-title"
-                value={newCourse.title}
-                onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={newCourse.description}
-                onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
-                rows={4}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-level">Level</Label>
-                <Select value={newCourse.level} onValueChange={(value: any) => setNewCourse({ ...newCourse, level: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="beginner">Beginner</SelectItem>
-                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                    <SelectItem value="advanced">Advanced</SelectItem>
-                  </SelectContent>
-                </Select>
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Course</DialogTitle>
+              <DialogDescription>
+                Update course information and curriculum
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4 pr-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-institution">Institution</Label>
+                  <Select value={newCourse.institutionId} onValueChange={(val) => setNewCourse({ ...newCourse, institutionId: val, batchId: '' })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Institution" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {institutions.map(inst => (
+                        <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-batch">Batch</Label>
+                  <Select 
+                    value={newCourse.batchId} 
+                    onValueChange={(val) => setNewCourse({ ...newCourse, batchId: val })}
+                    disabled={!newCourse.institutionId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Batch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {batches.map(batch => (
+                        <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
               <div>
-                <Label htmlFor="edit-duration">Duration</Label>
+                <Label htmlFor="edit-title">Course Title</Label>
                 <Input
-                  id="edit-duration"
-                  value={newCourse.duration}
-                  onChange={(e) => setNewCourse({ ...newCourse, duration: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-lessons">Number of Lessons</Label>
-                <Input
-                  id="edit-lessons"
-                  type="number"
-                  value={newCourse.lessons}
-                  onChange={(e) => setNewCourse({ ...newCourse, lessons: parseInt(e.target.value) || 0 })}
+                  id="edit-title"
+                  value={newCourse.title}
+                  onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
                 />
               </div>
               <div>
-                <Label htmlFor="edit-tags">Tags (comma-separated)</Label>
-                <Input
-                  id="edit-tags"
-                  value={newCourse.tags}
-                  onChange={(e) => setNewCourse({ ...newCourse, tags: e.target.value })}
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={newCourse.description}
+                  onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
+                  rows={3}
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-level">Level</Label>
+                  <Select value={newCourse.level} onValueChange={(value: any) => setNewCourse({ ...newCourse, level: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-duration">Duration</Label>
+                  <Input
+                    id="edit-duration"
+                    value={newCourse.duration}
+                    onChange={(e) => setNewCourse({ ...newCourse, duration: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Topics Management in Edit */}
+              <div className="border rounded-lg p-4 bg-neutral-50 space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Course Curriculum
+                </h3>
+                
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <Label>New Topic Title</Label>
+                      <Input 
+                        value={currentTopic.title}
+                        onChange={(e) => setCurrentTopic({ ...currentTopic, title: e.target.value })}
+                        placeholder="e.g., Introduction to React Hooks"
+                      />
+                    </div>
+                    <div>
+                      <Label>Topic Content</Label>
+                      <Textarea 
+                        value={currentTopic.content}
+                        onChange={(e) => setCurrentTopic({ ...currentTopic, content: e.target.value })}
+                        placeholder="Brief overview of what will be covered..."
+                        rows={2}
+                      />
+                    </div>
+                    <Button type="button" variant="outline" size="sm" className="w-fit" onClick={handleAddTopic}>
+                      <Plus className="w-4 h-4 mr-2" /> Add Topic
+                    </Button>
+                  </div>
+                </div>
+
+                {newCourse.topics.length > 0 && (
+                  <Accordion type="single" collapsible className="w-full">
+                    {newCourse.topics.map((topic, tIdx) => (
+                      <AccordionItem key={topic.id} value={topic.id}>
+                        <AccordionTrigger className="text-sm py-2">
+                          <div className="flex items-center gap-2">
+                            {topic.isLocked ? (
+                              <Lock className="w-3 h-3 text-red-500" />
+                            ) : (
+                              <Unlock className="w-3 h-3 text-green-500" />
+                            )}
+                            {topic.title} ({topic.questions.length} Qs)
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-2">
+                          <div className="flex items-center justify-between bg-neutral-100 p-2 rounded mb-2">
+                            <span className="text-xs font-medium">Topic Status: {topic.isLocked ? 'Locked' : 'Unlocked'}</span>
+                            <Button 
+                              variant="ghost" 
+                              size="xs" 
+                              className="h-6 text-[10px]"
+                              onClick={() => handleTopicToggleLock(tIdx)}
+                            >
+                              {topic.isLocked ? 'Unlock Topic' : 'Lock Topic'}
+                            </Button>
+                          </div>
+                          <p className="text-xs text-neutral-600 mb-4">{topic.content}</p>
+                          
+                          <div className="border-t pt-4 space-y-3">
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Add Assessment Question</h4>
+                            <div className="space-y-2">
+                              <Input 
+                                placeholder="Enter question..." 
+                                className="text-sm"
+                                value={currentQuestion.question}
+                                onChange={(e) => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
+                              />
+                              <div className="grid grid-cols-2 gap-2">
+                                {currentQuestion.options.map((opt, oIdx) => (
+                                  <Input 
+                                    key={oIdx}
+                                    placeholder={`Option ${oIdx + 1}`}
+                                    className="text-xs h-8"
+                                    value={opt}
+                                    onChange={(e) => {
+                                      const newOpts = [...currentQuestion.options];
+                                      newOpts[oIdx] = e.target.value;
+                                      setCurrentQuestion({ ...currentQuestion, options: newOpts });
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                              <div className="flex gap-2">
+                                <Input 
+                                  placeholder="Correct Answer" 
+                                  className="text-xs h-8 flex-1"
+                                  value={currentQuestion.correctAnswer}
+                                  onChange={(e) => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })}
+                                />
+                                <Button 
+                                  type="button" 
+                                  size="sm" 
+                                  className="h-8 px-4"
+                                  onClick={() => handleAddQuestion(tIdx)}
+                                >
+                                  Add
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {topic.questions.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                              <p className="text-[10px] font-bold uppercase text-neutral-400">Current Questions ({topic.questions.length})</p>
+                              <div className="space-y-2">
+                                {topic.questions.map((q, qIdx) => (
+                                  <div key={q.id} className="text-xs p-2 bg-white border rounded flex justify-between items-start">
+                                    <span>{qIdx + 1}. {q.question}</span>
+                                    <Badge variant="secondary" className="text-[9px] h-4">
+                                      Ans: {q.correctAnswer}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateCourse} style={{ backgroundColor: 'var(--color-primary)' }}>
+                  Save Changes
+                </Button>
+              </div>
             </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleUpdateCourse} style={{ backgroundColor: 'var(--color-primary)' }}>
-                Update Course
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
 
       {/* Enrolled Courses */}
       {!isAdmin && (
@@ -753,6 +939,94 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
         </div>
       </div>
       )}
+      {/* View Course Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{viewCourse?.title}</DialogTitle>
+            <DialogDescription>{viewCourse?.description}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-neutral-500 font-medium uppercase">Level</span>
+                {viewCourse && getLevelBadge(viewCourse.level)}
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-neutral-500 font-medium uppercase">Duration</span>
+                <div className="flex items-center gap-1 text-sm">
+                  <Clock className="w-4 h-4" />
+                  {viewCourse?.duration}
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-neutral-500 font-medium uppercase">Enrolled</span>
+                <div className="flex items-center gap-1 text-sm">
+                  <Users className="w-4 h-4" />
+                  {viewCourse?.enrolled}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                Course Curriculum
+              </h3>
+              {viewCourse?.topics && viewCourse.topics.length > 0 ? (
+                <Accordion type="single" collapsible className="w-full">
+                  {viewCourse.topics.map((topic: Topic) => (
+                    <AccordionItem key={topic.id} value={topic.id}>
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          {topic.isLocked ? (
+                            <Lock className="w-4 h-4 text-red-500" />
+                          ) : (
+                            <Unlock className="w-4 h-4 text-green-500" />
+                          )}
+                          <span>{topic.title}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-4">
+                        <div className="bg-neutral-50 p-4 rounded-md">
+                          <p className="text-sm text-neutral-700 leading-relaxed">{topic.content}</p>
+                        </div>
+                        {topic.questions.length > 0 && (
+                          <div className="space-y-3">
+                            <h4 className="text-sm font-semibold uppercase text-neutral-500 tracking-wider">Assessment Questions</h4>
+                            <div className="space-y-4">
+                              {topic.questions.map((q, idx) => (
+                                <div key={q.id} className="border-l-2 border-primary/20 pl-4 py-1">
+                                  <p className="font-medium text-sm mb-2">{idx + 1}. {q.question}</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {q.options.map((opt, oIdx) => (
+                                      <div 
+                                        key={oIdx} 
+                                        className={`text-xs p-2 rounded border ${opt === q.correctAnswer ? 'bg-green-50 border-green-200 text-green-700 font-medium' : 'bg-white border-neutral-100'}`}
+                                      >
+                                        {opt}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <p className="text-sm text-neutral-500 italic">No topics added to this course yet.</p>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-end pt-4 border-t">
+            <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

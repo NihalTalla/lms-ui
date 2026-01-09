@@ -20,6 +20,7 @@ export interface Topic {
   title: string;
   content: string;
   questions: TopicQuestion[];
+  isLocked?: boolean;
 }
 
 export interface TopicQuestion {
