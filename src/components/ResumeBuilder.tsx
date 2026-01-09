@@ -7,7 +7,7 @@ import { Label } from './ui/label';
 import { Separator } from './ui/separator';
 import { Badge } from './ui/badge';
 import { Download, Plus, Trash2, Eye } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function ResumeBuilder() {
   const [resumeData, setResumeData] = useState({

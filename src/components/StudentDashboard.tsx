@@ -6,7 +6,7 @@ import { Progress } from './ui/progress';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Trophy, Clock, CheckCircle2, TrendingUp, ArrowRight, Calendar, Code, Users, Flame } from 'lucide-react';
-import { problems, courses, batches } from '../lib/data';
+import { problems, courses, batches, assessments } from '../lib/data';
 import { toast } from 'sonner';
 
 interface StudentDashboardProps {
@@ -34,12 +34,13 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
   };
 
   const recommendedProblems = problems.slice(0, 3);
+  const studentAssessments = assessments.filter(assessment => assessment.batchId === 'batch-1'); // Assuming student is in batch-1
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2>Welcome back, Emma! 👋</h2>
+        <h2 className="text-xl">Welcome back, Emma! Let's start with backend development 👋</h2>
         <p className="text-neutral-600 mt-1">
           Here's your learning progress and upcoming activities
         </p>
@@ -251,6 +252,57 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Assessments */}
+          {studentAssessments.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Upcoming Assessments</CardTitle>
+                <CardDescription>
+                  Tests and assessments for your batch
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {studentAssessments.map((assessment) => (
+                    <div
+                      key={assessment.id}
+                      className="flex items-center justify-between p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:shadow-sm transition-all duration-200 cursor-pointer"
+                      onClick={() => {
+                        toast.info('Assessment feature coming soon!');
+                      }}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{assessment.name}</p>
+                          <Badge
+                            variant="outline"
+                            className={
+                              assessment.status === 'published'
+                                ? 'border-green-300 text-green-700'
+                                : 'border-yellow-300 text-yellow-700'
+                            }
+                          >
+                            {assessment.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-neutral-600 mt-1">{assessment.description}</p>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
+                          <span>Duration: {assessment.duration} mins</span>
+                          <span>Total Marks: {assessment.totalMarks}</span>
+                          <span>Questions: {assessment.questions.length}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-neutral-600">{assessment.category}</span>
+                        <ArrowRight className="w-4 h-4 text-neutral-400" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}

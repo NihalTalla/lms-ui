@@ -40,8 +40,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role = 'student';
     }
     
-    // Find user by role or email
-    const user = users.find(u => u.email === email || u.role === role);
+    // Find user by email first (exact match)
+    let user = users.find(u => u.email === email);
+    
+    // If no user found by email, try to find by role (for demo purposes)
+    if (!user && role) {
+      user = users.find(u => u.role === role);
+    }
     if (user) {
       setCurrentUser(user);
       localStorage.setItem('codify_user', JSON.stringify(user));

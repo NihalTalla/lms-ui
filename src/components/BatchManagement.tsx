@@ -35,6 +35,8 @@ import {
 import { batches, courses, users, problems } from '../lib/data';
 import { toast } from 'sonner';
 import { CSVBatchDialog } from './CSVBatchDialog';
+// import { CreateAssessmentWizard } from './CreateAssessmentWizard';
+import { Assessment } from '../lib/data';
 
 interface BatchManagementProps {
   onNavigate: (page: string, data?: any) => void;
@@ -49,14 +51,7 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
   const [uploadMethod, setUploadMethod] = useState<'manual' | 'csv'>('manual');
   const [assignFacultyDialogOpen, setAssignFacultyDialogOpen] = useState(false);
   const [selectedFaculty, setSelectedFaculty] = useState<string[]>([]);
-  const [createTestDialogOpen, setCreateTestDialogOpen] = useState(false);
-  const [testData, setTestData] = useState({
-    title: '',
-    description: '',
-    duration: '',
-    totalMarks: '',
-    scheduledDate: '',
-  });
+  const [createAssessmentWizardOpen, setCreateAssessmentWizardOpen] = useState(false);
   const [addProblemDialogOpen, setAddProblemDialogOpen] = useState(false);
   const [problemMode, setProblemMode] = useState<'select' | 'existing' | 'create'>('select');
   const [selectedExistingProblem, setSelectedExistingProblem] = useState('');
@@ -113,20 +108,10 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
     setSelectedFaculty([]);
   };
 
-  const handleCreateTest = () => {
-    if (!testData.title || !testData.duration || !testData.totalMarks) {
-      toast.error('Please fill all required fields');
-      return;
-    }
-    toast.success(`Test "${testData.title}" created for ${selectedBatch.name}`);
-    setCreateTestDialogOpen(false);
-    setTestData({
-      title: '',
-      description: '',
-      duration: '',
-      totalMarks: '',
-      scheduledDate: '',
-    });
+  const handleAssessmentCreated = (assessment: Assessment) => {
+    // Here you would typically save to backend
+    console.log('Assessment created:', assessment);
+    toast.success(`Assessment "${assessment.name}" created successfully!`);
   };
 
   const handleAddTestCase = () => {
@@ -464,7 +449,7 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setCreateTestDialogOpen(true)}>
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setCreateAssessmentWizardOpen(true)}>
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-4">
                         <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
@@ -629,94 +614,14 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
         </DialogContent>
       </Dialog>
 
-      {/* Create Test Dialog */}
-      <Dialog open={createTestDialogOpen} onOpenChange={setCreateTestDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create Test/Assessment</DialogTitle>
-            <DialogDescription>
-              Create a new test or assessment for {selectedBatch?.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="test-title">Test Title *</Label>
-              <Input
-                id="test-title"
-                placeholder="e.g., Mid-term Exam"
-                value={testData.title}
-                onChange={(e) => setTestData({ ...testData, title: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="test-description">Description</Label>
-              <Input
-                id="test-description"
-                placeholder="Brief description of the test"
-                value={testData.description}
-                onChange={(e) => setTestData({ ...testData, description: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration (mins) *</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  placeholder="60"
-                  value={testData.duration}
-                  onChange={(e) => setTestData({ ...testData, duration: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="total-marks">Total Marks *</Label>
-                <Input
-                  id="total-marks"
-                  type="number"
-                  placeholder="100"
-                  value={testData.totalMarks}
-                  onChange={(e) => setTestData({ ...testData, totalMarks: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="scheduled-date">Scheduled Date</Label>
-              <Input
-                id="scheduled-date"
-                type="datetime-local"
-                value={testData.scheduledDate}
-                onChange={(e) => setTestData({ ...testData, scheduledDate: e.target.value })}
-              />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button 
-                className="flex-1" 
-                style={{ backgroundColor: 'var(--color-primary)' }}
-                onClick={handleCreateTest}
-              >
-                <ClipboardList className="w-4 h-4 mr-2" />
-                Create Test
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => {
-                  setCreateTestDialogOpen(false);
-                  setTestData({
-                    title: '',
-                    description: '',
-                    duration: '',
-                    totalMarks: '',
-                    scheduledDate: '',
-                  });
-                }}
-              >
-                Cancel
-              </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+      {/* Create Assessment Wizard */}
+      <CreateAssessmentWizard
+        open={createAssessmentWizardOpen}
+        onOpenChange={setCreateAssessmentWizardOpen}
+        batchId={selectedBatch?.id || ''}
+        batchName={selectedBatch?.name || ''}
+        onAssessmentCreated={handleAssessmentCreated}
+      />
 
         {/* Add Problem Dialog */}
         <Dialog open={addProblemDialogOpen} onOpenChange={(open) => { if (!open) resetProblemDialog(); else setAddProblemDialogOpen(true); }}>

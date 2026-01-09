@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Code2, Mail, Lock, ArrowRight, Sparkles, Zap, BookOpen, Trophy, Users } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function SignIn() {
   const { login } = useAuth();
@@ -108,13 +108,13 @@ export function SignIn() {
             >
               <Code2 className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-6xl mb-4" style={{ fontWeight: 800 }}>
+            <h1 className="text-4xl mb-4" style={{ fontWeight: 700 }}>
               Codify LMS
             </h1>
-            <p className="text-2xl text-white/90 mb-8">
+            <p className="text-xl text-white/90 mb-8">
               Master Coding Through Practice
             </p>
-            <p className="text-lg text-white/80 max-w-2xl mx-auto">
+            <p className="text-base text-white/80 max-w-2xl mx-auto">
               An advanced learning management system designed for aspiring developers. 
               Learn, practice, and excel in data structures, algorithms, and software development.
             </p>
@@ -133,8 +133,8 @@ export function SignIn() {
               <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
                 <BookOpen className="w-6 h-6" />
               </div>
-              <h3 className="text-xl mb-2">Interactive Courses</h3>
-              <p className="text-white/80 text-sm">
+              <h3 className="text-lg mb-2">Interactive Courses</h3>
+              <p className="text-white/80 text-xs">
                 Hands-on coding courses with real-world projects
               </p>
             </div>
@@ -150,8 +150,8 @@ export function SignIn() {
               <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
                 <Zap className="w-6 h-6" />
               </div>
-              <h3 className="text-xl mb-2">Live Code Editor</h3>
-              <p className="text-white/80 text-sm">
+              <h3 className="text-lg mb-2">Live Code Editor</h3>
+              <p className="text-white/80 text-xs">
                 VS Code-like editor with instant feedback
               </p>
             </div>
@@ -167,8 +167,8 @@ export function SignIn() {
               <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
                 <Trophy className="w-6 h-6" />
               </div>
-              <h3 className="text-xl mb-2">Gamification</h3>
-              <p className="text-white/80 text-sm">
+              <h3 className="text-lg mb-2">Gamification</h3>
+              <p className="text-white/80 text-xs">
                 Earn points, badges, and climb the leaderboard
               </p>
             </div>
@@ -177,16 +177,16 @@ export function SignIn() {
           {/* Stats */}
           <div className="flex gap-12 mt-16">
             <div className="text-center">
-              <div className="text-4xl mb-2" style={{ fontWeight: 700 }}>500+</div>
-              <div className="text-white/80">Coding Problems</div>
+              <div className="text-2xl mb-2" style={{ fontWeight: 600 }}>500+</div>
+              <div className="text-white/80 text-sm">Coding Problems</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl mb-2" style={{ fontWeight: 700 }}>10K+</div>
-              <div className="text-white/80">Active Students</div>
+              <div className="text-2xl mb-2" style={{ fontWeight: 600 }}>10K+</div>
+              <div className="text-white/80 text-sm">Active Students</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl mb-2" style={{ fontWeight: 700 }}>95%</div>
-              <div className="text-white/80">Success Rate</div>
+              <div className="text-2xl mb-2" style={{ fontWeight: 600 }}>95%</div>
+              <div className="text-white/80 text-sm">Success Rate</div>
             </div>
           </div>
         </div>
@@ -226,13 +226,13 @@ export function SignIn() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: 'linear-gradient(135deg, #FF6B35, #F7931E)' }}>
               <Code2 className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-3xl" style={{ color: '#FF6B35' }}>Codify LMS</h2>
+            <h2 className="text-xl" style={{ color: '#FF6B35' }}>Codify LMS</h2>
           </div>
 
           {/* Login Header */}
           <div className="mb-8">
-            <h2 className="text-3xl text-neutral-900 mb-2">Welcome Back</h2>
-            <p className="text-neutral-600">
+            <h2 className="text-2xl text-neutral-900 mb-2">Welcome Back</h2>
+            <p className="text-neutral-600 text-sm">
               Sign in to continue your learning journey
             </p>
           </div>
@@ -305,31 +305,31 @@ export function SignIn() {
             <p className="text-xs mb-3" style={{ color: '#FF6B35', fontWeight: 600 }}>
               DEMO CREDENTIALS
             </p>
-            <div className="space-y-2 text-xs text-neutral-700">
+            <div className="space-y-1 text-xs text-neutral-700">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#7C3AED' }} />
-                <span><span className="font-medium">Admin:</span> admin01@gmail.com</span>
+                <span className="text-xs"><span className="font-medium">Admin:</span> admin01@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#14B8A6' }} />
-                <span><span className="font-medium">Faculty:</span> faculty01@gmail.com</span>
+                <span className="text-xs"><span className="font-medium">Faculty:</span> faculty01@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#14B8A6' }} />
-                <span><span className="font-medium">Trainer:</span> trainer01@gmail.com</span>
+                <span className="text-xs"><span className="font-medium">Trainer:</span> trainer01@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#10B981' }} />
-                <span><span className="font-medium">Student:</span> student01@gmail.com</span>
+                <span className="text-xs"><span className="font-medium">Student:</span> student01@gmail.com</span>
               </div>
-              <p className="text-xs text-neutral-500 mt-2 italic">
+              <p className="text-xs text-neutral-500 mt-1 italic">
                 Password can be anything in demo mode
               </p>
             </div>
           </div>
 
           {/* Footer */}
-          <p className="text-center text-sm text-neutral-500 mt-6">
+          <p className="text-center text-xs text-neutral-500 mt-4">
             Don't have an account?{' '}
             <a href="#" className="hover:underline transition-colors" style={{ color: '#FF6B35' }}>
               Request access

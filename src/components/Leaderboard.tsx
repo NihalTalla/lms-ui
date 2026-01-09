@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Trophy, Medal, Award, TrendingUp, Flame, Code, CheckCircle2, Download, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
 import { batches } from '../lib/data';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function Leaderboard() {
   const { currentUser } = useAuth();

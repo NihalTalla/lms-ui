@@ -22,7 +22,7 @@ import {
   FileCode
 } from 'lucide-react';
 import { Problem, Submission, TestCaseResult } from '../lib/data';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import Editor from '@monaco-editor/react';
 
 interface CodeEditorProps {

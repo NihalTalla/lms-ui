@@ -9,6 +9,26 @@ export interface User {
   batchId?: string;
 }
 
+export interface Institution {
+  id: string;
+  name: string;
+  location: string;
+}
+
+export interface Topic {
+  id: string;
+  title: string;
+  content: string;
+  questions: TopicQuestion[];
+}
+
+export interface TopicQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+}
+
 export interface Course {
   id: string;
   title: string;
@@ -19,6 +39,10 @@ export interface Course {
   enrolled: number;
   tags: string[];
   thumbnail?: string;
+  institutionId?: string;
+  batchId?: string;
+  topics?: Topic[];
+  isLocked?: boolean;
 }
 
 export interface Batch {
@@ -133,6 +157,36 @@ export interface AnswerVote {
   isUpvote: boolean;
 }
 
+export interface Assessment {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  batchId: string;
+  maxAttempts: number;
+  examType: 'single_time' | 'multiple_time' | 'practice';
+  cutOffType: 'single' | 'section_wise' | 'percentile';
+  password?: string;
+  duration: number; // in minutes
+  totalMarks: number;
+  scheduledDate?: string;
+  status: 'draft' | 'published' | 'active' | 'completed';
+  createdBy: string;
+  createdAt: string;
+  questions: AssessmentQuestion[];
+}
+
+export interface AssessmentQuestion {
+  id: string;
+  assessmentId: string;
+  question: string;
+  type: 'multiple_choice' | 'true_false' | 'short_answer' | 'coding';
+  options?: string[]; // for multiple choice
+  correctAnswer: string;
+  marks: number;
+  explanation?: string;
+}
+
 // Sample Users
 export const users: User[] = [
   {
@@ -176,6 +230,13 @@ export const users: User[] = [
   },
 ];
 
+// Sample Institutions
+export const institutions: Institution[] = [
+  { id: 'inst-1', name: 'Tech Institute of Technology', location: 'San Francisco, CA' },
+  { id: 'inst-2', name: 'Global Academy of Science', location: 'New York, NY' },
+  { id: 'inst-3', name: 'Elite Coding School', location: 'Austin, TX' },
+];
+
 // Sample Courses
 export const courses: Course[] = [
   {
@@ -187,6 +248,10 @@ export const courses: Course[] = [
     lessons: 48,
     enrolled: 245,
     tags: ['DSA', 'Python', 'Problem Solving'],
+    institutionId: 'inst-1',
+    batchId: 'batch-1',
+    isLocked: false,
+    topics: [],
   },
   {
     id: 'course-2',
@@ -197,6 +262,10 @@ export const courses: Course[] = [
     lessons: 64,
     enrolled: 312,
     tags: ['React', 'Node.js', 'MongoDB', 'TypeScript'],
+    institutionId: 'inst-2',
+    batchId: 'batch-2',
+    isLocked: true,
+    topics: [],
   },
 ];
 
@@ -463,4 +532,45 @@ def reverse_list(head):
     tags: ['Design', 'Hash Table', 'Linked List'],
     points: 350,
   },
+];
+
+// Sample Assessments
+export const assessments: Assessment[] = [
+  {
+    id: 'assessment-1',
+    name: 'DSA Fundamentals Quiz',
+    category: 'Internal Assessments',
+    description: 'Test your understanding of basic data structures and algorithms',
+    batchId: 'batch-1',
+    maxAttempts: 2,
+    examType: 'single_time',
+    cutOffType: 'single',
+    duration: 60,
+    totalMarks: 100,
+    scheduledDate: '2025-10-15T10:00',
+    status: 'published',
+    createdBy: 'admin-1',
+    createdAt: '2025-10-01T09:00:00Z',
+    questions: [
+      {
+        id: 'q-1',
+        assessmentId: 'assessment-1',
+        question: 'What is the time complexity of binary search?',
+        type: 'multiple_choice',
+        options: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'],
+        correctAnswer: 'O(log n)',
+        marks: 10,
+        explanation: 'Binary search divides the search space in half each time, resulting in logarithmic time complexity.'
+      },
+      {
+        id: 'q-2',
+        assessmentId: 'assessment-1',
+        question: 'Which data structure uses LIFO (Last In, First Out) principle?',
+        type: 'multiple_choice',
+        options: ['Queue', 'Stack', 'Array', 'Linked List'],
+        correctAnswer: 'Stack',
+        marks: 10,
+      }
+    ]
+  }
 ];

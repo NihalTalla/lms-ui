@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Plus, Edit, Trash2, Eye, Calendar, Clock, Users, BookOpen } from 'lucide-react';
 import { courses } from '../lib/data';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export function CourseManagement() {
   const [courseList, setCourseList] = useState(courses);
