@@ -12,6 +12,8 @@ export interface User {
 export interface Institution {
   id: string;
   name: string;
+  email: string;
+  activeUsers: number;
   location: string;
 }
 
@@ -49,12 +51,14 @@ export interface Course {
 export interface Batch {
   id: string;
   name: string;
+  year: string;
   courseId: string;
   startDate: string;
   endDate: string;
   students: number;
   faculty: string[];
   schedule: string;
+  institutionId?: string;
 }
 
 export interface Problem {
@@ -233,9 +237,9 @@ export const users: User[] = [
 
 // Sample Institutions
 export const institutions: Institution[] = [
-  { id: 'inst-1', name: 'Tech Institute of Technology', location: 'San Francisco, CA' },
-  { id: 'inst-2', name: 'Global Academy of Science', location: 'New York, NY' },
-  { id: 'inst-3', name: 'Elite Coding School', location: 'Austin, TX' },
+  { id: 'inst-1', name: 'Tech Institute of Technology', email: 'contact@tit.edu', activeUsers: 1250, location: 'San Francisco, CA' },
+  { id: 'inst-2', name: 'Global Academy of Science', email: 'info@globalacademy.edu', activeUsers: 850, location: 'New York, NY' },
+  { id: 'inst-3', name: 'Elite Coding School', email: 'hello@elitecoding.com', activeUsers: 450, location: 'Austin, TX' },
 ];
 
 // Sample Courses
@@ -275,22 +279,26 @@ export const batches: Batch[] = [
   {
     id: 'batch-1',
     name: 'DSA Batch - Fall 2025',
+    year: '2025',
     courseId: 'course-1',
     startDate: '2025-09-01',
     endDate: '2025-11-30',
     students: 45,
     faculty: ['faculty-1'],
     schedule: 'Mon, Wed, Fri - 6:00 PM to 8:00 PM',
+    institutionId: 'inst-1',
   },
   {
     id: 'batch-2',
     name: 'Web Dev Batch - Fall 2025',
+    year: '2025',
     courseId: 'course-2',
     startDate: '2025-09-15',
     endDate: '2026-01-15',
     students: 38,
     faculty: ['faculty-2'],
     schedule: 'Tue, Thu - 7:00 PM to 9:00 PM',
+    institutionId: 'inst-2',
   },
 ];
 

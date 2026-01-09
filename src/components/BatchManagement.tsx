@@ -32,7 +32,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { batches, courses, users, problems } from '../lib/data';
+import { batches, courses, users, problems, institutions } from '../lib/data';
 import { toast } from 'sonner';
 import { CSVBatchDialog } from './CSVBatchDialog';
 // import { CreateAssessmentWizard } from './CreateAssessmentWizard';
@@ -44,40 +44,33 @@ interface BatchManagementProps {
 }
 
 export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagementProps) {
+  const [selectedInstitution, setSelectedInstitution] = useState<string>('all');
+  const [selectedYear, setSelectedYear] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBatch, setSelectedBatch] = useState<any>(null);
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [csvStudents, setCsvStudents] = useState<any[]>([]);
-  const [uploadMethod, setUploadMethod] = useState<'manual' | 'csv'>('manual');
-  const [assignFacultyDialogOpen, setAssignFacultyDialogOpen] = useState(false);
-  const [selectedFaculty, setSelectedFaculty] = useState<string[]>([]);
-  const [createAssessmentWizardOpen, setCreateAssessmentWizardOpen] = useState(false);
-  const [addProblemDialogOpen, setAddProblemDialogOpen] = useState(false);
-  const [problemMode, setProblemMode] = useState<'select' | 'existing' | 'create'>('select');
-  const [selectedExistingProblem, setSelectedExistingProblem] = useState('');
-  const [newProblemData, setNewProblemData] = useState({
-    title: '',
-    difficulty: 'easy' as 'easy' | 'medium' | 'hard',
-    description: '',
-    constraints: '',
-    sampleInput: '',
-    sampleOutput: '',
-    explanation: '',
-    tags: '',
-    points: '',
+  
+  // Get unique years for the selected institution
+  const availableYears = Array.from(new Set(
+    batches
+      .filter(b => selectedInstitution === 'all' || b.institutionId === selectedInstitution)
+      .map(b => b.year)
+  )).sort((a, b) => b.localeCompare(a));
+
+  const filteredBatches = batches.filter(batch => {
+    const matchesInstitution = selectedInstitution === 'all' || batch.institutionId === selectedInstitution;
+    const matchesYear = selectedYear === 'all' || batch.year === selectedYear;
+    const matchesSearch = batch.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesInstitution && matchesYear && matchesSearch;
   });
-  const [testCases, setTestCases] = useState<Array<{ input: string; expectedOutput: string; hidden: boolean }>>([
-    { input: '', expectedOutput: '', hidden: false }
-  ]);
 
   const batchStats = {
-    activeBatches: batches.length,
-    totalStudents: batches.reduce((sum, batch) => sum + batch.students, 0),
+    activeBatches: filteredBatches.length,
+    totalStudents: filteredBatches.reduce((sum, batch) => sum + batch.students, 0),
     avgAttendance: 87,
     completionRate: 76,
   };
 
-  const batchesWithDetails = batches.map(batch => {
+  const batchesWithDetails = filteredBatches.map(batch => {
     const course = courses.find(c => c.id === batch.courseId);
     return {
       ...batch,
@@ -259,8 +252,8 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
       </div>
 
       {/* Search and Filter */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
+      <div className="flex flex-wrap gap-4">
+        <div className="relative flex-1 min-w-[300px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <Input
             placeholder="Search batches..."
@@ -269,17 +262,50 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
             className="pl-9"
           />
         </div>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Batches</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="upcoming">Upcoming</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-          </SelectContent>
-        </Select>
+        
+        <div className="flex gap-2 w-full md:w-auto">
+          <Select value={selectedInstitution} onValueChange={(val) => { setSelectedInstitution(val); setSelectedYear('all'); }}>
+            <SelectTrigger className="w-[200px]">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-neutral-400" />
+                <SelectValue placeholder="Institution" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Institutions</SelectItem>
+              {institutions.map(inst => (
+                <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-[120px]">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-neutral-400" />
+                <SelectValue placeholder="Year" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Years</SelectItem>
+              {availableYears.map(year => (
+                <SelectItem key={year} value={year}>{year}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select defaultValue="all">
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="upcoming">Upcoming</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Batch Cards */}

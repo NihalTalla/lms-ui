@@ -15,6 +15,8 @@ import { ResumeBuilder } from './components/ResumeBuilder';
 import { CoursesPage } from './components/CoursesPage';
 import { GradingQueue } from './components/GradingQueue';
 import { BatchManagement } from './components/BatchManagement';
+import { ManageInstitutions } from './components/ManageInstitutions';
+import { BatchYears } from './components/BatchYears';
 import { UserManagement } from './components/UserManagement';
 import { AnalyticsPage } from './components/AnalyticsPage';
 import { AttendancePage } from './components/AttendancePage';
@@ -90,6 +92,8 @@ function AppContent() {
         )}
         {currentPage === 'courses' && <CoursesPage onNavigate={handleNavigate} />}
         {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} />}
+        {currentPage === 'manage-institutions' && <ManageInstitutions />}
+        {currentPage === 'batch-years' && <BatchYears />}
         {currentPage === 'grading' && <GradingQueue onNavigate={handleNavigate} />}
         {currentPage === 'users' && <UserManagement onNavigate={handleNavigate} />}
         {currentPage === 'analytics' && <AnalyticsPage onNavigate={handleNavigate} />}

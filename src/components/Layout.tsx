@@ -25,174 +25,229 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
 
   if (!currentUser) return null;
 
-  const getNavItems = () => {
-    const common = [
-      { id: 'dashboard', label: 'Dashboard', icon: Home },
-      { id: 'courses', label: 'Courses', icon: BookOpen },
-    ];
+    const [isInstitutionsOpen, setIsInstitutionsOpen] = React.useState(false);
 
-    if (currentUser.role === 'student') {
-      return [
-        ...common,
-        { id: 'problems', label: 'Problems', icon: FileCode },
-        { id: 'attendance', label: 'Attendance', icon: Calendar },
-        { id: 'messages', label: 'Q&A', icon: MessageSquare },
-        { id: 'leaderboard', label: 'Leaderboard', icon: Award },
+    const getNavItems = () => {
+      const common = [
+        { id: 'dashboard', label: 'Dashboard', icon: Home },
+        { id: 'courses', label: 'Courses', icon: BookOpen },
       ];
-    } else if (currentUser.role === 'faculty') {
-      return [
-        ...common,
-        { id: 'batches', label: 'Batches', icon: Users },
-        { id: 'grading', label: 'Grading Queue', icon: FileCode },
-        { id: 'messages', label: 'Q&A', icon: MessageSquare },
-        { id: 'leaderboard', label: 'Leaderboard', icon: Award },
-      ];
-    } else if (currentUser.role === 'trainer') {
-      return [
-        ...common,
-        { id: 'batches', label: 'Batches', icon: Users },
-        { id: 'grading', label: 'Grading Queue', icon: FileCode },
-        { id: 'messages', label: 'Q&A', icon: MessageSquare },
-        { id: 'leaderboard', label: 'Leaderboard', icon: Award },
-        { id: 'tests', label: 'Tests', icon: FileCode },
-      ];
-    } else {
-      return [
-        ...common,
-        { id: 'users', label: 'Users', icon: Users },
-        { id: 'batches', label: 'Batches', icon: Users },
-        { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-        { id: 'leaderboard', label: 'Leaderboard', icon: Award },
-        { id: 'tests', label: 'Tests', icon: FileCode },
-      ];
-    }
-  };
 
-  const navItems = getNavItems();
+      if (currentUser.role === 'student') {
+        return [
+          ...common,
+          { id: 'problems', label: 'Problems', icon: FileCode },
+          { id: 'attendance', label: 'Attendance', icon: Calendar },
+          { id: 'messages', label: 'Q&A', icon: MessageSquare },
+          { id: 'leaderboard', label: 'Leaderboard', icon: Award },
+        ];
+      } else if (currentUser.role === 'faculty') {
+        return [
+          ...common,
+          { id: 'batches', label: 'Batches', icon: Users },
+          { id: 'grading', label: 'Grading Queue', icon: FileCode },
+          { id: 'messages', label: 'Q&A', icon: MessageSquare },
+          { id: 'leaderboard', label: 'Leaderboard', icon: Award },
+        ];
+      } else if (currentUser.role === 'trainer') {
+        return [
+          ...common,
+          { id: 'batches', label: 'Batches', icon: Users },
+          { id: 'grading', label: 'Grading Queue', icon: FileCode },
+          { id: 'messages', label: 'Q&A', icon: MessageSquare },
+          { id: 'leaderboard', label: 'Leaderboard', icon: Award },
+          { id: 'tests', label: 'Tests', icon: FileCode },
+        ];
+      } else {
+        return [
+          ...common,
+          { id: 'users', label: 'Users', icon: Users },
+          { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+          { id: 'leaderboard', label: 'Leaderboard', icon: Award },
+          { id: 'tests', label: 'Tests', icon: FileCode },
+        ];
+      }
+    };
 
-  return (
-    <div className="min-h-screen bg-neutral-50">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm">
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-3">
-              <Code2 className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
-              <span className="font-bold text-xl">Codify LMS</span>
-              <div 
-                className="px-2 py-1 rounded text-xs capitalize"
-                style={{
-                  backgroundColor: currentUser.role === 'student' 
-                    ? 'rgba(16, 185, 129, 0.1)' 
-                    : currentUser.role === 'faculty'
-                    ? 'rgba(20, 184, 166, 0.1)'
-                    : 'rgba(124, 58, 237, 0.1)',
-                  color: currentUser.role === 'student'
-                    ? 'var(--color-accent)'
-                    : currentUser.role === 'faculty'
-                    ? 'var(--color-secondary)'
-                    : 'var(--color-primary)',
-                }}
-              >
-                {currentUser.role}
+    const navItems = getNavItems();
+
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        {/* Top Navigation */}
+        <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm">
+          <div className="flex items-center justify-between px-6 py-3">
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-3">
+                <Code2 className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
+                <span className="font-bold text-xl">Codify LMS</span>
+                <div 
+                  className="px-2 py-1 rounded text-xs capitalize"
+                  style={{
+                    backgroundColor: currentUser.role === 'student' 
+                      ? 'rgba(16, 185, 129, 0.1)' 
+                      : currentUser.role === 'faculty'
+                      ? 'rgba(20, 184, 166, 0.1)'
+                      : 'rgba(124, 58, 237, 0.1)',
+                    color: currentUser.role === 'student'
+                      ? 'var(--color-accent)'
+                      : currentUser.role === 'faculty'
+                      ? 'var(--color-secondary)'
+                      : 'var(--color-primary)',
+                  }}
+                >
+                  {currentUser.role}
+                </div>
+              </div>
+              
+              <div className="relative w-96">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                <Input
+                  placeholder="Search courses, problems, or users..."
+                  className="pl-10"
+                />
               </div>
             </div>
-            
-            <div className="relative w-96">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
-              <Input
-                placeholder="Search courses, problems, or users..."
-                className="pl-10"
-              />
-            </div>
-          </div>
 
-          <div className="flex items-center gap-4">
-            {/* Profile Dropdown - For All Users */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 px-3 py-2 h-auto hover:bg-transparent">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback style={{ backgroundColor: currentUser.role === 'student' ? '#7C3AED' : 'var(--color-primary)', color: 'white' }}>
-                      {currentUser.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <ChevronDown className="w-4 h-4 text-neutral-600" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-0 rounded-lg shadow-lg border border-neutral-200">
-                <div className="p-1">
-                  <DropdownMenuItem 
-                    onClick={() => {
-                      toast.info('Issue reporting feature coming soon');
-                    }} 
-                    className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50"
-                  >
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                    <span className="text-neutral-700 text-sm">Raise an Issue</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => onNavigate('profile')} 
-                    className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50"
-                  >
-                    <User className="w-4 h-4 text-neutral-600" />
-                    <span className="text-neutral-700 text-sm">View Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => {
-                      logout();
-                      toast.success('Logged out successfully');
-                    }} 
-                    className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50 text-neutral-700"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span className="text-sm">Logout</span>
-                  </DropdownMenuItem>
-                </div>
-                <DropdownMenuSeparator className="m-0" />
-                <div className="px-3 py-3 bg-neutral-100 rounded-b-lg">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
+            <div className="flex items-center gap-4">
+              {/* Profile Dropdown - For All Users */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 px-3 py-2 h-auto hover:bg-transparent">
+                    <Avatar className="w-8 h-8">
                       <AvatarFallback style={{ backgroundColor: currentUser.role === 'student' ? '#7C3AED' : 'var(--color-primary)', color: 'white' }}>
                         {currentUser.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate text-neutral-900">{currentUser.name.toUpperCase()}</div>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-neutral-500" />
+                    <ChevronDown className="w-4 h-4 text-neutral-600" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 p-0 rounded-lg shadow-lg border border-neutral-200">
+                  <div className="p-1">
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        toast.info('Issue reporting feature coming soon');
+                      }} 
+                      className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50"
+                    >
+                      <AlertCircle className="w-4 h-4 text-red-500" />
+                      <span className="text-neutral-700 text-sm">Raise an Issue</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => onNavigate('profile')} 
+                      className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50"
+                    >
+                      <User className="w-4 h-4 text-neutral-600" />
+                      <span className="text-neutral-700 text-sm">View Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        logout();
+                        toast.success('Logged out successfully');
+                      }} 
+                      className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50 text-neutral-700"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span className="text-sm">Logout</span>
+                    </DropdownMenuItem>
                   </div>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuSeparator className="m-0" />
+                  <div className="px-3 py-3 bg-neutral-100 rounded-b-lg">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10">
+                        <AvatarFallback style={{ backgroundColor: currentUser.role === 'student' ? '#7C3AED' : 'var(--color-primary)', color: 'white' }}>
+                          {currentUser.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate text-neutral-900">{currentUser.name.toUpperCase()}</div>
+                      </div>
+                      <ChevronDown className="w-4 h-4 text-neutral-500" />
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 min-h-[calc(100vh-64px)] bg-white border-r border-neutral-200 flex flex-col">
-          <nav className="p-4 space-y-1 flex-1">
-            {navItems.map(item => {
-              const Icon = item.icon;
-              const isActive = currentPage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onNavigate(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'text-white shadow-md'
-                      : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
-                  }`}
-                  style={isActive ? { backgroundColor: 'var(--color-primary)' } : {}}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+        <div className="flex">
+          {/* Sidebar */}
+          <aside className="w-64 min-h-[calc(100vh-64px)] bg-white border-r border-neutral-200 flex flex-col">
+            <nav className="p-4 space-y-1 flex-1">
+              {navItems.map(item => {
+                const Icon = item.icon;
+                const isActive = currentPage === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => onNavigate(item.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                      isActive
+                        ? 'text-white shadow-md'
+                        : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
+                    }`}
+                    style={isActive ? { backgroundColor: 'var(--color-primary)' } : {}}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+
+              {/* Institutions Dropdown for Admin */}
+              {currentUser.role === 'admin' && (
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setIsInstitutionsOpen(!isInstitutionsOpen)}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-neutral-700 hover:bg-neutral-100 uppercase text-xs font-bold tracking-wider mt-4`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Users className="w-4 h-4" />
+                      INSTITUTIONS
+                    </span>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isInstitutionsOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {isInstitutionsOpen && (
+                    <div className="pl-4 space-y-1">
+                      <button
+                        onClick={() => onNavigate('manage-institutions')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          currentPage === 'manage-institutions'
+                            ? 'bg-neutral-100 text-neutral-900 font-medium'
+                            : 'text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        <BookOpen className="w-4 h-4" />
+                        <span className="text-sm">Manage Institutions</span>
+                      </button>
+                      <button
+                        onClick={() => onNavigate('batch-years')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          currentPage === 'batch-years'
+                            ? 'bg-neutral-100 text-neutral-900 font-medium'
+                            : 'text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                        <span className="text-sm">Batch Years</span>
+                      </button>
+                      <button
+                        onClick={() => onNavigate('batches')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          currentPage === 'batches'
+                            ? 'bg-neutral-100 text-neutral-900 font-medium'
+                            : 'text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        <Users className="w-4 h-4" />
+                        <span className="text-sm">Batches</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </nav>
 
           {/* Bottom Profile & Logout Section */}
           <div className="p-4 border-t border-neutral-200 space-y-2">
