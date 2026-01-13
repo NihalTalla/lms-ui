@@ -27,10 +27,10 @@ console.log("2 + 3 =", add(2, 3));`);
 
     try {
       // Capture console.log outputs
-      let logs = [];
+      let logs: string[] = [];
       const originalConsoleLog = console.log;
-      console.log = (...args) => {
-        logs.push(args.map(arg => 
+      console.log = (...args: any[]) => {
+        logs.push(args.map(arg =>
           typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(' '));
       };
@@ -49,7 +49,7 @@ console.log("2 + 3 =", add(2, 3));`);
 
       setOutput(outputText || 'Code executed successfully (no output)');
     } catch (error) {
-      setOutput(`Error: ${error.message}`);
+      setOutput(`Error: ${(error as Error).message}`);
     }
 
     setIsRunning(false);

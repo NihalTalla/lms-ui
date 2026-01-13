@@ -11,7 +11,7 @@ import { CodeEditor } from './components/CodeEditor';
 import { CodePracticeConsole } from './components/CodePracticeConsole';
 import { Leaderboard } from './components/Leaderboard';
 import { Messages } from './components/Messages';
-import { ResumeBuilder } from './components/ResumeBuilder';
+
 import { CoursesPage } from './components/CoursesPage';
 import { GradingQueue } from './components/GradingQueue';
 import { BatchManagement } from './components/BatchManagement';

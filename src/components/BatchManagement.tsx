@@ -9,9 +9,9 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { Switch } from './ui/switch';
-import { 
-  Users, 
-  Calendar, 
+import {
+  Users,
+  Calendar,
   Clock,
   TrendingUp,
   Plus,
@@ -34,7 +34,7 @@ import { CSVBatchDialog } from './CSVBatchDialog';
 
 interface BatchManagementProps {
   onNavigate: (page: string, data?: any) => void;
-  role?: 'admin' | 'faculty' | 'trainer';
+  role?: 'admin' | 'faculty' | 'trainer' | 'student';
 }
 
 export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagementProps) {
@@ -42,7 +42,7 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBatch, setSelectedBatch] = useState<any>(null);
-  
+
   // Dialog states
   const [assignFacultyDialogOpen, setAssignFacultyDialogOpen] = useState(false);
   const [addProblemDialogOpen, setAddProblemDialogOpen] = useState(false);
@@ -421,7 +421,7 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
           <DialogHeader>
             <DialogTitle>Add Problem to Batch</DialogTitle>
           </DialogHeader>
-          
+
           {problemMode === 'select' ? (
             <div className="grid grid-cols-2 gap-4 py-6">
               <button onClick={() => setProblemMode('existing')} className="p-6 border-2 border-dashed rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-center group">
@@ -448,8 +448,8 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
             </div>
           ) : (
             <div className="space-y-4 py-4">
-              <Input placeholder="Problem Title" value={newProblemData.title} onChange={e => setNewProblemData({...newProblemData, title: e.target.value})} />
-              <Textarea placeholder="Description" value={newProblemData.description} onChange={e => setNewProblemData({...newProblemData, description: e.target.value})} />
+              <Input placeholder="Problem Title" value={newProblemData.title} onChange={e => setNewProblemData({ ...newProblemData, title: e.target.value })} />
+              <Textarea placeholder="Description" value={newProblemData.description} onChange={e => setNewProblemData({ ...newProblemData, description: e.target.value })} />
               <div className="flex justify-end gap-2">
                 <Button variant="ghost" onClick={() => setProblemMode('select')}>Back</Button>
                 <Button className="bg-emerald-600 text-white" onClick={handleCreateNewProblem}>Create & Add</Button>

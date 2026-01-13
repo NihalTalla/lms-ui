@@ -89,7 +89,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       options: currentQuestion.options.filter(o => o.trim() !== ''),
       correctAnswer: currentQuestion.correctAnswer,
     };
-    
+
     const updatedTopics = [...newCourse.topics];
     updatedTopics[topicIndex].questions.push(question);
     setNewCourse({ ...newCourse, topics: updatedTopics });
@@ -98,7 +98,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   };
 
   const handleToggleLock = (courseId: string) => {
-    const updated = courseList.map(c => 
+    const updated = courseList.map(c =>
       c.id === courseId ? { ...c, isLocked: !c.isLocked } : c
     );
     setCourseList(updated);
@@ -110,7 +110,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       toast.error('Please fill in required fields (Title, Institution, Batch)');
       return;
     }
-    
+
     const course = {
       id: `course-${Date.now()}`,
       title: newCourse.title,
@@ -125,19 +125,19 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       topics: newCourse.topics,
       isLocked: false,
     };
-    
+
     setCourseList([...courseList, course]);
     setIsCreateDialogOpen(false);
-    setNewCourse({ 
-      title: '', 
-      description: '', 
-      level: 'beginner', 
-      duration: '', 
-      lessons: 0, 
-      tags: '', 
-      institutionId: '', 
-      batchId: '', 
-      topics: [] 
+    setNewCourse({
+      title: '',
+      description: '',
+      level: 'beginner',
+      duration: '',
+      lessons: 0,
+      tags: '',
+      institutionId: '',
+      batchId: '',
+      topics: []
     });
     toast.success('Course created successfully!');
   };
@@ -160,37 +160,37 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
 
   const handleUpdateCourse = () => {
     if (!selectedCourse) return;
-    
-    const updated = courseList.map(c => 
+
+    const updated = courseList.map(c =>
       c.id === selectedCourse.id
         ? {
-            ...c,
-            title: newCourse.title,
-            description: newCourse.description,
-            level: newCourse.level,
-            duration: newCourse.duration,
-            lessons: newCourse.lessons,
-            tags: newCourse.tags.split(',').map(t => t.trim()).filter(t => t),
-            institutionId: newCourse.institutionId,
-            batchId: newCourse.batchId,
-            topics: newCourse.topics,
-          }
+          ...c,
+          title: newCourse.title,
+          description: newCourse.description,
+          level: newCourse.level,
+          duration: newCourse.duration,
+          lessons: newCourse.lessons,
+          tags: newCourse.tags.split(',').map(t => t.trim()).filter(t => t),
+          institutionId: newCourse.institutionId,
+          batchId: newCourse.batchId,
+          topics: newCourse.topics,
+        }
         : c
     );
-    
+
     setCourseList(updated);
     setIsEditDialogOpen(false);
     setSelectedCourse(null);
-    setNewCourse({ 
-      title: '', 
-      description: '', 
-      level: 'beginner', 
-      duration: '', 
-      lessons: 0, 
-      tags: '', 
-      institutionId: '', 
-      batchId: '', 
-      topics: [] 
+    setNewCourse({
+      title: '',
+      description: '',
+      level: 'beginner',
+      duration: '',
+      lessons: 0,
+      tags: '',
+      institutionId: '',
+      batchId: '',
+      topics: []
     });
     toast.success('Course updated successfully!');
   };
@@ -206,7 +206,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       intermediate: 'bg-yellow-100 text-yellow-700 border-yellow-300',
       advanced: 'bg-red-100 text-red-700 border-red-300',
     };
-    
+
     return (
       <Badge variant="outline" className={styles[level as keyof typeof styles]}>
         {level.charAt(0).toUpperCase() + level.slice(1)}
@@ -221,7 +221,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
         <div>
           <h2 className="text-3xl font-bold text-neutral-900">Courses</h2>
           <p className="text-neutral-600 mt-1">
-            {isAdmin 
+            {isAdmin
               ? 'Manage courses and explore available courses'
               : 'Explore and enroll in courses to advance your skills'}
           </p>
@@ -241,198 +241,198 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                   Add a new course to the platform
                 </DialogDescription>
               </DialogHeader>
-                <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="institution">Institution</Label>
-                      <Select value={newCourse.institutionId} onValueChange={(val) => setNewCourse({ ...newCourse, institutionId: val, batchId: '' })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Institution" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {institutions.map(inst => (
-                            <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="batch">Batch</Label>
-                      <Select 
-                        value={newCourse.batchId} 
-                        onValueChange={(val) => setNewCourse({ ...newCourse, batchId: val })}
-                        disabled={!newCourse.institutionId}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Batch" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {batches.filter(b => true).map(batch => (
-                            <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+              <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto pr-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="institution">Institution</Label>
+                    <Select value={newCourse.institutionId} onValueChange={(val) => setNewCourse({ ...newCourse, institutionId: val, batchId: '' })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Institution" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {institutions.map(inst => (
+                          <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+                  <div>
+                    <Label htmlFor="batch">Batch</Label>
+                    <Select
+                      value={newCourse.batchId}
+                      onValueChange={(val) => setNewCourse({ ...newCourse, batchId: val })}
+                      disabled={!newCourse.institutionId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Batch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {batches.filter(b => true).map(batch => (
+                          <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
+                <div>
+                  <Label htmlFor="title">Course Title</Label>
+                  <Input
+                    id="title"
+                    value={newCourse.title}
+                    onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
+                    placeholder="e.g., Advanced System Design"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={newCourse.description}
+                    onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
+                    placeholder="Course description..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="title">Course Title</Label>
+                    <Label htmlFor="level">Level</Label>
+                    <Select value={newCourse.level} onValueChange={(value: any) => setNewCourse({ ...newCourse, level: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="duration">Duration</Label>
                     <Input
-                      id="title"
-                      value={newCourse.title}
-                      onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
-                      placeholder="e.g., Advanced System Design"
+                      id="duration"
+                      value={newCourse.duration}
+                      onChange={(e) => setNewCourse({ ...newCourse, duration: e.target.value })}
+                      placeholder="e.g., 12 weeks"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={newCourse.description}
-                      onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
-                      placeholder="Course description..."
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
+                </div>
+
+                {/* Topics Management */}
+                <div className="border rounded-lg p-4 bg-neutral-50 space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    Course Topics
+                  </h3>
+
+                  <div className="space-y-3">
                     <div>
-                      <Label htmlFor="level">Level</Label>
-                      <Select value={newCourse.level} onValueChange={(value: any) => setNewCourse({ ...newCourse, level: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="beginner">Beginner</SelectItem>
-                          <SelectItem value="intermediate">Intermediate</SelectItem>
-                          <SelectItem value="advanced">Advanced</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="duration">Duration</Label>
+                      <Label>Topic Title</Label>
                       <Input
-                        id="duration"
-                        value={newCourse.duration}
-                        onChange={(e) => setNewCourse({ ...newCourse, duration: e.target.value })}
-                        placeholder="e.g., 12 weeks"
+                        value={currentTopic.title}
+                        onChange={(e) => setCurrentTopic({ ...currentTopic, title: e.target.value })}
+                        placeholder="Introduction to..."
                       />
                     </div>
-                  </div>
-
-                  {/* Topics Management */}
-                  <div className="border rounded-lg p-4 bg-neutral-50 space-y-4">
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" />
-                      Course Topics
-                    </h3>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <Label>Topic Title</Label>
-                        <Input 
-                          value={currentTopic.title}
-                          onChange={(e) => setCurrentTopic({ ...currentTopic, title: e.target.value })}
-                          placeholder="Introduction to..."
-                        />
-                      </div>
-                      <div>
-                        <Label>Topic Content</Label>
-                        <Textarea 
-                          value={currentTopic.content}
-                          onChange={(e) => setCurrentTopic({ ...currentTopic, content: e.target.value })}
-                          placeholder="Content for this topic..."
-                          rows={2}
-                        />
-                      </div>
-                      <Button type="button" variant="outline" size="sm" onClick={handleAddTopic}>
-                        <Plus className="w-4 h-4 mr-2" /> Add Topic
-                      </Button>
+                    <div>
+                      <Label>Topic Content</Label>
+                      <Textarea
+                        value={currentTopic.content}
+                        onChange={(e) => setCurrentTopic({ ...currentTopic, content: e.target.value })}
+                        placeholder="Content for this topic..."
+                        rows={2}
+                      />
                     </div>
-
-                    {newCourse.topics.length > 0 && (
-                      <Accordion type="single" collapsible className="w-full">
-                        {newCourse.topics.map((topic, tIdx) => (
-                          <AccordionItem key={topic.id} value={topic.id}>
-                            <AccordionTrigger className="text-sm py-2">
-                              <div className="flex items-center gap-2">
-                                {topic.isLocked ? (
-                                  <Lock className="w-3 h-3 text-red-500" />
-                                ) : (
-                                  <Unlock className="w-3 h-3 text-green-500" />
-                                )}
-                                {topic.title} ({topic.questions.length} Questions)
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="space-y-4 pt-2">
-                              <div className="flex items-center justify-between bg-neutral-100 p-2 rounded mb-2">
-                                <span className="text-xs font-medium">Topic Status: {topic.isLocked ? 'Locked' : 'Unlocked'}</span>
-                                <Button 
-                                  variant="ghost" 
-                                  size="xs" 
-                                  className="h-6 text-[10px]"
-                                  onClick={() => handleTopicToggleLock(tIdx)}
-                                >
-                                  {topic.isLocked ? 'Unlock Topic' : 'Lock Topic'}
-                                </Button>
-                              </div>
-                              <p className="text-xs text-neutral-600 italic">{topic.content}</p>
-                              
-                              <div className="border-t pt-2 space-y-2">
-                                <Label className="text-xs font-bold">Add Question to Topic</Label>
-                                <Input 
-                                  placeholder="Question" 
-                                  className="text-xs"
-                                  value={currentQuestion.question}
-                                  onChange={(e) => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
-                                />
-                                <div className="grid grid-cols-2 gap-2">
-                                  {currentQuestion.options.map((opt, oIdx) => (
-                                    <Input 
-                                      key={oIdx}
-                                      placeholder={`Option ${oIdx + 1}`}
-                                      className="text-xs h-7"
-                                      value={opt}
-                                      onChange={(e) => {
-                                        const newOpts = [...currentQuestion.options];
-                                        newOpts[oIdx] = e.target.value;
-                                        setCurrentQuestion({ ...currentQuestion, options: newOpts });
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                                <Input 
-                                  placeholder="Correct Answer" 
-                                  className="text-xs h-7"
-                                  value={currentQuestion.correctAnswer}
-                                  onChange={(e) => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })}
-                                />
-                                <Button 
-                                  type="button" 
-                                  variant="secondary" 
-                                  size="sm" 
-                                  className="h-7 text-xs"
-                                  onClick={() => handleAddQuestion(tIdx)}
-                                >
-                                  Add Question
-                                </Button>
-                              </div>
-
-                              {topic.questions.length > 0 && (
-                                <ul className="text-xs space-y-1 pl-4 list-disc text-neutral-500">
-                                  {topic.questions.map((q, qIdx) => (
-                                    <li key={q.id}>{q.question}</li>
-                                  ))}
-                                </ul>
-                              )}
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
-                    )}
+                    <Button type="button" variant="outline" size="sm" onClick={handleAddTopic}>
+                      <Plus className="w-4 h-4 mr-2" /> Add Topic
+                    </Button>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-4 border-t">
+                  {newCourse.topics.length > 0 && (
+                    <Accordion type="single" collapsible className="w-full">
+                      {newCourse.topics.map((topic, tIdx) => (
+                        <AccordionItem key={topic.id} value={topic.id}>
+                          <AccordionTrigger className="text-sm py-2">
+                            <div className="flex items-center gap-2">
+                              {topic.isLocked ? (
+                                <Lock className="w-3 h-3 text-red-500" />
+                              ) : (
+                                <Unlock className="w-3 h-3 text-green-500" />
+                              )}
+                              {topic.title} ({topic.questions.length} Questions)
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="space-y-4 pt-2">
+                            <div className="flex items-center justify-between bg-neutral-100 p-2 rounded mb-2">
+                              <span className="text-xs font-medium">Topic Status: {topic.isLocked ? 'Locked' : 'Unlocked'}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-[10px]"
+                                onClick={() => handleTopicToggleLock(tIdx)}
+                              >
+                                {topic.isLocked ? 'Unlock Topic' : 'Lock Topic'}
+                              </Button>
+                            </div>
+                            <p className="text-xs text-neutral-600 italic">{topic.content}</p>
+
+                            <div className="border-t pt-2 space-y-2">
+                              <Label className="text-xs font-bold">Add Question to Topic</Label>
+                              <Input
+                                placeholder="Question"
+                                className="text-xs"
+                                value={currentQuestion.question}
+                                onChange={(e) => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
+                              />
+                              <div className="grid grid-cols-2 gap-2">
+                                {currentQuestion.options.map((opt, oIdx) => (
+                                  <Input
+                                    key={oIdx}
+                                    placeholder={`Option ${oIdx + 1}`}
+                                    className="text-xs h-7"
+                                    value={opt}
+                                    onChange={(e) => {
+                                      const newOpts = [...currentQuestion.options];
+                                      newOpts[oIdx] = e.target.value;
+                                      setCurrentQuestion({ ...currentQuestion, options: newOpts });
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                              <Input
+                                placeholder="Correct Answer"
+                                className="text-xs h-7"
+                                value={currentQuestion.correctAnswer}
+                                onChange={(e) => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })}
+                              />
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => handleAddQuestion(tIdx)}
+                              >
+                                Add Question
+                              </Button>
+                            </div>
+
+                            {topic.questions.length > 0 && (
+                              <ul className="text-xs space-y-1 pl-4 list-disc text-neutral-500">
+                                {topic.questions.map((q, qIdx) => (
+                                  <li key={q.id}>{q.question}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
                   </Button>
@@ -457,385 +457,385 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
           </CardHeader>
           <CardContent>
             <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Course Title</TableHead>
-                    <TableHead>Institution/Batch</TableHead>
-                    <TableHead>Level</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Enrolled</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {courseList.map((course) => (
-                    <TableRow key={course.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex flex-col">
-                          <span>{course.title}</span>
-                          <span className="text-xs text-neutral-500">{course.topics?.length || 0} Topics</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-xs">
-                          <span className="font-medium">
-                            {institutions.find(i => i.id === course.institutionId)?.name || 'N/A'}
-                          </span>
-                          <span className="text-neutral-500">
-                            {batches.find(b => b.id === course.batchId)?.name || 'N/A'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getLevelBadge(course.level)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4 text-neutral-500" />
-                          {course.duration}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4 text-neutral-500" />
-                          {course.enrolled}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleToggleLock(course.id)}
-                          className={course.isLocked ? "text-red-600" : "text-green-600"}
-                        >
-                          {course.isLocked ? (
-                            <><Lock className="w-4 h-4 mr-1" /> Locked</>
-                          ) : (
-                            <><Unlock className="w-4 h-4 mr-1" /> Unlocked</>
-                          )}
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Course Title</TableHead>
+                  <TableHead>Institution/Batch</TableHead>
+                  <TableHead>Level</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Enrolled</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {courseList.map((course) => (
+                  <TableRow key={course.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span>{course.title}</span>
+                        <span className="text-xs text-neutral-500">{course.topics?.length || 0} Topics</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col text-xs">
+                        <span className="font-medium">
+                          {institutions.find(i => i.id === course.institutionId)?.name || 'N/A'}
+                        </span>
+                        <span className="text-neutral-500">
+                          {batches.find(b => b.id === course.batchId)?.name || 'N/A'}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getLevelBadge(course.level)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4 text-neutral-500" />
+                        {course.duration}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4 text-neutral-500" />
+                        {course.enrolled}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleLock(course.id)}
+                        className={course.isLocked ? "text-red-600" : "text-green-600"}
+                      >
+                        {course.isLocked ? (
+                          <><Lock className="w-4 h-4 mr-1" /> Locked</>
+                        ) : (
+                          <><Unlock className="w-4 h-4 mr-1" /> Unlocked</>
+                        )}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" onClick={() => { setViewCourse(course); setIsViewDialogOpen(true); }}>
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
                         </Button>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" onClick={() => { setViewCourse(course); setIsViewDialogOpen(true); }}>
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditCourse(course)}
-                          >
-                            <Edit className="w-4 h-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteCourse(course.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditCourse(course)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteCourse(course.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </CardContent>
         </Card>
       )}
 
       {/* Edit Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Course</DialogTitle>
-              <DialogDescription>
-                Update course information and curriculum
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4 pr-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-institution">Institution</Label>
-                  <Select value={newCourse.institutionId} onValueChange={(val) => setNewCourse({ ...newCourse, institutionId: val, batchId: '' })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Institution" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {institutions.map(inst => (
-                        <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="edit-batch">Batch</Label>
-                  <Select 
-                    value={newCourse.batchId} 
-                    onValueChange={(val) => setNewCourse({ ...newCourse, batchId: val })}
-                    disabled={!newCourse.institutionId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Batch" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {batches.map(batch => (
-                        <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Course</DialogTitle>
+            <DialogDescription>
+              Update course information and curriculum
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 pr-2">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-title">Course Title</Label>
-                <Input
-                  id="edit-title"
-                  value={newCourse.title}
-                  onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  value={newCourse.description}
-                  onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-level">Level</Label>
-                  <Select value={newCourse.level} onValueChange={(value: any) => setNewCourse({ ...newCourse, level: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="edit-duration">Duration</Label>
-                  <Input
-                    id="edit-duration"
-                    value={newCourse.duration}
-                    onChange={(e) => setNewCourse({ ...newCourse, duration: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Topics Management in Edit */}
-              <div className="border rounded-lg p-4 bg-neutral-50 space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
-                  Course Curriculum
-                </h3>
-                
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 gap-3">
-                    <div>
-                      <Label>New Topic Title</Label>
-                      <Input 
-                        value={currentTopic.title}
-                        onChange={(e) => setCurrentTopic({ ...currentTopic, title: e.target.value })}
-                        placeholder="e.g., Introduction to React Hooks"
-                      />
-                    </div>
-                    <div>
-                      <Label>Topic Content</Label>
-                      <Textarea 
-                        value={currentTopic.content}
-                        onChange={(e) => setCurrentTopic({ ...currentTopic, content: e.target.value })}
-                        placeholder="Brief overview of what will be covered..."
-                        rows={2}
-                      />
-                    </div>
-                    <Button type="button" variant="outline" size="sm" className="w-fit" onClick={handleAddTopic}>
-                      <Plus className="w-4 h-4 mr-2" /> Add Topic
-                    </Button>
-                  </div>
-                </div>
-
-                {newCourse.topics.length > 0 && (
-                  <Accordion type="single" collapsible className="w-full">
-                    {newCourse.topics.map((topic, tIdx) => (
-                      <AccordionItem key={topic.id} value={topic.id}>
-                        <AccordionTrigger className="text-sm py-2">
-                          <div className="flex items-center gap-2">
-                            {topic.isLocked ? (
-                              <Lock className="w-3 h-3 text-red-500" />
-                            ) : (
-                              <Unlock className="w-3 h-3 text-green-500" />
-                            )}
-                            {topic.title} ({topic.questions.length} Qs)
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="space-y-4 pt-2">
-                          <div className="flex items-center justify-between bg-neutral-100 p-2 rounded mb-2">
-                            <span className="text-xs font-medium">Topic Status: {topic.isLocked ? 'Locked' : 'Unlocked'}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="xs" 
-                              className="h-6 text-[10px]"
-                              onClick={() => handleTopicToggleLock(tIdx)}
-                            >
-                              {topic.isLocked ? 'Unlock Topic' : 'Lock Topic'}
-                            </Button>
-                          </div>
-                          <p className="text-xs text-neutral-600 mb-4">{topic.content}</p>
-                          
-                          <div className="border-t pt-4 space-y-3">
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Add Assessment Question</h4>
-                            <div className="space-y-2">
-                              <Input 
-                                placeholder="Enter question..." 
-                                className="text-sm"
-                                value={currentQuestion.question}
-                                onChange={(e) => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
-                              />
-                              <div className="grid grid-cols-2 gap-2">
-                                {currentQuestion.options.map((opt, oIdx) => (
-                                  <Input 
-                                    key={oIdx}
-                                    placeholder={`Option ${oIdx + 1}`}
-                                    className="text-xs h-8"
-                                    value={opt}
-                                    onChange={(e) => {
-                                      const newOpts = [...currentQuestion.options];
-                                      newOpts[oIdx] = e.target.value;
-                                      setCurrentQuestion({ ...currentQuestion, options: newOpts });
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                              <div className="flex gap-2">
-                                <Input 
-                                  placeholder="Correct Answer" 
-                                  className="text-xs h-8 flex-1"
-                                  value={currentQuestion.correctAnswer}
-                                  onChange={(e) => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })}
-                                />
-                                <Button 
-                                  type="button" 
-                                  size="sm" 
-                                  className="h-8 px-4"
-                                  onClick={() => handleAddQuestion(tIdx)}
-                                >
-                                  Add
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-
-                          {topic.questions.length > 0 && (
-                            <div className="mt-4 space-y-2">
-                              <p className="text-[10px] font-bold uppercase text-neutral-400">Current Questions ({topic.questions.length})</p>
-                              <div className="space-y-2">
-                                {topic.questions.map((q, qIdx) => (
-                                  <div key={q.id} className="text-xs p-2 bg-white border rounded flex justify-between items-start">
-                                    <span>{qIdx + 1}. {q.question}</span>
-                                    <Badge variant="secondary" className="text-[9px] h-4">
-                                      Ans: {q.correctAnswer}
-                                    </Badge>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </AccordionContent>
-                      </AccordionItem>
+                <Label htmlFor="edit-institution">Institution</Label>
+                <Select value={newCourse.institutionId} onValueChange={(val) => setNewCourse({ ...newCourse, institutionId: val, batchId: '' })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Institution" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {institutions.map(inst => (
+                      <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
                     ))}
-                  </Accordion>
-                )}
+                  </SelectContent>
+                </Select>
               </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleUpdateCourse} style={{ backgroundColor: 'var(--color-primary)' }}>
-                  Save Changes
-                </Button>
+              <div>
+                <Label htmlFor="edit-batch">Batch</Label>
+                <Select
+                  value={newCourse.batchId}
+                  onValueChange={(val) => setNewCourse({ ...newCourse, batchId: val })}
+                  disabled={!newCourse.institutionId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Batch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {batches.map(batch => (
+                      <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+
+            <div>
+              <Label htmlFor="edit-title">Course Title</Label>
+              <Input
+                id="edit-title"
+                value={newCourse.title}
+                onChange={(e) => setNewCourse({ ...newCourse, title: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={newCourse.description}
+                onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-level">Level</Label>
+                <Select value={newCourse.level} onValueChange={(value: any) => setNewCourse({ ...newCourse, level: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit-duration">Duration</Label>
+                <Input
+                  id="edit-duration"
+                  value={newCourse.duration}
+                  onChange={(e) => setNewCourse({ ...newCourse, duration: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* Topics Management in Edit */}
+            <div className="border rounded-lg p-4 bg-neutral-50 space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Course Curriculum
+              </h3>
+
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <Label>New Topic Title</Label>
+                    <Input
+                      value={currentTopic.title}
+                      onChange={(e) => setCurrentTopic({ ...currentTopic, title: e.target.value })}
+                      placeholder="e.g., Introduction to React Hooks"
+                    />
+                  </div>
+                  <div>
+                    <Label>Topic Content</Label>
+                    <Textarea
+                      value={currentTopic.content}
+                      onChange={(e) => setCurrentTopic({ ...currentTopic, content: e.target.value })}
+                      placeholder="Brief overview of what will be covered..."
+                      rows={2}
+                    />
+                  </div>
+                  <Button type="button" variant="outline" size="sm" className="w-fit" onClick={handleAddTopic}>
+                    <Plus className="w-4 h-4 mr-2" /> Add Topic
+                  </Button>
+                </div>
+              </div>
+
+              {newCourse.topics.length > 0 && (
+                <Accordion type="single" collapsible className="w-full">
+                  {newCourse.topics.map((topic, tIdx) => (
+                    <AccordionItem key={topic.id} value={topic.id}>
+                      <AccordionTrigger className="text-sm py-2">
+                        <div className="flex items-center gap-2">
+                          {topic.isLocked ? (
+                            <Lock className="w-3 h-3 text-red-500" />
+                          ) : (
+                            <Unlock className="w-3 h-3 text-green-500" />
+                          )}
+                          {topic.title} ({topic.questions.length} Qs)
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-4 pt-2">
+                        <div className="flex items-center justify-between bg-neutral-100 p-2 rounded mb-2">
+                          <span className="text-xs font-medium">Topic Status: {topic.isLocked ? 'Locked' : 'Unlocked'}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-[10px]"
+                            onClick={() => handleTopicToggleLock(tIdx)}
+                          >
+                            {topic.isLocked ? 'Unlock Topic' : 'Lock Topic'}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-neutral-600 mb-4">{topic.content}</p>
+
+                        <div className="border-t pt-4 space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Add Assessment Question</h4>
+                          <div className="space-y-2">
+                            <Input
+                              placeholder="Enter question..."
+                              className="text-sm"
+                              value={currentQuestion.question}
+                              onChange={(e) => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              {currentQuestion.options.map((opt, oIdx) => (
+                                <Input
+                                  key={oIdx}
+                                  placeholder={`Option ${oIdx + 1}`}
+                                  className="text-xs h-8"
+                                  value={opt}
+                                  onChange={(e) => {
+                                    const newOpts = [...currentQuestion.options];
+                                    newOpts[oIdx] = e.target.value;
+                                    setCurrentQuestion({ ...currentQuestion, options: newOpts });
+                                  }}
+                                />
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Correct Answer"
+                                className="text-xs h-8 flex-1"
+                                value={currentQuestion.correctAnswer}
+                                onChange={(e) => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })}
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                className="h-8 px-4"
+                                onClick={() => handleAddQuestion(tIdx)}
+                              >
+                                Add
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {topic.questions.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            <p className="text-[10px] font-bold uppercase text-neutral-400">Current Questions ({topic.questions.length})</p>
+                            <div className="space-y-2">
+                              {topic.questions.map((q, qIdx) => (
+                                <div key={q.id} className="text-xs p-2 bg-white border rounded flex justify-between items-start">
+                                  <span>{qIdx + 1}. {q.question}</span>
+                                  <Badge variant="secondary" className="text-[9px] h-4">
+                                    Ans: {q.correctAnswer}
+                                  </Badge>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateCourse} style={{ backgroundColor: 'var(--color-primary)' }}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Enrolled Courses */}
       {!isAdmin && (
-      <div>
-        <h3 className="mb-4">My Courses</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {courses.slice(0, 2).map((course) => (
-            <Card key={course.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <CardTitle>{course.title}</CardTitle>
-                    <CardDescription className="mt-2">{course.description}</CardDescription>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      course.level === 'beginner'
-                        ? 'border-green-300 text-green-700'
-                        : course.level === 'intermediate'
-                        ? 'border-yellow-300 text-yellow-700'
-                        : 'border-red-300 text-red-700'
-                    }
-                  >
-                    {course.level}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-neutral-600">Course Progress</span>
-                    <span>65%</span>
-                  </div>
-                  <Progress value={65} />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 py-3 border-y border-neutral-200">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-sm text-neutral-600 mb-1">
-                      <Clock className="w-4 h-4" />
-                      <span>Duration</span>
+        <div>
+          <h3 className="mb-4">My Courses</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {courses.slice(0, 2).map((course) => (
+              <Card key={course.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <CardTitle>{course.title}</CardTitle>
+                      <CardDescription className="mt-2">{course.description}</CardDescription>
                     </div>
-                    <p className="text-sm">{course.duration}</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-sm text-neutral-600 mb-1">
-                      <BookOpen className="w-4 h-4" />
-                      <span>Lessons</span>
-                    </div>
-                    <p className="text-sm">{course.lessons}</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-sm text-neutral-600 mb-1">
-                      <Users className="w-4 h-4" />
-                      <span>Students</span>
-                    </div>
-                    <p className="text-sm">{course.enrolled}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {course.tags.map((tag) => (
-                    <Badge key={tag} variant="outline">
-                      {tag}
+                    <Badge
+                      variant="outline"
+                      className={
+                        course.level === 'beginner'
+                          ? 'border-green-300 text-green-700'
+                          : course.level === 'intermediate'
+                            ? 'border-yellow-300 text-yellow-700'
+                            : 'border-red-300 text-red-700'
+                      }
+                    >
+                      {course.level}
                     </Badge>
-                  ))}
-                </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-neutral-600">Course Progress</span>
+                      <span>65%</span>
+                    </div>
+                    <Progress value={65} />
+                  </div>
 
-<div className="flex gap-2">
+                  <div className="grid grid-cols-3 gap-4 py-3 border-y border-neutral-200">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-sm text-neutral-600 mb-1">
+                        <Clock className="w-4 h-4" />
+                        <span>Duration</span>
+                      </div>
+                      <p className="text-sm">{course.duration}</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-sm text-neutral-600 mb-1">
+                        <BookOpen className="w-4 h-4" />
+                        <span>Lessons</span>
+                      </div>
+                      <p className="text-sm">{course.lessons}</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-sm text-neutral-600 mb-1">
+                        <Users className="w-4 h-4" />
+                        <span>Students</span>
+                      </div>
+                      <p className="text-sm">{course.enrolled}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {course.tags.map((tag) => (
+                      <Badge key={tag} variant="outline">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
                     <Button className="flex-1" style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => toast.success('Continuing learning...')}>
                       Continue Learning
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -844,100 +844,100 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                       View Details
                     </Button>
                   </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
       )}
 
       {/* Recommended Courses */}
       {!isAdmin && (
-      <div>
-        <h3 className="mb-4">Recommended for You</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            {
-              id: 'rec-1',
-              title: 'Advanced System Design',
-              level: 'advanced',
-              duration: '10 weeks',
-              lessons: 40,
-              enrolled: 180,
-              rating: 4.8,
-              tags: ['System Design', 'Scalability', 'Architecture'],
-            },
-            {
-              id: 'rec-2',
-              title: 'Competitive Programming',
-              level: 'intermediate',
-              duration: '8 weeks',
-              lessons: 32,
-              enrolled: 220,
-              rating: 4.9,
-              tags: ['Algorithms', 'Problem Solving', 'Optimization'],
-            },
-            {
-              id: 'rec-3',
-              title: 'Database Fundamentals',
-              level: 'beginner',
-              duration: '6 weeks',
-              lessons: 24,
-              enrolled: 315,
-              rating: 4.7,
-              tags: ['SQL', 'NoSQL', 'Database Design'],
-            },
-          ].map((course) => (
-            <Card key={course.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <Badge
-                    variant="outline"
-                    className={
-                      course.level === 'beginner'
-                        ? 'border-green-300 text-green-700'
-                        : course.level === 'intermediate'
-                        ? 'border-yellow-300 text-yellow-700'
-                        : 'border-red-300 text-red-700'
-                    }
-                  >
-                    {course.level}
-                  </Badge>
-                  <div className="flex items-center gap-1 text-sm">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span>{course.rating}</span>
-                  </div>
-                </div>
-                <CardTitle className="text-base">{course.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4 text-sm text-neutral-600">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {course.duration}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <BookOpen className="w-3 h-3" />
-                    {course.lessons} lessons
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-1">
-                  {course.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
+        <div>
+          <h3 className="mb-4">Recommended for You</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              {
+                id: 'rec-1',
+                title: 'Advanced System Design',
+                level: 'advanced',
+                duration: '10 weeks',
+                lessons: 40,
+                enrolled: 180,
+                rating: 4.8,
+                tags: ['System Design', 'Scalability', 'Architecture'],
+              },
+              {
+                id: 'rec-2',
+                title: 'Competitive Programming',
+                level: 'intermediate',
+                duration: '8 weeks',
+                lessons: 32,
+                enrolled: 220,
+                rating: 4.9,
+                tags: ['Algorithms', 'Problem Solving', 'Optimization'],
+              },
+              {
+                id: 'rec-3',
+                title: 'Database Fundamentals',
+                level: 'beginner',
+                duration: '6 weeks',
+                lessons: 24,
+                enrolled: 315,
+                rating: 4.7,
+                tags: ['SQL', 'NoSQL', 'Database Design'],
+              },
+            ].map((course) => (
+              <Card key={course.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between mb-2">
+                    <Badge
+                      variant="outline"
+                      className={
+                        course.level === 'beginner'
+                          ? 'border-green-300 text-green-700'
+                          : course.level === 'intermediate'
+                            ? 'border-yellow-300 text-yellow-700'
+                            : 'border-red-300 text-red-700'
+                      }
+                    >
+                      {course.level}
                     </Badge>
-                  ))}
-                </div>
+                    <div className="flex items-center gap-1 text-sm">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span>{course.rating}</span>
+                    </div>
+                  </div>
+                  <CardTitle className="text-base">{course.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-4 text-sm text-neutral-600">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {course.duration}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="w-3 h-3" />
+                      {course.lessons} lessons
+                    </div>
+                  </div>
 
-<Button variant="outline" className="w-full" onClick={() => toast.success(`Enrolled in ${course.title}!`)}>
+                  <div className="flex flex-wrap gap-1">
+                    {course.tags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  <Button variant="outline" className="w-full" onClick={() => toast.success(`Enrolled in ${course.title}!`)}>
                     Enroll Now
                   </Button>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
       )}
       {/* View Course Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
@@ -1000,8 +1000,8 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                                   <p className="font-medium text-sm mb-2">{idx + 1}. {q.question}</p>
                                   <div className="grid grid-cols-2 gap-2">
                                     {q.options.map((opt, oIdx) => (
-                                      <div 
-                                        key={oIdx} 
+                                      <div
+                                        key={oIdx}
                                         className={`text-xs p-2 rounded border ${opt === q.correctAnswer ? 'bg-green-50 border-green-200 text-green-700 font-medium' : 'bg-white border-neutral-100'}`}
                                       >
                                         {opt}
