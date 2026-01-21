@@ -15,12 +15,13 @@ import { Messages } from './components/Messages';
 import { CoursesPage } from './components/CoursesPage';
 import { GradingQueue } from './components/GradingQueue';
 import { BatchManagement } from './components/BatchManagement';
-import { ManageInstitutions } from './components/ManageInstitutions';
-import { BatchYears } from './components/BatchYears';
-import { TrainerInvitation } from './components/TrainerInvitation';
-import { Billing } from './components/Billing';
-import { CodingContest } from './components/CodingContest';
-import { AssessmentsManagement } from './components/AssessmentsManagement';
+// Placeholder components for missing files
+function ManageInstitutions() { return <div className="p-6"><h2 className="text-2xl font-bold">Manage Institutions</h2><p className="text-neutral-600">Coming soon...</p></div> }
+function BatchYears({ onNavigate }: { onNavigate?: (page: string, data?: any) => void }) { return <div className="p-6"><h2 className="text-2xl font-bold">Batch Years</h2><p className="text-neutral-600">Coming soon...</p></div> }
+function TrainerInvitation() { return <div className="p-6"><h2 className="text-2xl font-bold">Trainer Invitation</h2><p className="text-neutral-600">Coming soon...</p></div> }
+function Billing() { return <div className="p-6"><h2 className="text-2xl font-bold">Billing</h2><p className="text-neutral-600">Coming soon...</p></div> }
+function CodingContest() { return <div className="p-6"><h2 className="text-2xl font-bold">Coding Contest</h2><p className="text-neutral-600">Coming soon...</p></div> }
+function AssessmentsManagement() { return <div className="p-6"><h2 className="text-2xl font-bold">Assessments Management</h2><p className="text-neutral-600">Coming soon...</p></div> }
 import { UserManagement } from './components/UserManagement';
 import { AnalyticsPage } from './components/AnalyticsPage';
 import { AttendancePage } from './components/AttendancePage';
