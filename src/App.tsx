@@ -34,12 +34,14 @@ function AppContent() {
   const { currentUser } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
+  const [pageData, setPageData] = useState<any>(null);
 
   // Reset page state when user changes (including logout/login)
   React.useEffect(() => {
     if (currentUser) {
       setCurrentPage('dashboard');
       setSelectedProblem(null);
+      setPageData(null);
     }
   }, [currentUser?.id]); // Reset when user ID changes
 
@@ -48,6 +50,7 @@ function AppContent() {
   }
 
   const handleNavigate = (page: string, data?: any) => {
+    setPageData(data || null);
     if (page === 'problem' && data) {
       setSelectedProblem(data);
       setCurrentPage('editor');
@@ -95,9 +98,9 @@ function AppContent() {
           </div>
         )}
         {currentPage === 'courses' && <CoursesPage onNavigate={handleNavigate} />}
-        {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} />}
+        {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} initialFilters={pageData} />}
         {currentPage === 'manage-institutions' && <ManageInstitutions />}
-        {currentPage === 'batch-years' && <BatchYears />}
+        {currentPage === 'batch-years' && <BatchYears onNavigate={handleNavigate} />}
         {currentPage === 'trainer-invitation' && <TrainerInvitation />}
         {currentPage === 'billing' && <Billing />}
         {currentPage === 'coding-contest' && <CodingContest />}

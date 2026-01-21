@@ -55,9 +55,10 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const [viewCourse, setViewCourse] = useState<any>(null);
 
   const handleTopicToggleLock = (topicIndex: number) => {
-    const updatedTopics = [...newCourse.topics];
-    updatedTopics[topicIndex].isLocked = !updatedTopics[topicIndex].isLocked;
-    setNewCourse({ ...newCourse, topics: updatedTopics });
+    const updatedTopics = newCourse.topics.map((t, i) =>
+      i === topicIndex ? { ...t, isLocked: !t.isLocked } : t
+    );
+    setNewCourse(prev => ({ ...prev, topics: updatedTopics }));
     toast.success(`Topic ${updatedTopics[topicIndex].isLocked ? 'locked' : 'unlocked'}`);
   };
 
@@ -73,7 +74,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       questions: [],
       isLocked: false,
     };
-    setNewCourse({ ...newCourse, topics: [...newCourse.topics, topic] });
+    setNewCourse(prev => ({ ...prev, topics: [...prev.topics, topic] }));
     setCurrentTopic({ title: '', content: '' });
     toast.success('Topic added');
   };
@@ -90,9 +91,10 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       correctAnswer: currentQuestion.correctAnswer,
     };
 
-    const updatedTopics = [...newCourse.topics];
-    updatedTopics[topicIndex].questions.push(question);
-    setNewCourse({ ...newCourse, topics: updatedTopics });
+    const updatedTopics = newCourse.topics.map((t, i) =>
+      i === topicIndex ? { ...t, questions: [...t.questions, question] } : t
+    );
+    setNewCourse(prev => ({ ...prev, topics: updatedTopics }));
     setCurrentQuestion({ question: '', options: ['', '', '', ''], correctAnswer: '' });
     toast.success('Question added to topic');
   };
@@ -234,7 +236,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                 Create Course
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl ml-64 overflow-auto max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle>Create New Course</DialogTitle>
                 <DialogDescription>

@@ -176,163 +176,161 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           </div>
         </header>
 
-        <div className="flex">
-          {/* Sidebar */}
-          <aside className="w-64 min-h-[calc(100vh-64px)] bg-white border-r border-neutral-200 flex flex-col">
-            <nav className="p-4 space-y-1 flex-1">
-              {navItems.map(item => {
-                const Icon = item.icon;
-                const isActive = currentPage === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => onNavigate(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                      isActive
-                        ? 'text-white shadow-md'
-                        : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
-                    }`}
-                    style={isActive ? { backgroundColor: 'var(--color-primary)' } : {}}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
+        {/* Fixed Sidebar */}
+        <aside className="fixed left-0 bg-white border-r border-neutral-200 flex flex-col overflow-hidden z-40" style={{ top: '64px', width: '256px', height: 'calc(100vh - 64px)' }}>
+          <nav className="p-4 space-y-1 flex-1 overflow-y-auto overflow-x-hidden">
+            {navItems.map(item => {
+              const Icon = item.icon;
+              const isActive = currentPage === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigate(item.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'text-white shadow-md'
+                      : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
+                  }`}
+                  style={isActive ? { backgroundColor: 'var(--color-primary)' } : {}}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
 
-              {/* Institutions Dropdown for Admin */}
+            {/* Institutions Dropdown for Admin */}
+            {currentUser.role === 'admin' && (
+              <div className="space-y-1">
+                <button
+                  onClick={() => setIsInstitutionsOpen(!isInstitutionsOpen)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-neutral-700 hover:bg-neutral-100 uppercase text-xs font-bold tracking-wider mt-4`}
+                >
+                  <span className="flex items-center gap-3">
+                    <Users className="w-4 h-4" />
+                    INSTITUTIONS
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isInstitutionsOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                  {isInstitutionsOpen && (
+                    <div className="pl-4 space-y-1">
+                      <button
+                        onClick={() => onNavigate('manage-institutions')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          currentPage === 'manage-institutions'
+                            ? 'bg-neutral-100 text-neutral-900 font-medium'
+                            : 'text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        <BookOpen className="w-4 h-4" />
+                        <span className="text-sm">Manage Institutions</span>
+                      </button>
+                      <button
+                        onClick={() => onNavigate('batch-years')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          currentPage === 'batch-years'
+                            ? 'bg-neutral-100 text-neutral-900 font-medium'
+                            : 'text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                        <span className="text-sm">Batch Years</span>
+                      </button>
+                      <button
+                        onClick={() => onNavigate('batches')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          currentPage === 'batches'
+                            ? 'bg-neutral-100 text-neutral-900 font-medium'
+                            : 'text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        <Users className="w-4 h-4" />
+                        <span className="text-sm">Batches</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Assessments Dropdown for Admin */}
               {currentUser.role === 'admin' && (
                 <div className="space-y-1">
                   <button
-                    onClick={() => setIsInstitutionsOpen(!isInstitutionsOpen)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-neutral-700 hover:bg-neutral-100 uppercase text-xs font-bold tracking-wider mt-4`}
+                    onClick={() => setIsAssessmentsOpen(!isAssessmentsOpen)}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-neutral-700 hover:bg-neutral-100 uppercase text-xs font-bold tracking-wider`}
                   >
                     <span className="flex items-center gap-3">
-                      <Users className="w-4 h-4" />
-                      INSTITUTIONS
+                      <ClipboardList className="w-4 h-4" />
+                      ASSESSMENTS
                     </span>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isInstitutionsOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isAssessmentsOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
-                    {isInstitutionsOpen && (
-                      <div className="pl-4 space-y-1">
-                        <button
-                          onClick={() => onNavigate('manage-institutions')}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                            currentPage === 'manage-institutions'
-                              ? 'bg-neutral-100 text-neutral-900 font-medium'
-                              : 'text-neutral-600 hover:bg-neutral-50'
-                          }`}
-                        >
-                          <BookOpen className="w-4 h-4" />
-                          <span className="text-sm">Manage Institutions</span>
-                        </button>
-                        <button
-                          onClick={() => onNavigate('batch-years')}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                            currentPage === 'batch-years'
-                              ? 'bg-neutral-100 text-neutral-900 font-medium'
-                              : 'text-neutral-600 hover:bg-neutral-50'
-                          }`}
-                        >
-                          <BarChart3 className="w-4 h-4" />
-                          <span className="text-sm">Batch Years</span>
-                        </button>
-                        <button
-                          onClick={() => onNavigate('batches')}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                            currentPage === 'batches'
-                              ? 'bg-neutral-100 text-neutral-900 font-medium'
-                              : 'text-neutral-600 hover:bg-neutral-50'
-                          }`}
-                        >
-                          <Users className="w-4 h-4" />
-                          <span className="text-sm">Batches</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  {isAssessmentsOpen && (
+                    <div className="pl-4 space-y-1">
+                      <button
+                        onClick={() => onNavigate('assessments-management')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          currentPage === 'assessments-management'
+                            ? 'bg-neutral-100 text-neutral-900 font-medium'
+                            : 'text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                        <span className="text-sm">Reports</span>
+                      </button>
+                      <button
+                        onClick={() => onNavigate('assessments-management')}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          currentPage === 'assessments-management'
+                            ? 'bg-neutral-100 text-neutral-900 font-medium'
+                            : 'text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                        <span className="text-sm">Progress</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
-                {/* Assessments Dropdown for Admin */}
-                {currentUser.role === 'admin' && (
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => setIsAssessmentsOpen(!isAssessmentsOpen)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 text-neutral-700 hover:bg-neutral-100 uppercase text-xs font-bold tracking-wider`}
-                    >
-                      <span className="flex items-center gap-3">
-                        <ClipboardList className="w-4 h-4" />
-                        ASSESSMENTS
-                      </span>
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isAssessmentsOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {isAssessmentsOpen && (
-                      <div className="pl-4 space-y-1">
-                        <button
-                          onClick={() => onNavigate('assessments-management')}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                            currentPage === 'assessments-management'
-                              ? 'bg-neutral-100 text-neutral-900 font-medium'
-                              : 'text-neutral-600 hover:bg-neutral-50'
-                          }`}
-                        >
-                          <BarChart3 className="w-4 h-4" />
-                          <span className="text-sm">Reports</span>
-                        </button>
-                        <button
-                          onClick={() => onNavigate('assessments-management')}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                            currentPage === 'assessments-management'
-                              ? 'bg-neutral-100 text-neutral-900 font-medium'
-                              : 'text-neutral-600 hover:bg-neutral-50'
-                          }`}
-                        >
-                          <TrendingUp className="w-4 h-4" />
-                          <span className="text-sm">Progress</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+          </nav>
 
-            </nav>
-
-          {/* Bottom Profile & Logout Section */}
-          <div className="p-4 border-t border-neutral-200 space-y-2">
-            {currentUser.role === 'student' && (
-              <button
-                onClick={() => onNavigate('settings')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  currentPage === 'settings'
-                    ? 'text-white shadow-md'
-                    : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
-                }`}
-                style={currentPage === 'settings' ? { backgroundColor: 'var(--color-primary)' } : {}}
-              >
-                <Settings className="w-5 h-5" />
-                <span className="text-sm font-medium">Settings</span>
-              </button>
-            )}
+        {/* Bottom Profile & Logout Section */}
+        <div className="p-4 border-t border-neutral-200 space-y-2">
+          {currentUser.role === 'student' && (
             <button
-              onClick={() => {
-                logout();
-                toast.success('Logged out successfully');
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 hover:shadow-sm"
+              onClick={() => onNavigate('settings')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                currentPage === 'settings'
+                  ? 'text-white shadow-md'
+                  : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
+              }`}
+              style={currentPage === 'settings' ? { backgroundColor: 'var(--color-primary)' } : {}}
             >
-              <LogOut className="w-5 h-5" />
-              <span className="text-sm font-medium">Logout</span>
+              <Settings className="w-5 h-5" />
+              <span className="text-sm font-medium">Settings</span>
             </button>
-          </div>
-        </aside>
+          )}
+          <button
+            onClick={() => {
+              logout();
+              toast.success('Logged out successfully');
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 hover:shadow-sm"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="text-sm font-medium">Logout</span>
+          </button>
+        </div>
+      </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-8">
+        <main className="overflow-y-auto flex-1 p-8" style={{ marginLeft: '256px' }}>
           {children}
         </main>
-      </div>
     </div>
   );
 }

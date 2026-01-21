@@ -25,7 +25,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   ];
 
   const courseDistribution = [
-    { name: 'DSA', value: 45, color: '#7C3AED' },
+    { name: 'DSA', value: 45, color: 'hsla(262, 83%, 58%, 1.00)' },
     { name: 'Web Dev', value: 38, color: '#14B8A6' },
     { name: 'System Design', value: 28, color: '#10B981' },
     { name: 'Others', value: 20, color: '#F59E0B' },
@@ -72,7 +72,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-neutral-600">Total Users</p>
+                  <p className="text-sm text-neutral-600 ">Total Users</p>
                   <h3 className="mt-1">{totalUsers}</h3>
                   <p className="text-xs text-green-600 mt-1">+{monthlyGrowth}% this month</p>
                 </div>

@@ -35,17 +35,19 @@ import { CSVBatchDialog } from './CSVBatchDialog';
 interface BatchManagementProps {
   onNavigate: (page: string, data?: any) => void;
   role?: 'admin' | 'faculty' | 'trainer' | 'student';
+  initialFilters?: { institutionId?: string; year?: string };
 }
 
-export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagementProps) {
-  const [selectedInstitution, setSelectedInstitution] = useState<string>('');
-  const [selectedYear, setSelectedYear] = useState<string>('');
+export function BatchManagement({ onNavigate, role = 'faculty', initialFilters }: BatchManagementProps) {
+  const [selectedInstitution, setSelectedInstitution] = useState<string>(initialFilters?.institutionId || '');
+  const [selectedYear, setSelectedYear] = useState<string>(initialFilters?.year || '');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBatch, setSelectedBatch] = useState<any>(null);
 
   // Dialog states
   const [assignFacultyDialogOpen, setAssignFacultyDialogOpen] = useState(false);
   const [addProblemDialogOpen, setAddProblemDialogOpen] = useState(false);
+  const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
   const [problemMode, setProblemMode] = useState<'select' | 'existing' | 'create'>('select');
   const [selectedFaculty, setSelectedFaculty] = useState<string[]>([]);
   const [selectedExistingProblem, setSelectedExistingProblem] = useState('');
@@ -347,7 +349,7 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setAssessmentDialogOpen(true)}>
                     <CardContent className="pt-6">
                       <div className="flex items-start gap-4">
                         <div className="p-3 bg-emerald-50 rounded-lg">
@@ -456,6 +458,44 @@ export function BatchManagement({ onNavigate, role = 'faculty' }: BatchManagemen
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={assessmentDialogOpen} onOpenChange={setAssessmentDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Assessment</DialogTitle>
+            <DialogDescription>Create a new assessment with coding problems.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label>Assessment Title</Label>
+              <Input placeholder="e.g. Mid-Term Coding Exam" />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea placeholder="Instructions for students..." />
+            </div>
+
+            <div className="space-y-4 border rounded-lg p-4 bg-neutral-50">
+              <div className="flex justify-between items-center">
+                <h4 className="font-semibold">Questions</h4>
+                <Button size="sm" variant="secondary" onClick={() => setAddProblemDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" /> Add Question from Problems
+                </Button>
+              </div>
+              <div className="text-center py-8 text-neutral-500 text-sm">
+                No questions added yet. Add existing problems or create new ones.
+              </div>
+            </div>
+
+            <Button className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => {
+              toast.success('Assessment created successfully');
+              setAssessmentDialogOpen(false);
+            }}>
+              Create Assessment
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
