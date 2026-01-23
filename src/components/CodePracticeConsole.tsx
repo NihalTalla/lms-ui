@@ -6,7 +6,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Play, RotateCcw, ArrowLeft } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
-export function CodePracticeConsole({ onBack }: { onBack?: () => void }) {
+export function CodePracticeConsole({ onBack, className = "h-screen" }: { onBack?: () => void; className?: string }) {
   const [language, setLanguage] = useState('javascript');
   const [code, setCode] = useState(`// Welcome to the Code Practice Console!
 // Write your JavaScript code here and click Run to execute it.
@@ -74,7 +74,7 @@ console.log("2 + 3 =", add(2, 3));`);
   };
 
   return (
-    <Card className="h-screen flex flex-col">
+    <Card className={`${className} flex flex-col`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

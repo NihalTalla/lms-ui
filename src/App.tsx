@@ -19,8 +19,8 @@ import { ManageInstitutions } from './components/ManageInstitutions';
 import { BatchYears } from './components/BatchYears';
 import { Billing } from './components/Billing';
 import { CodingContest } from './components/CodingContest';
-function TrainerInvitation() { return <div className="p-6"><h2 className="text-2xl font-bold">Trainer Invitation</h2><p className="text-neutral-600">Coming soon...</p></div> }
-function AssessmentsManagement() { return <div className="p-6"><h2 className="text-2xl font-bold">Assessments Management</h2><p className="text-neutral-600">Coming soon...</p></div> }
+import { MyTrainers, SendInvitation } from './components/TrainerInvitation';
+import { AssessmentManagement } from './components/AssessmentManagement';
 import { UserManagement } from './components/UserManagement';
 import { AnalyticsPage } from './components/AnalyticsPage';
 import { AttendancePage } from './components/AttendancePage';
@@ -101,10 +101,11 @@ function AppContent() {
         {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} initialFilters={pageData} />}
         {currentPage === 'manage-institutions' && <ManageInstitutions />}
         {currentPage === 'batch-years' && <BatchYears onNavigate={handleNavigate} />}
-        {currentPage === 'trainer-invitation' && <TrainerInvitation />}
+        {currentPage === 'trainer-invitation' && <MyTrainers onNavigate={handleNavigate} />}
+        {currentPage === 'send-invitation' && <SendInvitation onNavigate={handleNavigate} />}
         {currentPage === 'billing' && <Billing />}
         {currentPage === 'coding-contest' && <CodingContest />}
-        {currentPage === 'assessments-management' && <AssessmentsManagement />}
+        {(currentPage === 'assessments-management' || currentPage === 'assessment') && <AssessmentManagement />}
         {currentPage === 'grading' && <GradingQueue onNavigate={handleNavigate} />}
         {currentPage === 'users' && <UserManagement onNavigate={handleNavigate} />}
         {currentPage === 'analytics' && <AnalyticsPage onNavigate={handleNavigate} />}

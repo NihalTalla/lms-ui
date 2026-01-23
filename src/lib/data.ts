@@ -23,13 +23,20 @@ export interface Topic {
   content: string;
   questions: TopicQuestion[];
   isLocked?: boolean;
+  images?: string[];
+  accessDuration?: string;
+  durationLocked?: boolean;
 }
 
 export interface TopicQuestion {
   id: string;
   question: string;
-  options: string[];
-  correctAnswer: string;
+  options?: string[];
+  correctAnswer?: string;
+  type?: 'multiple_choice' | 'coding';
+  starterCode?: string;
+  expectedOutput?: string;
+  testCases?: { input: string; expectedOutput: string; hidden?: boolean }[];
 }
 
 export interface Course {
@@ -256,7 +263,47 @@ export const courses: Course[] = [
     institutionId: 'inst-1',
     batchId: 'batch-1',
     isLocked: false,
-    topics: [],
+    topics: [
+      {
+        id: 'topic-1-1',
+        title: 'Introduction to Arrays',
+        content: 'Arrays are fundamental data structures that store elements of the same type in contiguous memory locations. In this topic, we will cover array initialization, traversal, and basic operations.',
+        isLocked: false,
+        images: [
+          'https://images.unsplash.com/photo-1516116216624-53e697fedbea?auto=format&fit=crop&q=80&w=400',
+        ],
+        questions: [
+          {
+            id: 'q-1-1-1',
+            question: 'What is the time complexity to access an element in an array by its index?',
+            type: 'multiple_choice',
+            options: ['O(1)', 'O(n)', 'O(log n)', 'O(n^2)'],
+            correctAnswer: 'O(1)'
+          }
+        ]
+      },
+      {
+        id: 'topic-1-2',
+        title: 'Linked Lists Deep Dive',
+        content: 'Linked lists are linear data structures where elements are not stored in contiguous locations. Each element (node) contains a data part and a reference to the next node.',
+        isLocked: true,
+        images: [
+          'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=400',
+        ],
+        questions: [
+          {
+            id: 'q-1-2-1',
+            question: 'Implement a function to reverse a singly linked list.',
+            type: 'coding',
+            starterCode: 'class ListNode {\n  int val;\n  ListNode next;\n  ListNode(int x) { val = x; }\n}\n\nclass Solution {\n  public ListNode reverseList(ListNode head) {\n    // Write your code here\n  }\n}',
+            testCases: [
+              { input: '[1,2,3,4,5]', expectedOutput: '[5,4,3,2,1]', hidden: false },
+              { input: '[]', expectedOutput: '[]', hidden: true }
+            ]
+          }
+        ]
+      }
+    ],
   },
   {
     id: 'course-2',

@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Users, BookOpen, Activity, TrendingUp, UserPlus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Users, BookOpen, Activity, TrendingUp, UserPlus, AlertCircle, CheckCircle2, FolderPlus, FileText, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 
 interface AdminDashboardProps {
   onNavigate: (page: string, data?: any) => void;
@@ -59,6 +60,21 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           </p>
         </div>
         <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <FolderPlus className="w-4 h-4" />
+                Assessment
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onNavigate('assessment')}>
+                <FileText className="w-4 h-4 mr-2" />
+                Assessment Management
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" onClick={() => onNavigate('users')}>
             <UserPlus className="w-4 h-4 mr-2" />
             Add User
