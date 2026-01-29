@@ -101,106 +101,21 @@ export function TopicDetailsPage({
   };
 
   return (
-    <div className="flex h-screen bg-neutral-100">
-      {/* LEFT SIDEBAR */}
-      <div className="w-80 bg-gradient-to-b from-slate-900 via-blue-900 to-slate-950 text-white overflow-y-auto shadow-xl">
-        <div className="p-6 border-b border-blue-800/50">
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            className="text-white hover:bg-white/10 mb-6 w-full justify-start"
-            onClick={onBack}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-
-          {/* Assignment Title */}
-          <h2 className="text-2xl font-bold mb-1">{assignmentTitle}</h2>
-          <p className="text-sm text-blue-200 mb-4">{topics.length} Topics</p>
-
-          {/* Progress */}
-          <div className="mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs text-blue-200 font-semibold">Progress</span>
-              <span className="text-xs text-blue-100 font-bold">{Math.round(totalProgress)}%</span>
-            </div>
-            <Progress value={totalProgress} className="h-2" />
-          </div>
-
-          {/* Total Duration */}
-          <div className="flex items-center gap-2 text-xs text-blue-200">
-            <Clock className="w-3 h-3" />
-            <span>Total: {totalDuration}m</span>
-          </div>
-        </div>
-
-        {/* Topics Section */}
-        <div className="p-6 space-y-4">
-          {/* Section Header */}
-          <div
-            className="flex items-center justify-between cursor-pointer hover:bg-white/5 p-3 rounded-lg transition"
-            onClick={() => toggleSection('topics')}
-          >
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-400" />
-              <span className="font-semibold">Topics</span>
-            </div>
-            <ChevronDown
-              className={`w-4 h-4 transition-transform ${
-                expandedSections.topics ? 'rotate-180' : ''
-              }`}
-            />
-          </div>
-
-          {/* Topic Items */}
-          {expandedSections.topics && (
-            <div className="space-y-2 pl-2">
-              {topics.map((topic) => (
-                <div
-                  key={topic.id}
-                  className={`p-3 rounded-lg cursor-pointer transition group ${
-                    selectedTopicId === topic.id
-                      ? 'bg-orange-500/20 border-l-2 border-orange-400 bg-white/10'
-                      : 'bg-white/10 hover:bg-white/20 border-l-2 border-transparent'
-                  }`}
-                  onClick={() => handleTopicSelect(topic.id)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        {topic.status === 'completed' ? (
-                          <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0" />
-                        ) : (
-                          <div className="w-4 h-4 rounded-full border-2 border-blue-400 flex-shrink-0" />
-                        )}
-                        <p
-                          className={`font-medium text-sm group-hover:text-orange-300 transition ${
-                            selectedTopicId === topic.id
-                              ? 'text-orange-300'
-                              : 'text-white'
-                          }`}
-                        >
-                          {topic.title}
-                        </p>
-                      </div>
-                      <p className="text-xs text-blue-300 ml-6">
-                        {topic.questions} questions • {topic.duration}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* RIGHT CONTENT AREA */}
-      <div className="flex-1 overflow-y-auto bg-white">
-        <div className="p-8 max-w-4xl mx-auto">
+    <div className="flex h-full bg-neutral-100 font-sans text-neutral-900">
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 overflow-y-auto bg-white text-neutral-900">
+        <div className="p-8 w-full text-neutral-900">
           {/* Header */}
           <div className="mb-8">
+            <Button
+              variant="ghost"
+              className="text-neutral-500 hover:text-neutral-900 mb-6 p-0 h-auto font-medium transition-colors"
+              onClick={onBack}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Module
+            </Button>
+
             <div className="flex items-start justify-between mb-6">
               <div>
                 <div className="flex items-center gap-3 mb-2">
@@ -208,11 +123,10 @@ export function TopicDetailsPage({
                     {selectedTopic.title}
                   </h1>
                   <Badge
-                    className={`rounded-full px-3 py-1 ${
-                      selectedTopic.status === 'completed'
+                    className={`rounded-full px-3 py-1 ${selectedTopic.status === 'completed'
                         ? 'bg-green-100 text-green-700'
                         : 'bg-yellow-100 text-yellow-700'
-                    }`}
+                      }`}
                   >
                     {selectedTopic.status === 'completed' ? '✓ Completed' : 'In Progress'}
                   </Badge>
@@ -241,7 +155,7 @@ export function TopicDetailsPage({
                 </div>
 
                 {/* Info Cards */}
-                <div className="grid grid-cols-2 gap-4 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   <Card className="bg-blue-50 border-blue-200">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
@@ -294,7 +208,7 @@ export function TopicDetailsPage({
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex gap-4 justify-end">
+          <div className="flex gap-4 justify-end mb-12">
             <Button
               variant="outline"
               className="border-neutral-300 text-neutral-700 hover:bg-neutral-100"

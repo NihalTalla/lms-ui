@@ -182,7 +182,7 @@ function AppContent() {
       <Layout
         currentPage={currentPage}
         onNavigate={handleNavigate}
-        hideSidebar={['student-module', 'assignment-listing', 'topic-details', 'student-coding', 'coding-challenge-ui'].includes(currentPage)}
+        hideSidebar={['courses', 'course-modules', 'student-module', 'assignment-listing', 'topic-details', 'student-coding', 'coding-challenge-ui'].includes(currentPage)}
       >
         {currentPage === 'dashboard' && (
           <>
