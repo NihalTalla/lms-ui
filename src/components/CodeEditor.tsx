@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { Input } from './ui/input';
 import { 
   Play, 
   Send, 
@@ -19,11 +21,16 @@ import {
   Clock,
   Loader2,
   Info,
-  FileCode
+  FileCode,
+  Save,
+  Download,
+  FolderOpen,
+  Trash2
 } from 'lucide-react';
 import { Problem, Submission, TestCaseResult } from '../lib/data';
 import { toast } from 'sonner';
 import Editor from '@monaco-editor/react';
+import { FileManager, SavedFile } from '../lib/fileManager';
 
 interface CodeEditorProps {
   problem: Problem;
@@ -42,10 +49,20 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
   const [showSidebar, setShowSidebar] = useState(true);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [memory, setMemory] = useState<number | null>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showFilesDialog, setShowFilesDialog] = useState(false);
+  const [fileName, setFileName] = useState(`${problem.title} - Solution`);
+  const [savedFiles, setSavedFiles] = useState<SavedFile[]>([]);
 
   useEffect(() => {
     setCode(problem.starterCode[language] || '');
+    loadSavedFiles();
   }, [language, problem]);
+
+  const loadSavedFiles = () => {
+    const files = FileManager.getFilesByProblem(problem.id);
+    setSavedFiles(files);
+  };
 
   const runCode = async () => {
     setIsRunning(true);
@@ -79,6 +96,47 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
     setIsRunning(false);
     
     toast.success(`Ran ${results.length} test cases`);
+  };
+
+  const saveFile = () => {
+    if (!fileName.trim()) {
+      toast.error('Please enter a file name');
+      return;
+    }
+
+    try {
+      FileManager.saveFile(fileName, code, language, problem.id);
+      toast.success(`Solution saved as "${fileName}"`);
+      setShowSaveDialog(false);
+      loadSavedFiles();
+    } catch (error) {
+      toast.error('Error saving file');
+    }
+  };
+
+  const downloadFile = (file: SavedFile) => {
+    try {
+      FileManager.downloadFile(file);
+      toast.success(`Downloaded ${file.name}`);
+    } catch (error) {
+      toast.error('Error downloading file');
+    }
+  };
+
+  const deleteFile = (id: string, name: string) => {
+    if (FileManager.deleteFile(id)) {
+      toast.success(`File "${name}" deleted`);
+      loadSavedFiles();
+    } else {
+      toast.error('Error deleting file');
+    }
+  };
+
+  const loadFile = (file: SavedFile) => {
+    setCode(file.code);
+    setLanguage(file.language);
+    setShowFilesDialog(false);
+    toast.success(`Loaded "${file.name}"`);
   };
 
   const submitCode = async () => {
@@ -187,6 +245,28 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
             onClick={() => setShowSidebar(!showSidebar)}
           >
             {showSidebar ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </Button>
+
+          <Separator orientation="vertical" className="h-6" />
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSaveDialog(true)}
+            title="Save your solution"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Save
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilesDialog(true)}
+            title="View saved solutions"
+          >
+            <FolderOpen className="w-4 h-4 mr-2" />
+            Files ({savedFiles.length})
           </Button>
 
           <Separator orientation="vertical" className="h-6" />
@@ -504,6 +584,92 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
           </div>
         </div>
       </div>
+
+      {/* Save Solution Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Solution</DialogTitle>
+            <DialogDescription>
+              Save your solution for this problem. You can download or reload it later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              placeholder="Enter file name"
+              value={fileName}
+              onChange={(e) => setFileName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && saveFile()}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveFile}>Save Solution</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Saved Files Dialog */}
+      <Dialog open={showFilesDialog} onOpenChange={setShowFilesDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Your Saved Solutions</DialogTitle>
+            <DialogDescription>
+              Manage solutions for {problem.title}
+            </DialogDescription>
+          </DialogHeader>
+
+          {savedFiles.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-neutral-500">No saved solutions for this problem yet. Save your first solution to get started!</p>
+            </div>
+          ) : (
+            <ScrollArea className="h-96">
+              <div className="space-y-2 pr-4">
+                {savedFiles.map((file) => (
+                  <div key={file.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-neutral-50">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium truncate">{file.name}</h4>
+                      <p className="text-sm text-neutral-500">
+                        {file.language} • {FileManager.formatDate(file.lastModified)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => loadFile(file)}
+                        title="Load this solution"
+                      >
+                        Load
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => downloadFile(file)}
+                        title="Download solution"
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => deleteFile(file.id, file.name)}
+                        title="Delete solution"
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

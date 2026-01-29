@@ -11,7 +11,8 @@ import { CodeEditor } from './components/CodeEditor';
 import { CodePracticeConsole } from './components/CodePracticeConsole';
 import { Leaderboard } from './components/Leaderboard';
 import { Messages } from './components/Messages';
-
+import { ContestNotificationProvider, ContestNotificationPopup } from './components/ContestNotification';
+import { StudentContestDashboard } from './components/StudentContestDashboard';
 import { CoursesPage } from './components/CoursesPage';
 import { GradingQueue } from './components/GradingQueue';
 import { BatchManagement } from './components/BatchManagement';
@@ -27,6 +28,13 @@ import { AttendancePage } from './components/AttendancePage';
 import { StudentSettings } from './components/StudentSettings';
 import { StudentProfile } from './components/StudentProfile';
 import { TestManagement } from './components/TestManagement';
+import { CourseModulesPage } from './components/CourseModulesPage';
+import { TestMonitoring } from './components/TestMonitoring';
+import { StudentModuleView } from './components/StudentModuleView';
+import { StudentCodingChallenge } from './components/StudentCodingChallenge';
+import { AssignmentListingPage } from './components/AssignmentListingPage';
+import { TopicDetailsPage } from './components/TopicDetailsPage';
+import { CodingChallengeUI } from './components/CodingChallengeUI';
 import { Problem } from './lib/data';
 import { Toaster } from './components/ui/sonner';
 
@@ -71,9 +79,111 @@ function AppContent() {
       return <CodePracticeConsole onBack={() => setCurrentPage('dashboard')} />;
     }
 
+    // Assignment Listing Page (no layout)
+    if (currentPage === 'assignment-listing' && pageData) {
+      return (
+        <AssignmentListingPage
+          assignment={pageData.assignment}
+          moduleName={pageData.moduleName}
+          courseName={pageData.courseName}
+          onSelectTopic={(topic) => {
+            handleNavigate('topic-details', {
+              assignment: pageData.assignment,
+              topic: topic,
+              moduleName: pageData.moduleName,
+              courseName: pageData.courseName,
+            });
+          }}
+          onBack={() => handleNavigate('student-module', pageData.previousData)}
+        />
+      );
+    }
+
+    // Topic Details Page (no layout)
+    if (currentPage === 'topic-details' && pageData) {
+      return (
+        <TopicDetailsPage
+          assignmentTitle={pageData.assignment.question}
+          moduleName={pageData.moduleName}
+          courseName={pageData.courseName}
+          selectedTopicId={pageData.topic.id}
+          onSelectTopic={(topicId) => {
+            const updatedData = { ...pageData, topic: { ...pageData.topic, id: topicId } };
+            setPageData(updatedData);
+          }}
+          onStartCoding={() => {
+            handleNavigate('coding-challenge-ui', {
+              topicTitle: pageData.topic.title,
+              difficulty: pageData.topic.difficulty || 'Easy',
+              problemDescription: pageData.topic.content,
+              examples: [
+                {
+                  id: 'ex-1',
+                  input: 'abcabcbb',
+                  output: '3',
+                  explanation: 'The longest substring without repeating characters is "abc".',
+                },
+              ],
+              testCases: [
+                { id: 'tc-1', input: 'abcabcbb', expectedOutput: '3', hidden: false },
+                { id: 'tc-2', input: 'bbbbb', expectedOutput: '1', hidden: false },
+                { id: 'tc-3', input: 'pwwkew', expectedOutput: '3', hidden: true },
+              ],
+            });
+          }}
+          onBack={() => setCurrentPage('assignment-listing')}
+        />
+      );
+    }
+
+    // Student Module View (no layout - has its own sidebar)
+    if (currentPage === 'student-module' && pageData) {
+      return (
+        <StudentModuleView
+          course={pageData.course}
+          selectedModule={pageData.module}
+          onNavigate={(page, data) => {
+            if (page === 'assignment-listing') {
+              handleNavigate('assignment-listing', {
+                assignment: data,
+                moduleName: pageData.module.title,
+                courseName: pageData.course.title,
+                previousData: pageData,
+              });
+            } else {
+              handleNavigate(page, data);
+            }
+          }}
+          onBack={() => handleNavigate('course-modules', pageData.course)}
+        />
+      );
+    }
+
+    // Full-Screen Coding Challenge (no layout)
+    if (currentPage === 'coding-challenge-ui' && pageData) {
+      return (
+        <CodingChallengeUI
+          topicTitle={pageData.topicTitle}
+          difficulty={pageData.difficulty}
+          problemDescription={pageData.problemDescription}
+          examples={pageData.examples}
+          testCases={pageData.testCases}
+          onSubmit={(code, language) => {
+            console.log('Code submitted:', { code, language });
+            handleNavigate('topic-details', { ...pageData });
+          }}
+          onBack={() => handleNavigate('topic-details', { ...pageData })}
+        />
+      );
+    }
+
     // All other views use Layout
     return (
-      <Layout currentPage={currentPage} onNavigate={handleNavigate}>
+      <Layout
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        hideSidebar={['student-module', 'assignment-listing', 'topic-details', 'student-coding', 'coding-challenge-ui'].includes(currentPage)}
+      >
         {currentPage === 'dashboard' && (
           <>
             {currentUser.role === 'student' && <StudentDashboard onNavigate={handleNavigate} />}
@@ -104,14 +214,48 @@ function AppContent() {
         {currentPage === 'trainer-invitation' && <MyTrainers onNavigate={handleNavigate} />}
         {currentPage === 'send-invitation' && <SendInvitation onNavigate={handleNavigate} />}
         {currentPage === 'billing' && <Billing />}
-        {currentPage === 'coding-contest' && <CodingContest />}
+        {currentPage === 'coding-contest' && currentUser.role === 'admin' && <CodingContest />}
+        {currentPage === 'contests' && currentUser.role === 'student' && <StudentContestDashboard onNavigate={handleNavigate} />}
         {(currentPage === 'assessments-management' || currentPage === 'assessment') && <AssessmentManagement />}
         {currentPage === 'grading' && <GradingQueue onNavigate={handleNavigate} />}
         {currentPage === 'users' && <UserManagement onNavigate={handleNavigate} />}
         {currentPage === 'analytics' && <AnalyticsPage onNavigate={handleNavigate} />}
         {currentPage === 'attendance' && <AttendancePage />}
         {currentPage === 'settings' && currentUser.role === 'student' && <StudentSettings onNavigate={handleNavigate} />}
-        {currentPage === 'tests' && (currentUser.role === 'admin' || currentUser.role === 'trainer') && <TestManagement />}
+        {currentPage === 'tests' && (currentUser.role === 'admin' || currentUser.role === 'trainer') && <TestManagement onNavigate={handleNavigate} />}
+        {currentPage === 'course-modules' && pageData && currentUser.role === 'student' && (
+          <CourseModulesPage
+            course={pageData}
+            onNavigate={handleNavigate}
+            userRole={currentUser.role as 'faculty' | 'trainer' | 'student'}
+            canLock={false}
+          />
+        )}
+        {currentPage === 'course-modules' && pageData && (currentUser.role === 'faculty' || currentUser.role === 'trainer') && (
+          <CourseModulesPage
+            course={pageData}
+            onNavigate={handleNavigate}
+            userRole={currentUser.role as 'faculty' | 'trainer' | 'student'}
+            canLock={currentUser.role === 'faculty' || currentUser.role === 'trainer'}
+          />
+        )}
+        {currentPage === 'student-coding' && pageData && (
+          <StudentCodingChallenge
+            challenge={pageData.challenge}
+            module={pageData.module}
+            course={pageData.course}
+            onNavigate={handleNavigate}
+            onBack={() => setCurrentPage('student-module')}
+          />
+        )}
+        {currentPage === 'test-monitoring' && pageData && (
+          <TestMonitoring
+            testName={pageData.testName}
+            batch={pageData.batch}
+            onNavigate={handleNavigate}
+            userRole={currentUser.role as 'faculty' | 'trainer'}
+          />
+        )}
       </Layout>
     );
   };
@@ -119,6 +263,7 @@ function AppContent() {
   return (
     <>
       {renderContent()}
+      <ContestNotificationPopup />
       <Toaster richColors position="top-right" />
     </>
   );
@@ -127,7 +272,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ContestNotificationProvider>
+        <AppContent />
+      </ContestNotificationProvider>
     </AuthProvider>
   );
 }

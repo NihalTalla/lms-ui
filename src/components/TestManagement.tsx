@@ -41,7 +41,11 @@ interface Test {
   flagged: number;
 }
 
-export function TestManagement() {
+interface TestManagementProps {
+  onNavigate?: (page: string, data?: any) => void;
+}
+
+export function TestManagement({ onNavigate }: TestManagementProps) {
   const { currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
   const isTrainer = currentUser?.role === 'trainer';
@@ -196,8 +200,11 @@ export function TestManagement() {
   };
 
   const handleMonitorTest = (test: Test) => {
-    toast.info(`Opening monitoring dashboard for ${test.title}`);
-    // In a real app, this would navigate to a monitoring page
+    if (onNavigate) {
+      onNavigate('test-monitoring', { testName: test.title, batch: test.batchName });
+    } else {
+      toast.info(`Opening monitoring dashboard for ${test.title}`);
+    }
   };
 
   const handleDeleteTest = (testId: string) => {

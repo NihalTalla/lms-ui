@@ -10,11 +10,13 @@ import { Trophy, Plus, Clock, Users, Code, Trash2, Eye, ArrowRight, ArrowLeft, S
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import { useContestNotification } from './ContestNotification';
 
 interface Question { id: string; title: string; difficulty: 'easy' | 'medium' | 'hard'; topic: string; points: number; }
 interface Contest { id: string; name: string; description: string; totalQuestions: number; startTime: string; endTime: string; status: 'draft' | 'scheduled' | 'active' | 'completed'; participants: number; questions: Question[]; }
 
 export function CodingContest() {
+    const { addNotification } = useContestNotification();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -49,7 +51,39 @@ export function CodingContest() {
 
     const handleNextStep = () => { if (!newContest.name || !newContest.startTime || !newContest.endTime) { toast.error('Fill required fields'); return; } if (new Date(newContest.startTime) >= new Date(newContest.endTime)) { toast.error('End time must be after start'); return; } setCurrentStep(2); };
 
-    const handleCreateContest = () => { if (newContest.selectedQuestions.length === 0) { toast.error('Add at least one question'); return; } const selectedQs = existingQuestions.filter(q => newContest.selectedQuestions.includes(q.id)); const contest: Contest = { id: String(contests.length + 1), name: newContest.name, description: newContest.description, totalQuestions: selectedQs.length, startTime: newContest.startTime, endTime: newContest.endTime, status: 'draft', participants: 0, questions: selectedQs }; setContests([contest, ...contests]); toast.success('Contest created'); setShowCreateDialog(false); resetForm(); };
+    const handleCreateContest = () => { 
+        if (newContest.selectedQuestions.length === 0) { 
+            toast.error('Add at least one question'); 
+            return; 
+        } 
+        const selectedQs = existingQuestions.filter(q => newContest.selectedQuestions.includes(q.id)); 
+        const contest: Contest = { 
+            id: String(contests.length + 1), 
+            name: newContest.name, 
+            description: newContest.description, 
+            totalQuestions: selectedQs.length, 
+            startTime: newContest.startTime, 
+            endTime: newContest.endTime, 
+            status: 'draft', 
+            participants: 0, 
+            questions: selectedQs 
+        }; 
+        setContests([contest, ...contests]); 
+        
+        // Trigger notification to all students
+        addNotification({
+            id: contest.id,
+            title: `New Contest: ${contest.name}`,
+            message: contest.description || 'A new coding contest has been created!',
+            type: 'contest_created',
+            timestamp: new Date(),
+            read: false
+        });
+        
+        toast.success('Contest created and students notified!'); 
+        setShowCreateDialog(false); 
+        resetForm(); 
+    };
 
     const handleAddNewQuestion = () => { if (!newQuestion.title || !newQuestion.topic) { toast.error('Fill title and topic'); return; } const q: Question = { id: `new-${Date.now()}`, title: newQuestion.title, difficulty: newQuestion.difficulty, topic: newQuestion.topic, points: newQuestion.points }; existingQuestions.push(q); setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] })); toast.success('Question added'); setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100 }); setQuestionMode('fetch'); };
 

@@ -18,9 +18,10 @@ interface LayoutProps {
   children: React.ReactNode;
   currentPage: string;
   onNavigate: (page: string) => void;
+  hideSidebar?: boolean;
 }
 
-export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
+export function Layout({ children, currentPage, onNavigate, hideSidebar = false }: LayoutProps) {
   const { currentUser, logout } = useAuth();
 
     if (!currentUser) return null;
@@ -39,6 +40,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         return [
           ...common,
           { id: 'problems', label: 'Problems', icon: FileCode },
+          { id: 'contests', label: 'Contests', icon: Trophy },
           { id: 'attendance', label: 'Attendance', icon: Calendar },
           { id: 'messages', label: 'Q&A', icon: MessageSquare },
           { id: 'leaderboard', label: 'Leaderboard', icon: Award },
@@ -47,7 +49,6 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         return [
           ...common,
           { id: 'batches', label: 'Batches', icon: Users },
-          { id: 'grading', label: 'Grading Queue', icon: FileCode },
           { id: 'messages', label: 'Q&A', icon: MessageSquare },
           { id: 'leaderboard', label: 'Leaderboard', icon: Award },
         ];
@@ -55,7 +56,6 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         return [
           ...common,
           { id: 'batches', label: 'Batches', icon: Users },
-          { id: 'grading', label: 'Grading Queue', icon: FileCode },
           { id: 'messages', label: 'Q&A', icon: MessageSquare },
           { id: 'leaderboard', label: 'Leaderboard', icon: Award },
           { id: 'tests', label: 'Tests', icon: FileCode },
@@ -78,9 +78,9 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
     const navItems = getNavItems();
 
     return (
-      <div className="min-h-screen bg-neutral-50">
+      <div className="flex flex-col h-screen w-screen bg-neutral-50 overflow-hidden">
         {/* Top Navigation */}
-        <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm">
+        <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm flex-shrink-0">
           <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-3">
@@ -177,7 +177,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         </header>
 
         {/* Fixed Sidebar */}
-        <aside className="fixed left-0 bg-white border-r border-neutral-200 flex flex-col overflow-hidden z-40" style={{ top: '64px', width: '256px', height: 'calc(100vh - 64px)' }}>
+        <aside className={`fixed left-0 bg-white border-r border-neutral-200 flex flex-col overflow-hidden z-40 transition-all duration-200 ${hideSidebar ? 'w-0' : 'w-64'}`} style={{ top: '64px', height: 'calc(100vh - 64px)' }}>
           <nav className="p-4 space-y-1 flex-1 overflow-y-auto overflow-x-hidden">
             {navItems.map(item => {
               const Icon = item.icon;
@@ -328,7 +328,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
       </aside>
 
         {/* Main Content */}
-        <main className="overflow-y-auto flex-1 p-8" style={{ marginLeft: '256px' }}>
+        <main className="flex-1 overflow-hidden transition-all duration-200" style={{ marginLeft: hideSidebar ? '0' : '256px' }}>
           {children}
         </main>
     </div>

@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, BookOpen } from 'lucide-react';
 import { batches, courses } from '../lib/data';
 import { toast } from 'sonner';
 
@@ -92,9 +92,6 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
                 <FileCode className="w-6 h-6" style={{ color: 'var(--color-warning)' }} />
               </div>
             </div>
-            <Button variant="link" className="p-0 h-auto mt-2 text-sm" onClick={() => onNavigate('grading')}>
-              View Queue →
-            </Button>
           </CardContent>
         </Card>
 
@@ -116,6 +113,70 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
         </Card>
       </div>
 
+      {/* Courses Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>My Courses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {courses.slice(0, 3).map((course) => (
+              <div
+                key={course.id}
+                className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all cursor-pointer"
+                onClick={() => onNavigate('course-modules', course)}
+              >
+                <h4 className="font-semibold mb-1">{course.title}</h4>
+                <p className="text-xs text-neutral-600 mb-3 line-clamp-2">{course.description}</p>
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className="text-xs capitalize">{course.level}</Badge>
+                  <Button size="sm" variant="ghost" className="h-auto p-0">
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Active Tests for Monitoring */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Tests - Student Monitoring</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div
+              className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 cursor-pointer transition"
+              onClick={() => onNavigate('test-monitoring', { testName: 'DSA Midterm', batch: 'DSA Batch - Fall 2025' })}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-semibold">DSA Midterm</h4>
+                  <p className="text-sm text-neutral-600">DSA Batch - Fall 2025</p>
+                </div>
+                <Badge className="bg-green-100 text-green-700">12 active</Badge>
+              </div>
+              <p className="text-xs text-neutral-500 mt-2">Monitor camera, mic, and code activity in real-time</p>
+            </div>
+            <div
+              className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 cursor-pointer transition"
+              onClick={() => onNavigate('test-monitoring', { testName: 'Algorithm Quiz', batch: 'Web Dev Batch - Fall 2025' })}
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-semibold">Algorithm Quiz</h4>
+                  <p className="text-sm text-neutral-600">Web Dev Batch - Fall 2025</p>
+                </div>
+                <Badge className="bg-orange-100 text-orange-700">8 active</Badge>
+              </div>
+              <p className="text-xs text-neutral-500 mt-2">Monitor camera, mic, and code activity in real-time</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
@@ -124,9 +185,6 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Recent Submissions</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => onNavigate('grading')}>
-                  View All
-                </Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -160,10 +218,6 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
                           Graded
                         </Badge>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => {
-                          toast.success(`Reviewing ${submission.student}'s submission`);
-                          onNavigate('grading');
-                        }}>Review</Button>
                     </div>
                   </div>
                 ))}
