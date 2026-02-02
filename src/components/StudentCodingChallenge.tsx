@@ -125,105 +125,154 @@ export function StudentCodingChallenge({
   };
 
   return (
-    <div className="h-full w-full flex flex-col bg-neutral-50">
-      {/* Header with Back button and Score */}
-      <div className="px-6 py-4 bg-white border-b border-neutral-200 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          className="text-neutral-700 hover:bg-neutral-100"
-          onClick={onBack}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Module
-        </Button>
-        {lastScore !== null && (
-          <div className="text-sm font-semibold text-neutral-900">
-            Score: <span style={{ color: 'var(--color-accent)' }}>{lastScore}/100</span>
-          </div>
-        )}
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-hidden flex gap-0">
-        {/* LEFT COLUMN - Problem Description (fixed width, scrollable) */}
-        <div className="w-96 bg-white border-r border-neutral-200 overflow-y-auto">
-          <div className="p-6 space-y-6">
-            {/* Title and Difficulty */}
-            <div>
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-neutral-900">
-                  {challenge?.question || challenge?.title || 'Assignment'}
-                </h1>
-                <Badge className={`${getDifficultyColor()} rounded-full px-3 py-1 whitespace-nowrap`}>
-                  {challenge?.difficulty || 'Assignment'}
-                </Badge>
-              </div>
-            </div>
-
-            {/* Problem Statement */}
-            <div>
-              <h3 className="font-semibold text-neutral-900 mb-3">Problem Statement</h3>
-              <p className="text-neutral-700 leading-relaxed text-sm whitespace-pre-wrap">
-                {challenge?.question || challenge?.description || 'No problem statement provided.'}
-              </p>
-            </div>
-
-            {/* Examples / Sample Tests */}
-            {testCases.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="font-semibold text-neutral-900">Sample Input & Output</h3>
-                {testCases.filter((tc) => !tc.hidden).map((tc, idx) => (
-                  <div key={tc.id || idx} className="border border-neutral-200 rounded-lg p-4 bg-neutral-50">
-                    <h4 className="font-semibold text-neutral-900 mb-2 text-sm">Example {idx + 1}</h4>
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-neutral-600">Input:</span>
-                        <div className="font-mono text-neutral-900 mt-1">{tc.input}</div>
-                      </div>
-                      <div className="border-t border-neutral-200 pt-2">
-                        <span className="text-neutral-600">Output:</span>
-                        <div className="font-mono text-green-700 font-semibold mt-1">{tc.expectedOutput}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+    <div className="h-screen w-full flex flex-col bg-white overflow-hidden">
+      {/* 🔴 2. Header alignment is fixed */}
+      <header className="px-6 py-4 border-b border-neutral-200 flex items-center justify-between bg-white z-10 shrink-0">
+        <div className="flex items-center gap-6">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors text-sm font-medium"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+          
+          <div className="h-4 w-px bg-neutral-200" />
+          
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-neutral-900 tracking-tight">
+              {challenge?.question || challenge?.title || 'Assignment'}
+            </h1>
+            {/* 🔴 8. Difficulty badge in header */}
+            <Badge className={`${getDifficultyColor()} rounded-full px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider`}>
+              {challenge?.difficulty || 'Easy'}
+            </Badge>
           </div>
         </div>
 
-        {/* RIGHT COLUMN - Editor and Test Cases (flex column) */}
-        <div className="flex-1 flex flex-col bg-neutral-50 overflow-hidden">
-          {/* Code Editor */}
-          <div className="flex-1 flex flex-col bg-white m-4 rounded-lg border border-neutral-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="w-32 h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="java">Java</SelectItem>
-                  <SelectItem value="python">Python</SelectItem>
-                  <SelectItem value="cpp">C++</SelectItem>
-                  <SelectItem value="js">JavaScript</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="ghost" className="text-neutral-600 hover:bg-neutral-100">
-                  <RotateCcw className="w-4 h-4" />
-                </Button>
-                <Button size="sm" variant="ghost" className="text-neutral-600 hover:bg-neutral-100">
-                  <Sun className="w-4 h-4" />
-                </Button>
-                <Button size="sm" variant="ghost" className="text-neutral-600 hover:bg-neutral-100">
-                  <Maximize2 className="w-4 h-4" />
-                </Button>
-              </div>
+        <div className="flex items-center gap-6">
+          {lastScore !== null && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-50 rounded-lg border border-neutral-100">
+              <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Score:</span>
+              <span className="text-sm font-bold text-neutral-900">{lastScore}/100</span>
             </div>
-            <div className="flex-1 flex overflow-hidden relative">
-              <div className="bg-neutral-100 text-neutral-500 text-xs font-mono py-4 px-2 select-none overflow-hidden">
+          )}
+          
+          <div className="flex items-center gap-3">
+            <Button variant="outline" className="h-9 px-4 text-xs font-bold border-neutral-200 text-neutral-600">
+              View Comments
+            </Button>
+            <Button
+              className="h-9 px-6 text-xs font-bold bg-neutral-900 text-white hover:bg-black rounded-lg"
+              onClick={handleSubmit}
+            >
+              Submit
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* 🔴 1. Proper 2-panel structure (Problem vs Code) */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* LEFT PANEL - Problem Panel */}
+        {/* 🔴 7. Independent scrolling */}
+        <div className="flex-1 overflow-y-auto border-r border-neutral-200 bg-white">
+          {/* 🔴 3. Problem content width and padding */}
+          <div className="max-w-3xl mx-auto p-10 space-y-10">
+            
+            <div className="space-y-4">
+              <h2 className="text-3xl font-bold text-neutral-900 tracking-tight">
+                {challenge?.title || "Series – Level 1: 2,4,8,14,22,...,n"}
+              </h2>
+              <p className="text-lg font-bold text-neutral-800">
+                Write a program to print the following series of numbers:
+              </p>
+            </div>
+
+            {/* 🔴 4. Visual separation for sections */}
+            <Card className="bg-neutral-50 border-neutral-100 shadow-sm overflow-hidden">
+              <CardContent className="p-8 flex items-center justify-center">
+                <div className="text-2xl font-mono font-medium text-neutral-800 tracking-widest">
+                  Series: 2, 4, 8, 14, 22, ..., n
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4 text-neutral-600 leading-relaxed text-base">
+              <p>The program should print the numbers that are less than a certain number. The maximum number should be taken as a variable input.</p>
+              <p className="text-red-600 font-bold">Refer to the sample inputs and outputs to understand the problem better. Do not delete the main method.</p>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                <FileCode className="w-4 h-4" />
+                Note:
+              </h3>
+              <Card className="bg-white border-neutral-100 shadow-none italic text-neutral-600 p-6 leading-relaxed">
+                The function should accept 'n' as a parameter and return a string containing the series of numbers up to 'n' without including any number greater than 'n'.
+              </Card>
+            </div>
+
+            {/* 🔴 4. Examples inside separate containers */}
+            {testCases.filter(tc => !tc.hidden).map((tc, idx) => (
+              <div key={tc.id || idx} className="space-y-4">
+                <h3 className="text-sm font-black text-neutral-400 uppercase tracking-widest">Example {idx + 1}</h3>
+                <Card className="bg-white border-neutral-100 shadow-none overflow-hidden">
+                  <div className="p-6 space-y-4 font-mono text-sm">
+                    <div className="flex gap-4">
+                      <span className="text-neutral-400 w-16">Input:</span>
+                      <span className="text-neutral-900 font-bold">n = {tc.input}</span>
+                    </div>
+                    <div className="h-px bg-neutral-50" />
+                    <div className="flex gap-4">
+                      <span className="text-neutral-400 w-16">Output {idx + 1}:</span>
+                      <span className="text-neutral-800">{tc.expectedOutput}</span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 🔴 10. Visual grouping (Core issue fixed by using clear modules) */}
+        
+        {/* RIGHT PANEL - Code Editor Panel */}
+        <div className="flex-1 flex flex-col bg-[#F9FAFB]">
+          
+          {/* 🔴 5. Code panel hierarchy: 1. Editor Header */}
+          <div className="px-4 py-3 flex items-center justify-between shrink-0">
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger className="w-32 h-9 bg-white border-neutral-200 font-bold text-xs uppercase tracking-wider">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="java">Java</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="cpp">C++</SelectItem>
+                <SelectItem value="js">JavaScript</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-2">
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-neutral-400 hover:text-neutral-900">
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-neutral-400 hover:text-neutral-900">
+                <Sun className="w-4 h-4" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-neutral-400 hover:text-neutral-900">
+                <Maximize2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* 🔴 5. Code panel hierarchy: 2. Editor Area */}
+          <div className="flex-1 flex overflow-hidden p-4 pt-0">
+            <div className="flex-1 flex rounded-xl border border-neutral-200 overflow-hidden shadow-sm bg-white relative">
+              <div className="bg-neutral-50 text-neutral-400 text-[10px] font-mono py-4 px-3 select-none border-r border-neutral-100 flex flex-col text-right">
                 {code.split('\n').map((_, i) => (
-                  <div key={i} className="h-6 leading-6">
+                  <div key={i} className="h-6 leading-6 min-w-[20px]">
                     {i + 1}
                   </div>
                 ))}
@@ -231,50 +280,72 @@ export function StudentCodingChallenge({
               <textarea
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="flex-1 font-mono text-sm bg-neutral-950 text-green-400 resize-none focus:outline-none focus:ring-0 border-0 p-4"
+                className="flex-1 font-mono text-sm bg-white text-neutral-800 resize-none focus:outline-none p-4 leading-6"
                 spellCheck="false"
               />
             </div>
           </div>
 
-          {/* Test Cases Section */}
-          <div className="h-48 bg-white m-4 mt-0 rounded-lg border border-neutral-200 overflow-hidden flex flex-col">
-            <div className="px-4 py-3 border-b border-neutral-200">
-              <h3 className="font-semibold text-neutral-900 text-sm">Test Cases</h3>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {testCases.map((tc, idx) => (
-                <div key={tc.id || idx} className="flex items-center justify-between p-3 rounded border border-neutral-200 bg-neutral-50 text-sm">
-                  <div className="flex-1">
-                    <div className="font-medium">Test {idx + 1} {tc.hidden ? '🔒' : ''}</div>
-                    <div className="text-xs text-neutral-600">Input: {tc.input}</div>
-                  </div>
-                  <div className={`font-semibold ${testResults[idx]?.passed ? 'text-green-600' : testResults[idx] ? 'text-red-600' : 'text-neutral-500'}`}>
-                    {testResults[idx] ? (testResults[idx].passed ? '✓ Pass' : '✗ Fail') : '—'}
+          {/* 🔴 6. Testcase and Run section (boxed section under editor) */}
+          <div className="p-4 pt-0 shrink-0">
+            <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="px-4 py-2 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
+                <div className="flex items-center gap-4">
+                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Testcases</span>
+                  <div className="flex items-center gap-1.5">
+                    {testCases.map((tc, idx) => (
+                      <button
+                        key={tc.id || idx}
+                        onClick={() => setActiveTab(idx)}
+                        className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${activeTab === idx 
+                          ? 'bg-neutral-900 text-white shadow-md' 
+                          : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}
+                      >
+                        Case {idx + 1}
+                      </button>
+                    ))}
+                    <button className="w-6 h-6 flex items-center justify-center rounded-md bg-neutral-100 text-neutral-500 hover:bg-neutral-200 transition-colors">
+                      <span className="text-sm font-bold">+</span>
+                    </button>
                   </div>
                 </div>
-              ))}
+                
+                {/* 🔴 6. Run button aligned right */}
+                <Button
+                  className="h-8 px-5 text-[10px] font-black uppercase tracking-wider bg-neutral-900 text-white hover:bg-black rounded-lg flex items-center gap-2"
+                  onClick={handleRun}
+                >
+                  <Play className="w-3 h-3 fill-current" />
+                  Run
+                </Button>
+              </div>
+
+              <div className="p-4 grid grid-cols-1 gap-4 overflow-y-auto max-h-48 font-mono text-sm">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Input:</label>
+                  <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-100 text-neutral-800 font-bold">
+                    {testCases[activeTab]?.input || 'No input'}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Actual Output:</label>
+                    <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-100 min-h-[44px] italic text-neutral-400">
+                      {testResults[activeTab]?.passed ? testResults[activeTab]?.output || 'Success' : 'No output yet...'}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Expected Output:</label>
+                    <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-blue-600 font-bold">
+                      {testCases[activeTab]?.expectedOutput || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="px-4 py-3 bg-white border-t border-neutral-200 flex justify-end gap-2">
-            <Button
-              className="rounded-lg gap-2 px-6"
-              style={{ backgroundColor: 'var(--color-warning)' }}
-              onClick={handleRun}
-            >
-              <Play className="w-4 h-4" />
-              Run Code
-            </Button>
-            <Button
-              className="rounded-lg gap-2 px-6"
-              style={{ backgroundColor: 'var(--color-primary)' }}
-              onClick={handleSubmit}
-            >
-              Submit
-            </Button>
-          </div>
         </div>
       </div>
     </div>

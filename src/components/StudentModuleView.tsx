@@ -148,37 +148,37 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
           {sidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
 
-        <div className="p-8 pb-4 space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-orange-600 rounded-xl flex items-center justify-center shadow-orange-200 shadow-lg">
-              <Code2 className="w-5 h-5 text-white" />
+          <div className="p-8 pb-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-neutral-100">
+                <Code2 className="w-6 h-6 text-neutral-900" />
+              </div>
+              {!sidebarMinimized && <span className="font-bold text-2xl tracking-tight text-neutral-900">Codify</span>}
             </div>
-            {!sidebarMinimized && <span className="font-extrabold text-2xl tracking-tight text-neutral-900">Codify</span>}
+
+            {!sidebarMinimized && (
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors text-sm font-medium"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Modules
+              </button>
+            )}
           </div>
 
           {!sidebarMinimized && (
-            <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors text-xs font-bold tracking-wide uppercase"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Modules
-            </button>
-          )}
-        </div>
-
-        {!sidebarMinimized && (
-          <div className="px-8 py-6 space-y-4">
-            <h2 className="text-base font-bold leading-tight text-neutral-900">Problem-Solving with Iteration</h2>
-            <div className="space-y-2">
-              <div className="flex justify-between text-[11px] font-bold text-neutral-500">
-                <span>1 Chapters</span>
-                <span>100%</span>
+            <div className="px-8 py-6 space-y-4">
+              <h2 className="text-xl font-bold leading-tight text-neutral-900">Problem-Solving with Iteration</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm font-medium text-neutral-500">
+                  <span>1 Chapters</span>
+                  <span>100%</span>
+                </div>
+                <Progress value={100} className="h-2 bg-neutral-100" indicatorClassName="bg-neutral-900" />
               </div>
-              <Progress value={100} className="h-1.5 bg-neutral-100" indicatorClassName="bg-green-500" />
             </div>
-          </div>
-        )}
+          )}
 
         <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
           <div className="px-4">
@@ -244,28 +244,25 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
           <div className="w-full max-w-[1400px] mx-auto px-16 py-12 flex flex-col min-h-full">
 
             {/* HEADER - Updated Breadcrumb & Date */}
-            <header className="mb-14 flex items-start justify-between animate-in fade-in slide-in-from-top-4 duration-500">
-              <div className="space-y-4">
+            <header className="mb-14 flex items-start justify-between">
+              <div className="flex-1" /> {/* Spacer */}
+              
+              <div className="flex flex-col items-center">
                 {/* Updated Breadcrumb */}
-                <div className="flex items-center gap-3 text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
-                  <span className="hover:text-neutral-600 transition-colors cursor-pointer">Cohort 46</span>
-                  <ChevronRight className="w-3 h-3 text-neutral-300" />
-                  <span className="hover:text-neutral-600 transition-colors cursor-pointer">DSA</span>
-                  <ChevronRight className="w-3 h-3 text-neutral-300" />
-                  <span className="text-neutral-900">Problem-Solving with Iteration</span>
+                <div className="flex items-center gap-3 text-sm font-medium text-neutral-500">
+                  <span className="hover:text-neutral-900 transition-colors cursor-pointer">Cohort 46</span>
+                  <ChevronRight className="w-4 h-4 text-neutral-300" />
+                  <span className="hover:text-neutral-900 transition-colors cursor-pointer">DSA</span>
+                  <ChevronRight className="w-4 h-4 text-neutral-300" />
+                  <span className="text-neutral-900 font-bold">Problem-Solving with Iteration</span>
                 </div>
-
-                <h1 className={`text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight ${activeItem.id === 'intro' ? 'text-red-600' : 'text-neutral-900'}`}>
-                  {activeItem.type === 'content' && activeItem.content ? activeItem.content.title : activeItem.title}
-                </h1>
               </div>
 
               {/* Date & Time */}
-              <div className="flex flex-col items-end gap-3 text-right">
-                <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-purple-200 ring-4 ring-purple-50">T</div>
+              <div className="flex-1 flex flex-col items-end text-right">
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Sunday, Nov 30</span>
-                  <span className="text-[10px] font-medium text-neutral-300">11:55 PM</span>
+                  <span className="text-sm font-bold text-neutral-900">Sunday, Nov 30</span>
+                  <span className="text-sm font-medium text-neutral-400">11:55 PM</span>
                 </div>
               </div>
             </header>
