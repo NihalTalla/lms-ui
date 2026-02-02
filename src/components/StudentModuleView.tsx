@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
@@ -17,6 +17,7 @@ import {
   Lock,
   ChevronLeft,
   Menu,
+  Play,
 } from 'lucide-react';
 import { Course, Topic } from '../lib/data';
 import { toast } from 'sonner';
@@ -59,7 +60,7 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
   const menuItems: MenuItem[] = [
     {
       id: 'intro',
-      title: 'Java Programming Basics (Iterations)',
+      title: 'Java Programming Basics',
       duration: '5m',
       type: 'content',
       locked: false,
@@ -125,7 +126,7 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
       setActiveItemId(nextItem.id);
       toast.success(`Navigating to ${nextItem.title}`);
     } else {
-      toast.info("Module Completed!");
+      toast.success("Module Completed!");
     }
   };
 
@@ -135,219 +136,241 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
 
   return (
     <div className="flex h-screen w-full bg-white overflow-hidden font-sans text-neutral-900">
-      {/* 🧱 LEFT SIDEBAR */}
+
+      {/* SIDEBAR - Fixed width, distinct separation */}
       <aside
-        className={`${sidebarMinimized ? 'w-20' : 'w-72'} bg-white text-neutral-900 flex flex-col transition-all duration-300 relative z-20 border-r border-neutral-200`}
+        className={`${sidebarMinimized ? 'w-24' : 'w-80'} shrink-0 bg-white text-neutral-900 flex flex-col transition-all duration-300 relative z-30 border-r-2 border-neutral-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)]`}
       >
-        {/* Toggle Button */}
         <button
           onClick={() => setSidebarMinimized(!sidebarMinimized)}
-          className="absolute -right-3 top-24 w-6 h-6 bg-white rounded-full flex items-center justify-center border border-neutral-300 z-30 shadow-md"
+          className="absolute -right-3 top-24 w-6 h-6 bg-white rounded-full flex items-center justify-center border border-neutral-300 z-30 shadow-md transform hover:scale-105 transition-transform"
         >
           {sidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
 
-        {/* Top: Logo & Back */}
-        <div className="p-6 space-y-6">
+        <div className="p-8 pb-4 space-y-8">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
+            <div className="w-9 h-9 bg-orange-600 rounded-xl flex items-center justify-center shadow-orange-200 shadow-lg">
               <Code2 className="w-5 h-5 text-white" />
             </div>
-            {!sidebarMinimized && <span className="font-bold text-xl tracking-tight text-neutral-900">Codify</span>}
+            {!sidebarMinimized && <span className="font-extrabold text-2xl tracking-tight text-neutral-900">Codify</span>}
           </div>
 
           {!sidebarMinimized && (
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors text-xs font-bold"
+              className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors text-xs font-bold tracking-wide uppercase"
             >
               <ArrowLeft className="w-4 h-4" />
-              BACK
+              Back to Modules
             </button>
           )}
         </div>
 
-        {/* Module Title & Progress */}
         {!sidebarMinimized && (
-          <div className="px-6 py-4 space-y-4">
-            <h2 className="text-sm font-bold leading-tight text-neutral-900">Problem-Solving with Iteration</h2>
+          <div className="px-8 py-6 space-y-4">
+            <h2 className="text-base font-bold leading-tight text-neutral-900">Problem-Solving with Iteration</h2>
             <div className="space-y-2">
-              <div className="flex justify-between text-[10px] font-bold text-neutral-600">
+              <div className="flex justify-between text-[11px] font-bold text-neutral-500">
                 <span>1 Chapters</span>
                 <span>100%</span>
               </div>
-              <Progress value={100} className="h-1 bg-neutral-300" />
+              <Progress value={100} className="h-1.5 bg-neutral-100" indicatorClassName="bg-green-500" />
             </div>
           </div>
         )}
 
-        {/* Navigation Items */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar pt-4">
-          {/* Section: Iterations */}
-          <div className="space-y-1">
-            <button
-              onClick={() => setIsIterationsOpen(!isIterationsOpen)}
-              className={`w-full flex items-center justify-between px-6 py-3 hover:bg-neutral-100 transition-colors ${isIterationsOpen ? 'text-neutral-900' : 'text-neutral-600'}`}
-            >
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                {!sidebarMinimized && <span className="text-sm font-bold">Iterations</span>}
-              </div>
-              {!sidebarMinimized && (
-                <div className="flex items-center gap-2 font-mono text-[10px] text-neutral-600">
-                  <span>8h 25m</span>
-                  {isIterationsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
+          <div className="px-4">
+            <div className="space-y-2">
+              <button
+                onClick={() => setIsIterationsOpen(!isIterationsOpen)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-neutral-50 transition-colors ${isIterationsOpen ? 'bg-neutral-50 text-neutral-900' : 'text-neutral-600'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  {!sidebarMinimized && <span className="text-sm font-bold">Iterations</span>}
+                </div>
+                {!sidebarMinimized && (
+                  <div className="flex items-center gap-2 font-mono text-[10px] text-neutral-400">
+                    <span>8h 25m</span>
+                    {isIterationsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </div>
+                )}
+              </button>
+
+              {isIterationsOpen && (
+                <div className="space-y-1 relative pl-4">
+                  <div className="absolute left-6 top-2 bottom-2 w-px bg-neutral-200" />
+                  {menuItems.map((item, idx) => {
+                    const locked = isLocked(item, idx);
+                    const isActive = activeItemId === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        disabled={locked}
+                        onClick={() => setActiveItemId(item.id)}
+                        className={`w-full text-left px-4 py-3 flex items-start gap-4 transition-all relative rounded-xl z-10 ${isActive ? 'bg-orange-50 text-orange-700 shadow-sm' : 'text-neutral-600 hover:bg-neutral-50 hover:pl-5'
+                          } ${locked ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      >
+                        <div className={`mt-0.5 ${isActive ? 'text-orange-600' : 'text-neutral-400'}`}>
+                          {item.type === 'content' && <FileText className="w-4 h-4" />}
+                          {item.type === 'practice' && <Code2 className="w-4 h-4" />}
+                          {item.type === 'assignment' && (locked ? <Lock className="w-4 h-4" /> : <span className="text-xs font-black font-mono">{'</>'}</span>)}
+                        </div>
+                        {!sidebarMinimized && (
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[12px] font-bold leading-snug ${isActive ? 'text-orange-900' : 'text-neutral-700'}`}>
+                              {item.title}
+                            </p>
+                            <p className={`text-[10px] mt-1 font-medium ${isActive ? 'text-orange-400' : 'text-neutral-400'}`}>{item.duration}</p>
+                          </div>
+                        )}
+                        {isActive && !sidebarMinimized && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-orange-500" />}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
-            </button>
-
-            {isIterationsOpen && (
-              <div className="space-y-0.5">
-                {menuItems.map((item, idx) => {
-                  const locked = isLocked(item, idx);
-                  const isActive = activeItemId === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      disabled={locked}
-                      onClick={() => setActiveItemId(item.id)}
-                      className={`w-full text-left px-6 py-4 flex items-start gap-4 transition-all relative ${isActive ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500' : 'text-neutral-600 hover:bg-neutral-100'
-                        } ${locked ? 'opacity-40 cursor-not-allowed' : ''}`}
-                    >
-                      <div className="mt-1">
-                        {item.type === 'content' && <FileText className="w-4 h-4" />}
-                        {item.type === 'practice' && <Code2 className="w-4 h-4" />}
-                        {item.type === 'assignment' && (locked ? <Lock className="w-4 h-4" /> : <span className="text-sm font-bold font-mono">{'</>'}</span>)}
-                      </div>
-                      {!sidebarMinimized && (
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-[11px] font-bold leading-snug ${isActive ? 'text-orange-600' : 'text-neutral-900'}`}>
-                            {item.title}
-                          </p>
-                          <p className="text-[10px] text-neutral-500 mt-0.5">{item.duration}</p>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* 🪟 RIGHT CONTENT AREA */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-white relative">
-        {/* Top Breadcrumb */}
-        <header className="h-16 border-b border-neutral-100 flex items-center px-10 flex-shrink-0 bg-white">
-          <div className="flex items-center gap-2 text-[11px] font-bold text-black uppercase tracking-[0.1em]">
-            <span>Cohort 46 - CMRTC II Yr - Phase 1</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span>DSA</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-black">Problem-Solving with Iteration</span>
-          </div>
-          <div className="ml-auto flex items-center gap-4">
-            <div className="w-9 h-9 rounded-full bg-purple-700 flex items-center justify-center text-white text-xs font-bold shadow-sm">T</div>
-          </div>
-        </header>
+      {/* MAIN CONTENT */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
+        <div className="flex-1 overflow-y-auto w-full custom-scrollbar">
 
-        {/* Dynamic Content */}
-        <div className="flex-1 overflow-y-auto p-10 lg:p-16 bg-white scroll-smooth relative">
-          <div className="max-w-4xl mx-auto pb-40">
-            {activeItem.type === 'content' && activeItem.content && (
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-12">
-                <div className="space-y-6">
-                  <h1 className="text-[52px] font-black text-red-600 tracking-tight leading-none">{activeItem.content.title}</h1>
-                  <div className="space-y-4">
-                    <h2 className="text-[28px] font-bold text-neutral-800">{activeItem.content.subtitle}</h2>
-                    <ul className="space-y-3">
-                      {activeItem.content.points.map((p, i) => (
-                        <li key={i} className="flex items-start gap-3 text-black font-semibold text-lg">
-                          <span className="text-black/40 mt-0.5">{i + 1}.</span>
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+          <div className="w-full max-w-[1400px] mx-auto px-16 py-12 flex flex-col min-h-full">
+
+            {/* HEADER - Updated Breadcrumb & Date */}
+            <header className="mb-14 flex items-start justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+              <div className="space-y-4">
+                {/* Updated Breadcrumb */}
+                <div className="flex items-center gap-3 text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
+                  <span className="hover:text-neutral-600 transition-colors cursor-pointer">Cohort 46</span>
+                  <ChevronRight className="w-3 h-3 text-neutral-300" />
+                  <span className="hover:text-neutral-600 transition-colors cursor-pointer">DSA</span>
+                  <ChevronRight className="w-3 h-3 text-neutral-300" />
+                  <span className="text-neutral-900">Problem-Solving with Iteration</span>
                 </div>
 
-                {activeItem.content.sections.map((sec, i) => (
-                  <div key={i} className="space-y-10">
-                    <div className="space-y-4">
-                      <h3 className="text-[34px] font-bold text-neutral-900 leading-tight">{sec.title}</h3>
-                      <p className="text-xl text-black leading-relaxed max-w-3xl font-medium">{sec.text}</p>
-                    </div>
-                    {sec.image && (
-                      <div className="rounded-xl overflow-hidden shadow-2xl shadow-neutral-200/50 border border-neutral-100">
-                        <img src={sec.image} alt="Diagram" className="w-full h-auto object-cover max-h-[500px]" />
+                <h1 className={`text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight ${activeItem.id === 'intro' ? 'text-red-600' : 'text-neutral-900'}`}>
+                  {activeItem.type === 'content' && activeItem.content ? activeItem.content.title : activeItem.title}
+                </h1>
+              </div>
+
+              {/* Date & Time */}
+              <div className="flex flex-col items-end gap-3 text-right">
+                <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-purple-200 ring-4 ring-purple-50">T</div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Sunday, Nov 30</span>
+                  <span className="text-[10px] font-medium text-neutral-300">11:55 PM</span>
+                </div>
+              </div>
+            </header>
+
+            <div className="flex-1">
+
+              {/* Content Type */}
+              {activeItem.type === 'content' && activeItem.content && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-20 items-start">
+
+                    <div className="space-y-12">
+                      <div className="space-y-6">
+                        <h2 className="text-3xl font-bold text-neutral-800 tracking-tight">{activeItem.content.subtitle}</h2>
+                        <ul className="space-y-4">
+                          {activeItem.content.points.map((p, i) => (
+                            <li key={i} className="flex items-start gap-4 text-lg font-medium text-neutral-700 group">
+                              <span className="text-neutral-300 font-mono text-sm mt-1 group-hover:text-red-500 transition-colors">0{i + 1}.</span>
+                              {p}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    )}
-                    <div className="space-y-6">
-                      <h4 className="text-2xl font-black text-black tracking-tight">Syntax</h4>
-                      <Card className="bg-white border-2 border-neutral-100 shadow-lg">
-                        <CardContent className="p-10 font-mono text-base leading-[2] text-neutral-800">
-                          <div className="space-y-1">
-                            <div>
-                              <span className="text-blue-600 font-bold">for</span> (
-                              <span className="bg-yellow-100/80 px-1.5 py-0.5 rounded mx-1">initialize [,initialize];</span>
-                              <span className="font-bold border-b-2 border-neutral-300 mx-1">condition;</span>
-                            </div>
-                            <div className="pl-32">
-                              <span className="bg-green-100/80 px-1.5 py-0.5 rounded mx-1">update[,update]</span> ) {'{'}
-                            </div>
-                            <div className="pl-48">
-                              <span className="bg-neutral-100 px-3 py-1 rounded text-black italic">code_block;</span>
-                            </div>
-                            <div className="pl-24">
-                              {'}'}
-                            </div>
+
+                      {activeItem.content.sections.map((sec, i) => (
+                        <div key={i} className="space-y-6">
+                          <h3 className="text-2xl font-bold text-neutral-900">{sec.title}</h3>
+                          <p className="text-lg leading-loose text-neutral-600 font-medium text-justify">{sec.text}</p>
+
+                          <div className="pt-4">
+                            <h4 className="text-sm font-black text-neutral-900 uppercase tracking-widest mb-4">Syntax</h4>
+                            <Card className="bg-neutral-900 border-none shadow-2xl overflow-hidden rounded-2xl">
+                              <CardContent className="p-8 font-mono text-sm leading-[2.5] text-white/90">
+                                <div>
+                                  <span className="text-purple-400 font-bold">for</span> (
+                                  <span className="text-yellow-300 mx-1">initialize [,initialize];</span>
+                                  <span className="text-blue-300 mx-1 font-bold">condition;</span>
+                                </div>
+                                <div className="pl-12">
+                                  <span className="text-green-300 mx-1">update[,update]</span> ) {'{'}
+                                </div>
+                                <div className="pl-20">
+                                  <span className="text-neutral-400 italic">// code_block to be executed</span>
+                                </div>
+                                <div className="pl-8">
+                                  {'}'}
+                                </div>
+                              </CardContent>
+                            </Card>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-8 sticky top-10">
+                      {activeItem.content.sections.map((sec, i) => sec.image && (
+                        <div key={i} className="rounded-2xl overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] border-4 border-white transform hover:scale-[1.02] transition-transform duration-500">
+                          <img src={sec.image} alt={sec.title} className="w-full h-auto object-cover" />
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {activeItem.type === 'practice' && activeItem.practice && (
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-10">
-                <div className="font-mono text-xl space-y-6 p-12 bg-neutral-50 rounded-[40px] min-h-[600px] border border-neutral-100 shadow-inner overflow-hidden">
-                  {activeItem.practice.outputs.map((line, i) => (
-                    <div key={i} className="text-neutral-700 tracking-[0.2em] animate-in fade-in duration-700" style={{ transitionDelay: `${i * 50}ms` }}>
-                      {line}
-                    </div>
-                  ))}
                 </div>
-              </div>
-            )}
+              )}
 
-            {activeItem.type === 'assignment' && activeItem.assignment && (
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-12">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              {/* Practice Type */}
+              {activeItem.type === 'practice' && activeItem.practice && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="space-y-6">
+                      <h2 className="text-2xl font-bold text-neutral-900">Pattern Output Practice</h2>
+                      <p className="text-neutral-600 leading-relaxed">
+                        Analyze the code execution flow and predict the output.
+                      </p>
+                    </div>
+                    <div className="font-mono text-lg space-y-6 p-10 bg-neutral-900 rounded-[32px] min-h-[500px] border border-neutral-800 shadow-2xl text-green-400">
+                      {activeItem.practice.outputs.map((line, i) => (
+                        <div key={i} className="tracking-[0.2em] animate-in fade-in duration-700" style={{ transitionDelay: `${i * 50}ms` }}>
+                          {line}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Assignment Type */}
+              {activeItem.type === 'assignment' && activeItem.assignment && (
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
                   <div className="flex items-center gap-4">
-                    <h1 className="text-[44px] font-black text-neutral-900 tracking-tight leading-tight">{activeItem.title}</h1>
-                    <Badge className="bg-green-100 text-green-700 border-none font-black uppercase text-[10px] px-3 py-1 tracking-wider">Submitted</Badge>
+                    <Badge className="bg-green-100/50 text-green-700 hover:bg-green-100 border-green-200 uppercase text-[10px] px-3 py-1 font-black tracking-wider">Submitted</Badge>
+                    <span className="text-neutral-400 text-sm font-medium">Score: 100/100</span>
                   </div>
-                  <span className="text-[11px] font-black text-black uppercase tracking-widest whitespace-nowrap bg-neutral-100 px-4 py-2 rounded-full">
-                    Sunday, November 30, 2025 11:55 PM
-                  </span>
-                </div>
 
-                <Card className="rounded-[32px] border border-neutral-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden bg-white">
-                  <Table>
-                    <TableHeader className="bg-neutral-100 border-b border-black/10">
-                      <TableRow className="border-none hover:bg-transparent">
-                        <TableHead className="px-10 py-6 text-center font-black text-black uppercase text-[10px] tracking-widest">Topic</TableHead>
-                        <TableHead className="px-10 py-6 text-center font-black text-black uppercase text-[10px] tracking-widest">Questions</TableHead>
-                        <TableHead className="px-10 py-6 text-center font-black text-black uppercase text-[10px] tracking-widest">Status</TableHead>
-                        <TableHead className="px-10 py-6" />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  <div className="border border-neutral-100 rounded-[24px] overflow-hidden bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+                    <div className="grid grid-cols-12 gap-8 px-8 py-5 bg-neutral-50/80 border-b border-neutral-100 text-[10px] font-black text-neutral-400 uppercase tracking-widest">
+                      <div className="col-span-12 md:col-span-5 flex items-center">Topic</div>
+                      <div className="col-span-3 hidden md:flex items-center justify-center">Questions</div>
+                      <div className="col-span-2 hidden md:flex items-center justify-center">Status</div>
+                      <div className="col-span-2 hidden md:block"></div>
+                    </div>
+
+                    <div className="divide-y divide-neutral-50">
                       {activeItem.assignment.topics.map((t, i) => (
-                        <TableRow
+                        <div
                           key={i}
                           onClick={() => onNavigate('coding-challenge-ui', {
                             topicTitle: t.title,
@@ -372,47 +395,48 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                             ],
                             previousData: { course, module: selectedModule }
                           })}
-                          className="border-neutral-50 last:border-none group hover:bg-neutral-50/50 transition-all cursor-pointer"
+                          className="grid grid-cols-12 gap-8 px-8 py-8 items-center cursor-pointer group hover:bg-neutral-50/50 transition-colors"
                         >
-                          <TableCell className="px-10 py-8 text-center">
-                            <span className="font-bold text-neutral-800 text-[17px] group-hover:text-orange-600 transition-colors">{t.title}</span>
-                          </TableCell>
-                          <TableCell className="px-10 py-8 text-center">
-                            <span className="font-bold text-neutral-500 text-sm bg-neutral-100 px-3 py-1 rounded-lg">{t.questions}</span>
-                          </TableCell>
-                          <TableCell className="px-10 py-8 text-center">
-                            <Badge className="bg-green-50 text-green-600 font-black border-none uppercase text-[10px] px-4 py-1.5 rounded-full">{t.status}</Badge>
-                          </TableCell>
-                          <TableCell className="px-10 py-8">
-                            <div className="flex items-center justify-end gap-6 text-neutral-900">
-                              <Button variant="outline" className="h-10 rounded-xl font-bold text-xs px-6 border-neutral-200 hover:border-orange-200 hover:bg-orange-50 hover:text-orange-600 transition-all shadow-sm">Retake Test</Button>
-                              <ChevronRight className="w-5 h-5 text-neutral-300 group-hover:text-neutral-900 transition-all transform group-hover:translate-x-1" />
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                          <div className="col-span-12 md:col-span-5 font-bold text-lg text-neutral-800 group-hover:text-orange-600 transition-colors">
+                            {t.title}
+                          </div>
+                          <div className="col-span-6 md:col-span-3 flex md:justify-center">
+                            <span className="bg-neutral-100 text-neutral-600 text-xs font-bold px-4 py-1.5 rounded-lg">
+                              {t.questions}
+                            </span>
+                          </div>
+                          <div className="col-span-6 md:col-span-2 flex md:justify-center">
+                            <span className="text-green-600 bg-green-50 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full">
+                              {t.status}
+                            </span>
+                          </div>
+                          <div className="col-span-12 md:col-span-2 flex items-center justify-end gap-4 mt-4 md:mt-0">
+                            <Button variant="outline" className="h-9 px-5 rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 group-hover:border-orange-200 group-hover:text-orange-600 group-hover:bg-white bg-transparent shadow-none hover:shadow-sm transition-all">
+                              Retake
+                            </Button>
+                            <ChevronRight className="w-5 h-5 text-neutral-300 group-hover:text-neutral-900 transition-colors" />
+                          </div>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
-                </Card>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-                {/* Table Footer Space */}
-                <div className="h-40" />
-              </div>
-            )}
-          </div>
+            <div className="mt-20 flex justify-end pb-10 border-t border-neutral-50 pt-10">
+              <Button
+                onClick={handleNext}
+                className="bg-neutral-900 hover:bg-black text-white text-base font-bold rounded-2xl px-10 py-7 h-auto shadow-2xl hover:shadow-neutral-500/20 active:scale-95 transition-all flex items-center gap-3"
+              >
+                Next Chapter
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </div>
 
-          {/* 🏁 PERSISTENT NEXT BUTTON */}
-          <div className="absolute bottom-10 right-14 z-50">
-            <Button
-              onClick={handleNext}
-              className="bg-orange-600 hover:bg-orange-700 text-white rounded-2xl px-12 py-8 h-auto font-black text-lg shadow-[0_20px_40px_rgba(234,88,12,0.3)] group transition-all transform hover:-translate-y-1 active:scale-95"
-            >
-              Next
-              <ArrowRight className="w-6 h-6 ml-2 group-hover:translate-x-1.5 transition-transform" />
-            </Button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
