@@ -87,11 +87,24 @@ function AppContent() {
           moduleName={pageData.moduleName}
           courseName={pageData.courseName}
           onSelectTopic={(topic) => {
-            handleNavigate('topic-details', {
-              assignment: pageData.assignment,
-              topic: topic,
-              moduleName: pageData.moduleName,
-              courseName: pageData.courseName,
+            handleNavigate('coding-challenge-ui', {
+              topicTitle: topic.title,
+              difficulty: topic.difficulty || 'Easy',
+              problemDescription: 'Find the length of the longest substring without repeating characters in a given string.',
+              examples: [
+                {
+                  id: 'ex-1',
+                  input: 'str = "abcabcbb"',
+                  output: '3',
+                  explanation: 'The longest substring without repeating characters is "abc", with the length of 3.',
+                },
+              ],
+              testCases: [
+                { id: 'tc-1', input: 'abcabcbb', expectedOutput: '3', hidden: false },
+                { id: 'tc-2', input: 'bbbbb', expectedOutput: '1', hidden: false },
+                { id: 'tc-3', input: 'pwwkew', expectedOutput: '3', hidden: false },
+              ],
+              previousData: pageData,
             });
           }}
           onBack={() => handleNavigate('student-module', pageData.previousData)}
@@ -170,9 +183,19 @@ function AppContent() {
           testCases={pageData.testCases}
           onSubmit={(code, language) => {
             console.log('Code submitted:', { code, language });
-            handleNavigate('topic-details', { ...pageData });
+            if (pageData.previousData) {
+              handleNavigate('assignment-listing', pageData.previousData);
+            } else {
+              handleNavigate('dashboard');
+            }
           }}
-          onBack={() => handleNavigate('topic-details', { ...pageData })}
+          onBack={() => {
+            if (pageData.previousData) {
+              handleNavigate('assignment-listing', pageData.previousData);
+            } else {
+              handleNavigate('dashboard');
+            }
+          }}
         />
       );
     }

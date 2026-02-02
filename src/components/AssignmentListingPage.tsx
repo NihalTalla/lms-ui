@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { ArrowLeft, ChevronRight, CheckCircle2, Clock, TrendingUp, Award, Target, Zap, BookOpen } from 'lucide-react';
-import { TopicQuestion } from '../lib/data';
-import { toast } from 'sonner';
 import { Progress } from './ui/progress';
+import {
+  ArrowLeft,
+  ChevronRight,
+  ArrowRight,
+  ChevronDown,
+  CheckCircle2,
+  Clock,
+  Layout,
+  Search,
+} from 'lucide-react';
+import { TopicQuestion } from '../lib/data';
 
 interface AssignmentListingPageProps {
   assignment: TopicQuestion;
@@ -16,6 +24,26 @@ interface AssignmentListingPageProps {
   onBack: () => void;
 }
 
+interface Assignment {
+  id: string;
+  title: string;
+  status: 'completed' | 'in-progress' | 'pending';
+  dueDate?: string;
+  topics: Topic[];
+}
+
+interface Topic {
+  id: string;
+  title: string;
+  questionsCompleted: number;
+  totalQuestions: number;
+  status: 'submitted' | 'in-progress' | 'pending';
+  submittedDate: string | null;
+  difficulty: string;
+  duration: string;
+  hasAttempted: boolean;
+}
+
 export function AssignmentListingPage({
   assignment,
   moduleName,
@@ -23,329 +51,151 @@ export function AssignmentListingPage({
   onSelectTopic,
   onBack,
 }: AssignmentListingPageProps) {
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [expandedAssignments, setExpandedAssignments] = useState<{ [key: string]: boolean }>({
+    'assign-1': true,
+  });
 
-  // Mock topics data based on assignment
-  const topics = [
+  const assignments: Assignment[] = [
     {
-      id: 'topic-1',
-      title: 'Series – Level 1',
-      questionsCompleted: 3,
-      totalQuestions: 3,
-      status: 'submitted',
-      submittedDate: 'Sunday, November 30, 2025 11:55 PM',
-      difficulty: 'Easy',
-      duration: '15m',
+      id: 'assign-1',
+      title: 'Assignment – 1',
+      status: 'completed',
+      dueDate: 'Sunday, Nov 30, 2025',
+      topics: [
+        { id: 't1', title: 'Series – Level 1', questionsCompleted: 3, totalQuestions: 3, status: 'submitted', submittedDate: '2024-11-20', difficulty: 'Easy', duration: '15m', hasAttempted: true },
+        { id: 't2', title: 'Series – Level 2', questionsCompleted: 2, totalQuestions: 2, status: 'submitted', submittedDate: '2024-11-21', difficulty: 'Medium', duration: '25m', hasAttempted: true },
+        { id: 't3', title: 'Series – Level 3', questionsCompleted: 0, totalQuestions: 3, status: 'pending', submittedDate: null, difficulty: 'Hard', duration: '30m', hasAttempted: false },
+      ],
     },
     {
-      id: 'topic-2',
-      title: 'Series – Level 2',
-      questionsCompleted: 2,
-      totalQuestions: 2,
-      status: 'submitted',
-      submittedDate: 'Sunday, November 30, 2025 11:55 PM',
-      difficulty: 'Medium',
-      duration: '25m',
-    },
-    {
-      id: 'topic-3',
-      title: 'Series – Level 3',
-      questionsCompleted: 0,
-      totalQuestions: 3,
+      id: 'assign-2',
+      title: 'Assignment – 2',
       status: 'pending',
-      submittedDate: null,
-      difficulty: 'Hard',
-      duration: '30m',
+      topics: [],
     },
   ];
 
-  const handleRetakeTest = (topicId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    toast.info(`Starting retake for topic: ${topicId}`);
+  const calculateProgress = (assign: Assignment) => {
+    if (assign.topics.length === 0) return 0;
+    const completed = assign.topics.filter(t => t.status === 'submitted').length;
+    return Math.round((completed / assign.topics.length) * 100);
   };
-
-  const handleSelectTopic = (topic: any) => {
-    onSelectTopic(topic);
-  };
-
-  // Calculate assignment stats
-  const totalQuestions = topics.reduce((sum, t) => sum + t.totalQuestions, 0);
-  const completedQuestions = topics.reduce((sum, t) => sum + t.questionsCompleted, 0);
-  const completionPercentage = Math.round((completedQuestions / totalQuestions) * 100);
-  const totalTime = 70; // minutes
-  const submittedTopics = topics.filter(t => t.status === 'submitted').length;
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      {/* Header Section */}
-      <div className="bg-white border-b border-neutral-200 sticky top-0 z-10 shadow-sm">
-        <div className="p-8">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <Button
-                variant="ghost"
-                className="text-neutral-700 hover:bg-neutral-100 mb-4 -ml-3"
-                onClick={onBack}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-              <h1 className="text-4xl font-bold text-neutral-900 mb-2">
-                {assignment.question || 'Assignment'} – 1
-              </h1>
-              <p className="text-neutral-600">
-                Module: <span className="font-semibold">{moduleName}</span> • Course:{' '}
-                <span className="font-semibold">{courseName}</span>
-              </p>
-            </div>
-            <div className="flex flex-col gap-2 items-end">
-              <Badge className="bg-green-100 text-green-700 rounded-full px-4 py-2 text-sm font-semibold">
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Submitted
-              </Badge>
-              <div className="text-sm text-neutral-600 font-medium">
-                Sunday, November 30, 2025 11:55 PM
-              </div>
-            </div>
+    <div className="flex flex-col h-screen bg-neutral-50 overflow-hidden text-neutral-900 font-sans">
+      <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-8 flex-shrink-0">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" className="text-neutral-500 hover:text-neutral-900 p-0 h-auto" onClick={onBack}>
+            <ArrowLeft className="w-5 h-5 mr-1" />
+            Back
+          </Button>
+          <div className="h-6 w-px bg-neutral-200" />
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-neutral-500">{courseName}</span>
+            <ChevronRight className="w-4 h-4 text-neutral-300" />
+            <span className="font-bold text-neutral-900">{moduleName}</span>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content */}
-      <div className="p-8 space-y-8">
-        {/* Performance Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="shadow-sm border-neutral-200 hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Target className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-neutral-500 uppercase tracking-wide font-semibold">Completion</p>
-                  <p className="text-2xl font-bold text-neutral-900">{completionPercentage}%</p>
-                </div>
-              </div>
-              <Progress value={completionPercentage} className="mt-4" />
-            </CardContent>
-          </Card>
+      <div className="flex-1 overflow-y-auto p-10">
+        <div className="max-w-none mx-auto space-y-8">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight text-neutral-900">{moduleName}</h1>
+            <p className="text-neutral-500">Track and complete your assignments for this module.</p>
+          </div>
 
-          <Card className="shadow-sm border-neutral-200 hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-neutral-500 uppercase tracking-wide font-semibold">Questions</p>
-                  <p className="text-2xl font-bold text-neutral-900">{completedQuestions}/{totalQuestions}</p>
-                </div>
-              </div>
-              <p className="text-xs text-green-600 font-medium mt-4">All completed</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm border-neutral-200 hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-neutral-500 uppercase tracking-wide font-semibold">Time Spent</p>
-                  <p className="text-2xl font-bold text-neutral-900">{totalTime}m</p>
-                </div>
-              </div>
-              <p className="text-xs text-orange-600 font-medium mt-4">Total duration</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm border-neutral-200 hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-neutral-500 uppercase tracking-wide font-semibold">Topics</p>
-                  <p className="text-2xl font-bold text-neutral-900">{submittedTopics}/{topics.length}</p>
-                </div>
-              </div>
-              <p className="text-xs text-purple-600 font-medium mt-4">Submitted</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Topics Table Card */}
-        <Card className="shadow-md border-neutral-200">
-          <CardHeader className="bg-neutral-50 border-b border-neutral-200">
-            <CardTitle className="text-lg font-bold text-neutral-900 flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              Topics Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-neutral-200 bg-neutral-50">
-                    <TableHead className="text-left font-bold text-neutral-900 w-1/3">Topic</TableHead>
-                    <TableHead className="text-center font-bold text-neutral-900 w-1/6">Questions</TableHead>
-                    <TableHead className="text-center font-bold text-neutral-900 w-1/6">Status</TableHead>
-                    <TableHead className="text-center font-bold text-neutral-900 w-1/4">Action</TableHead>
-                    <TableHead className="text-right font-bold text-neutral-900 w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {topics.map((topic, idx) => (
-                    <TableRow
-                      key={topic.id}
-                      className="hover:bg-neutral-50 border-neutral-200 cursor-pointer transition"
-                      onClick={() => handleSelectTopic(topic)}
-                    >
-                      <TableCell>
-                        <div>
-                          <p className="font-semibold text-neutral-900 hover:text-orange-500 transition">
-                            {topic.title}
-                          </p>
-                          <p className="text-xs text-neutral-500 mt-1">
-                            {topic.difficulty} • {topic.duration}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-neutral-900 font-medium">
-                          {topic.questionsCompleted}/{topic.totalQuestions} Completed
+          <div className="space-y-4">
+            {assignments.map((assign) => (
+              <Card key={assign.id} className="overflow-hidden border-neutral-200 shadow-sm">
+                <div
+                  className="p-6 flex items-center justify-between bg-white cursor-pointer hover:bg-neutral-50 transition-colors"
+                  onClick={() => setExpandedAssignments(prev => ({ ...prev, [assign.id]: !prev[assign.id] }))}
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                      <Layout className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-neutral-900">{assign.title}</h3>
+                      <div className="flex items-center gap-3 text-xs text-neutral-500 mt-1">
+                        <span className="flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                          {assign.topics.filter(t => t.status === 'submitted').length}/{assign.topics.length} Completed
                         </span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge
-                          className={
-                            topic.status === 'submitted'
-                              ? 'bg-green-100 text-green-700 rounded-full'
-                              : 'bg-yellow-100 text-yellow-700 rounded-full'
-                          }
-                        >
-                          {topic.status === 'submitted' ? 'Submitted' : 'Pending'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => handleRetakeTest(topic.id, e)}
-                          className="text-neutral-700 hover:bg-neutral-100 border-neutral-300"
-                        >
-                          Retake Test
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <ChevronRight className="w-5 h-5 text-neutral-400" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                        {assign.dueDate && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            Due {assign.dueDate}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
-        {/* Review & Feedback Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="shadow-md border-neutral-200">
-            <CardHeader className="bg-gradient-to-br from-blue-50 to-blue-50 border-b border-blue-100">
-              <CardTitle className="text-lg font-bold text-neutral-900 flex items-center gap-2">
-                <Award className="w-5 h-5 text-blue-600" />
-                Review Solutions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <p className="text-sm text-neutral-600 mb-4">
-                Review your answers and see detailed explanations for each question.
-              </p>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 font-semibold">
-                View Detailed Review →
-              </Button>
-            </CardContent>
-          </Card>
+                  <div className="flex items-center gap-6">
+                    <div className="flex flex-col items-end gap-1.5 min-w-[120px]">
+                      <span className="text-xs font-bold text-neutral-600">{calculateProgress(assign)}%</span>
+                      <Progress value={calculateProgress(assign)} className="h-1.5 w-full bg-neutral-100" />
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-neutral-400 transition-transform ${expandedAssignments[assign.id] ? '' : '-rotate-90'}`} />
+                  </div>
+                </div>
 
-          <Card className="shadow-md border-neutral-200">
-            <CardHeader className="bg-gradient-to-br from-green-50 to-green-50 border-b border-green-100">
-              <CardTitle className="text-lg font-bold text-neutral-900 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-green-600" />
-                Performance Insights
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="p-4 bg-green-50 border border-green-100 rounded-lg">
-                  <p className="text-sm font-semibold text-green-900 mb-1">Great Job! 🎉</p>
-                  <p className="text-sm text-green-700">
-                    You completed all questions successfully. Your average time per question was better than expected.
-                  </p>
-                </div>
-                <Button variant="outline" className="w-full font-semibold border-green-200 text-green-700 hover:bg-green-50">
-                  View Full Analytics →
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Next Steps Section */}
-        <Card className="shadow-md border-neutral-200 bg-gradient-to-br from-orange-50 to-orange-50">
-          <CardHeader className="border-b border-orange-100">
-            <CardTitle className="text-lg font-bold text-neutral-900">What's Next?</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <p className="text-sm text-neutral-700 mb-6">
-              Excellent progress! You've completed this assignment. Here are your next recommended actions:
-            </p>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-orange-100">
-                <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center flex-shrink-0 font-bold text-sm">1</div>
-                <div>
-                  <p className="font-semibold text-neutral-900">Attempt Practice Problems</p>
-                  <p className="text-sm text-neutral-600 mt-1">Solidify your knowledge with additional practice questions</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-orange-100">
-                <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center flex-shrink-0 font-bold text-sm">2</div>
-                <div>
-                  <p className="font-semibold text-neutral-900">Move to Next Assignment</p>
-                  <p className="text-sm text-neutral-600 mt-1">Progress to the next module and continue learning</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-4 bg-white rounded-lg border border-orange-100">
-                <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center flex-shrink-0 font-bold text-sm">3</div>
-                <div>
-                  <p className="font-semibold text-neutral-900">Review Weak Areas</p>
-                  <p className="text-sm text-neutral-600 mt-1">Focus on topics where you spent more time</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Bottom Navigation */}
-        <div className="flex justify-between items-center gap-4 pt-4 border-t border-neutral-200">
-          <Button
-            variant="outline"
-            className="border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-            onClick={onBack}
-          >
-            ← Previous Assignment
-          </Button>
-          <div className="flex gap-4">
-            <Button variant="outline" className="border-neutral-300 text-neutral-700 hover:bg-neutral-100">
-              Review Solutions
-            </Button>
-            <Button
-              className="rounded-lg px-8 font-semibold"
-              style={{ backgroundColor: 'var(--color-warning)' }}
-            >
-              Next Assignment →
-            </Button>
+                {expandedAssignments[assign.id] && assign.topics.length > 0 && (
+                  <div className="border-t border-neutral-100">
+                    <Table>
+                      <TableHeader className="bg-neutral-50/50">
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px]">Topic</TableHead>
+                          <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-center">Status</TableHead>
+                          <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {assign.topics.map((topic) => (
+                          <TableRow key={topic.id} className="hover:bg-neutral-50/50 transition-colors border-neutral-100">
+                            <TableCell className="px-6 py-4">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-neutral-800">{topic.title}</span>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-medium border-neutral-200 bg-neutral-100 text-neutral-600">
+                                    {topic.difficulty}
+                                  </Badge>
+                                  <span className="text-[10px] text-neutral-400">{topic.duration}</span>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 text-center">
+                              {topic.status === 'submitted' ? (
+                                <Badge className="bg-green-50 text-green-600 hover:bg-green-50 border-green-100 px-3 py-1 font-bold text-[10px] uppercase rounded-full">
+                                  Submitted
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-neutral-100 text-neutral-500 hover:bg-neutral-100 border-neutral-200 px-3 py-1 font-bold text-[10px] uppercase rounded-full">
+                                  Pending
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="px-6 py-4 text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-4 font-bold text-xs text-orange-600 hover:bg-orange-50 hover:text-orange-700 rounded-full"
+                                onClick={() => onSelectTopic(topic)}
+                              >
+                                {topic.hasAttempted ? 'Retake Test' : 'Start Test'}
+                                <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </Card>
+            ))}
           </div>
         </div>
       </div>

@@ -5,11 +5,11 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { 
-  FileText, 
-  Link2, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  FileText,
+  Link2,
+  CheckCircle2,
+  XCircle,
   ExternalLink,
   Settings
 } from 'lucide-react';
@@ -74,7 +74,7 @@ export function StudentSettings({ onNavigate }: StudentSettingsProps) {
       toast.error(`Please enter your ${platform.platform} username`);
       return;
     }
-    
+
     const updated = [...platformConnections];
     updated[index] = { ...updated[index], connected: true };
     setPlatformConnections(updated);
@@ -141,19 +141,17 @@ export function StudentSettings({ onNavigate }: StudentSettingsProps) {
                 return (
                   <div
                     key={platform.platform}
-                    className={`p-4 border-2 rounded-lg transition-all ${
-                      platform.connected
+                    className={`p-4 border-2 rounded-lg transition-all ${platform.connected
                         ? platform.color
                         : 'bg-white border-neutral-200 hover:border-neutral-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 flex-1">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center border-2 ${
-                          platform.connected
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center border-2 ${platform.connected
                             ? platform.color.replace('bg-', 'bg-').replace('border-', 'border-')
                             : 'bg-neutral-50 border-neutral-200'
-                        }`}>
+                          }`}>
                           <Icon />
                         </div>
                         <div className="flex-1">
@@ -168,11 +166,13 @@ export function StudentSettings({ onNavigate }: StudentSettingsProps) {
                           </div>
                           {platform.connected ? (
                             <p className="text-sm text-neutral-600 mt-1">
-                              Username: <span className="font-medium">{platform.username}</span>
+                              Profile: <a href={platform.username} target="_blank" rel="noreferrer" className="font-medium text-blue-600 hover:underline inline-flex items-center gap-1">
+                                View Profile <ExternalLink className="w-3 h-3" />
+                              </a>
                             </p>
                           ) : (
                             <p className="text-sm text-neutral-500 mt-1">
-                              Connect your {platform.platform} account
+                              Connect your {platform.platform} profile link
                             </p>
                           )}
                         </div>
@@ -182,14 +182,14 @@ export function StudentSettings({ onNavigate }: StudentSettingsProps) {
                         {!platform.connected ? (
                           <>
                             <Input
-                              placeholder={`${platform.platform} username`}
+                              placeholder={`https://${platform.platform.toLowerCase()}.com/u/profile`}
                               value={platform.username}
                               onChange={(e) => {
                                 const updated = [...platformConnections];
                                 updated[index].username = e.target.value;
                                 setPlatformConnections(updated);
                               }}
-                              className="w-48"
+                              className="w-64"
                             />
                             <Button
                               onClick={() => handleConnectPlatform(index)}

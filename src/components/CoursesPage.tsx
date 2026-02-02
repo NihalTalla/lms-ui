@@ -1684,8 +1684,19 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       {/* Enrolled Courses */}
       {
         !isAdmin && (
-          <div>
-            <h3 className="mb-4">My Courses</h3>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onNavigate('dashboard')}
+                className="text-neutral-500 hover:text-neutral-900"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </div>
+            <h3 className="mb-4 text-2xl font-bold">My Courses</h3>
             <div className={`grid gap-6 ${currentUser?.role === 'student' ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
               {(currentUser?.role === 'student' ? courses.slice(0, 1) : courses.slice(0, 2)).map((course) => (
                 <Card key={course.id} className="hover:shadow-lg transition-shadow">

@@ -151,7 +151,18 @@ export function CourseModulesPage({ course, onNavigate, userRole, canLock = fals
                       // Open the first assignment question directly in the coding view
                       const first = module.questions && module.questions.length > 0 ? module.questions[0] : null;
                       if (first) {
-                        onNavigate('student-coding', { challenge: first, module, course });
+                        onNavigate('coding-challenge-ui', {
+                          topicTitle: module.title,
+                          difficulty: 'Medium',
+                          problemDescription: module.content,
+                          examples: [
+                            { id: 'ex-1', input: 'n = 100', output: '2,4,8,14,22,32,44,58,74,92' }
+                          ],
+                          testCases: [
+                            { id: 'tc-1', input: '100', expectedOutput: '2,4,8,14,22,32,44,58,74,92', hidden: false }
+                          ],
+                          previousData: { course, module }
+                        });
                       } else {
                         toast.info('No assignments available for this module');
                       }

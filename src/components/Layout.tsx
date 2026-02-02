@@ -83,7 +83,10 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
       <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm flex-shrink-0">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => onNavigate('dashboard')}
+            >
               <Code2 className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
               <span className="font-bold text-xl">Codify LMS</span>
               <div
@@ -188,8 +191,8 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                      ? 'text-white shadow-md'
-                      : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
+                    ? 'text-white shadow-md'
+                    : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
                     }`}
                   style={isActive ? { backgroundColor: 'var(--color-primary)' } : {}}
                 >
@@ -218,8 +221,8 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
                     <button
                       onClick={() => onNavigate('manage-institutions')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${currentPage === 'manage-institutions'
-                          ? 'bg-neutral-100 text-neutral-900 font-medium'
-                          : 'text-neutral-600 hover:bg-neutral-50'
+                        ? 'bg-neutral-100 text-neutral-900 font-medium'
+                        : 'text-neutral-600 hover:bg-neutral-50'
                         }`}
                     >
                       <BookOpen className="w-4 h-4" />
@@ -228,8 +231,8 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
                     <button
                       onClick={() => onNavigate('batch-years')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${currentPage === 'batch-years'
-                          ? 'bg-neutral-100 text-neutral-900 font-medium'
-                          : 'text-neutral-600 hover:bg-neutral-50'
+                        ? 'bg-neutral-100 text-neutral-900 font-medium'
+                        : 'text-neutral-600 hover:bg-neutral-50'
                         }`}
                     >
                       <BarChart3 className="w-4 h-4" />
@@ -238,8 +241,8 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
                     <button
                       onClick={() => onNavigate('batches')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${currentPage === 'batches'
-                          ? 'bg-neutral-100 text-neutral-900 font-medium'
-                          : 'text-neutral-600 hover:bg-neutral-50'
+                        ? 'bg-neutral-100 text-neutral-900 font-medium'
+                        : 'text-neutral-600 hover:bg-neutral-50'
                         }`}
                     >
                       <Users className="w-4 h-4" />
@@ -269,8 +272,8 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
                     <button
                       onClick={() => onNavigate('assessments-management')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${currentPage === 'assessments-management'
-                          ? 'bg-neutral-100 text-neutral-900 font-medium'
-                          : 'text-neutral-600 hover:bg-neutral-50'
+                        ? 'bg-neutral-100 text-neutral-900 font-medium'
+                        : 'text-neutral-600 hover:bg-neutral-50'
                         }`}
                     >
                       <BarChart3 className="w-4 h-4" />
@@ -279,8 +282,8 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
                     <button
                       onClick={() => onNavigate('assessments-management')}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${currentPage === 'assessments-management'
-                          ? 'bg-neutral-100 text-neutral-900 font-medium'
-                          : 'text-neutral-600 hover:bg-neutral-50'
+                        ? 'bg-neutral-100 text-neutral-900 font-medium'
+                        : 'text-neutral-600 hover:bg-neutral-50'
                         }`}
                     >
                       <TrendingUp className="w-4 h-4" />
@@ -299,8 +302,8 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
               <button
                 onClick={() => onNavigate('settings')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'settings'
-                    ? 'text-white shadow-md'
-                    : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
+                  ? 'text-white shadow-md'
+                  : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
                   }`}
                 style={currentPage === 'settings' ? { backgroundColor: 'var(--color-primary)' } : {}}
               >
@@ -323,8 +326,10 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
       )}
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden transition-all duration-200" style={{ marginLeft: hideSidebar ? '0' : '256px' }}>
-        {children}
+      <main className="flex-1 overflow-y-auto transition-all duration-200" style={{ marginLeft: hideSidebar ? '0' : '256px' }}>
+        <div className="p-6 min-h-full">
+          {children}
+        </div>
       </main>
     </div>
   );

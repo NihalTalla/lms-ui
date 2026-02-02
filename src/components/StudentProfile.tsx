@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { 
-  User, 
-  Users, 
-  GraduationCap, 
-  TrendingUp, 
-  CheckCircle2, 
-  FileText, 
-  MessageSquare, 
+import { Badge } from './ui/badge';
+import {
+  User,
+  Users,
+  GraduationCap,
+  TrendingUp,
+  CheckCircle2,
+  FileText,
+  MessageSquare,
   ArrowLeft,
   Calendar,
   Upload,
-  ChevronDown
+  ChevronDown,
+  Plus
 } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
 import { ResumeBuilder } from './ResumeBuilder';
@@ -252,25 +254,120 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
           </div>
         );
 
+      case 'parent-info':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Users className="w-5 h-5" style={{ color: '#FF6B35' }} />
+              <h3 className="text-xl font-semibold">Parent Info</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Father's Name</Label>
+                <Input placeholder="Father's Name" />
+              </div>
+              <div className="space-y-2">
+                <Label>Mother's Name</Label>
+                <Input placeholder="Mother's Name" />
+              </div>
+              <div className="space-y-2">
+                <Label>Contact Number</Label>
+                <Input placeholder="Parent Contact" />
+              </div>
+              <div className="space-y-2">
+                <Label>Occupation</Label>
+                <Input placeholder="Occupation" />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'education':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-6">
+              <GraduationCap className="w-5 h-5" style={{ color: '#FF6B35' }} />
+              <h3 className="text-xl font-semibold">Education</h3>
+            </div>
+            <div className="space-y-6">
+              <div className="p-4 border border-neutral-100 bg-neutral-50/30 rounded-xl space-y-4">
+                <h4 className="font-bold text-neutral-800">Undergraduate</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input placeholder="Degree" defaultValue="B.Tech CS" />
+                  <Input placeholder="University" defaultValue="CMR Technical Campus" />
+                  <Input placeholder="Year of Completion" defaultValue="2027" />
+                  <Input placeholder="GPA/Percentage" defaultValue="8.5" />
+                </div>
+              </div>
+              <div className="p-4 border border-neutral-100 bg-neutral-50/30 rounded-xl space-y-4">
+                <h4 className="font-bold text-neutral-800">Higher Secondary</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input placeholder="Stream" defaultValue="MPC" />
+                  <Input placeholder="Institution" />
+                  <Input placeholder="Year" />
+                  <Input placeholder="Percentage" />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'academic-work':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-6">
+              <TrendingUp className="w-5 h-5" style={{ color: '#FF6B35' }} />
+              <h3 className="text-xl font-semibold">Academic Work</h3>
+            </div>
+            <div className="space-y-4">
+              <Card className="border-neutral-100">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-bold text-neutral-900">Final Year Project - AI Chatbot</h4>
+                    <Badge className="bg-orange-100 text-orange-600 border-none">Active</Badge>
+                  </div>
+                  <p className="text-sm text-neutral-500 mb-4">A sophisticated chatbot built with React and OpenAI API for campus automation.</p>
+                  <div className="flex gap-2">
+                    <Badge variant="outline">React</Badge>
+                    <Badge variant="outline">Node.js</Badge>
+                    <Badge variant="outline">OpenAI</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+              <Button variant="outline" className="w-full border-dashed">
+                <Plus className="w-4 h-4 mr-2" /> Add New Project
+              </Button>
+            </div>
+          </div>
+        );
+
+      case 'trainer-feedback':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 mb-6">
+              <MessageSquare className="w-5 h-5" style={{ color: '#FF6B35' }} />
+              <h3 className="text-xl font-semibold">Trainer Feedback</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded-r-xl">
+                <p className="text-sm font-bold text-orange-700 mb-1">Excellent Problem Solving Skills</p>
+                <p className="text-xs text-orange-600 mb-2">"Nihal has shown great potential in competitive programming. Needs slight focus on time complexity."</p>
+                <div className="flex items-center gap-2">
+                  <Avatar className="w-6 h-6">
+                    <AvatarFallback className="text-[10px] bg-orange-500 text-white font-bold">JD</AvatarFallback>
+                  </Avatar>
+                  <span className="text-[10px] font-bold text-orange-800">John Doe, Lead Trainer</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       case 'view-resume':
         return <ResumeBuilder />;
 
       default:
-        return (
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-6">
-              <User className="w-5 h-5" style={{ color: '#FF6B35' }} />
-              <h3 className="text-xl font-semibold">
-                {menuItems.find(item => item.id === activeSection)?.label}
-              </h3>
-            </div>
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-neutral-600">This section is coming soon...</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return null;
     }
   };
 
@@ -296,11 +393,10 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                  isActive
-                    ? 'text-white shadow-md'
-                    : 'text-neutral-700 hover:bg-neutral-100'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
+                  ? 'text-white shadow-md'
+                  : 'text-neutral-700 hover:bg-neutral-100'
+                  }`}
                 style={isActive ? { backgroundColor: '#FF6B35' } : {}}
               >
                 <Icon className="w-5 h-5" />
