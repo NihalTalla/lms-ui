@@ -135,7 +135,7 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
   };
 
   return (
-    <div className="flex h-screen w-full bg-white overflow-hidden font-sans text-neutral-900">
+    <div className="fixed inset-0 z-50 flex h-screen w-full bg-white overflow-hidden font-sans text-neutral-900">
 
       {/* SIDEBAR - Fixed width, distinct separation */}
       <aside
@@ -148,37 +148,37 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
           {sidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
 
-          <div className="p-8 pb-4 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-neutral-100">
-                <Code2 className="w-6 h-6 text-neutral-900" />
-              </div>
-              {!sidebarMinimized && <span className="font-bold text-2xl tracking-tight text-neutral-900">Codify</span>}
+        <div className="p-8 pb-4 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-neutral-100">
+              <Code2 className="w-6 h-6 text-neutral-900" />
             </div>
-
-            {!sidebarMinimized && (
-              <button
-                onClick={onBack}
-                className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors text-sm font-medium"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Modules
-              </button>
-            )}
+            {!sidebarMinimized && <span className="font-bold text-2xl tracking-tight text-neutral-900">Codify</span>}
           </div>
 
           {!sidebarMinimized && (
-            <div className="px-8 py-6 space-y-4">
-              <h2 className="text-xl font-bold leading-tight text-neutral-900">Problem-Solving with Iteration</h2>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm font-medium text-neutral-500">
-                  <span>1 Chapters</span>
-                  <span>100%</span>
-                </div>
-                <Progress value={100} className="h-2 bg-neutral-100" indicatorClassName="bg-neutral-900" />
-              </div>
-            </div>
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors text-sm font-medium"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Modules
+            </button>
           )}
+        </div>
+
+        {!sidebarMinimized && (
+          <div className="px-8 py-6 space-y-4">
+            <h2 className="text-xl font-bold leading-tight text-neutral-900">Problem-Solving with Iteration</h2>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm font-medium text-neutral-500">
+                <span>1 Chapters</span>
+                <span>100%</span>
+              </div>
+              <Progress value={100} className="h-2 bg-neutral-100" indicatorClassName="bg-neutral-900" />
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
           <div className="px-4">
@@ -244,10 +244,8 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
           <div className="w-full max-w-[1400px] mx-auto px-16 py-12 flex flex-col min-h-full">
 
             {/* HEADER - Updated Breadcrumb & Date */}
-            <header className="mb-14 flex items-start justify-between">
-              <div className="flex-1" /> {/* Spacer */}
-              
-              <div className="flex flex-col items-center">
+            <header className="mb-14 flex items-center justify-between">
+              <div className="flex flex-col">
                 {/* Updated Breadcrumb */}
                 <div className="flex items-center gap-3 text-sm font-medium text-neutral-500">
                   <span className="hover:text-neutral-900 transition-colors cursor-pointer">Cohort 46</span>
@@ -259,7 +257,7 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
               </div>
 
               {/* Date & Time */}
-              <div className="flex-1 flex flex-col items-end text-right">
+              <div className="flex items-center gap-3 text-right">
                 <div className="flex flex-col">
                   <span className="text-sm font-bold text-neutral-900">Sunday, Nov 30</span>
                   <span className="text-sm font-medium text-neutral-400">11:55 PM</span>
@@ -358,64 +356,76 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                   </div>
 
                   <div className="border border-neutral-100 rounded-[24px] overflow-hidden bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-                    <div className="grid grid-cols-12 gap-8 px-8 py-5 bg-neutral-50/80 border-b border-neutral-100 text-[10px] font-black text-neutral-400 uppercase tracking-widest">
-                      <div className="col-span-12 md:col-span-5 flex items-center">Topic</div>
-                      <div className="col-span-3 hidden md:flex items-center justify-center">Questions</div>
-                      <div className="col-span-2 hidden md:flex items-center justify-center">Status</div>
-                      <div className="col-span-2 hidden md:block"></div>
-                    </div>
-
-                    <div className="divide-y divide-neutral-50">
-                      {activeItem.assignment.topics.map((t, i) => (
-                        <div
-                          key={i}
-                          onClick={() => onNavigate('coding-challenge-ui', {
-                            topicTitle: t.title,
-                            difficulty: t.difficulty,
-                            problemDescription: 'Find the length of the longest substring without repeating characters in a given string. Series: 2, 4, 8, 14, 22, ..., n',
-                            examples: [
-                              {
-                                id: 'ex-1',
-                                input: 'n = 100',
-                                output: '2,4,8,14,22,32,44,58,74,92',
+                    <Table>
+                      <TableHeader className="bg-neutral-50/80">
+                        <TableRow className="border-b border-neutral-100 hover:bg-transparent">
+                          <TableHead className="w-[45%] pl-8 py-5 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Topic</TableHead>
+                          <TableHead className="text-center py-5 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Questions</TableHead>
+                          <TableHead className="text-center py-5 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Status</TableHead>
+                          <TableHead className="text-right pr-8 py-5 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {activeItem.assignment.topics.map((t, i) => (
+                          <TableRow
+                            key={i}
+                            className="cursor-pointer hover:bg-neutral-50/50 transition-colors border-b border-neutral-50 last:border-0"
+                            onClick={() => onNavigate('student-coding', {
+                              challenge: {
+                                title: t.title,
+                                question: t.title,
+                                difficulty: t.difficulty,
+                                description: 'Find the length of the longest substring without repeating characters in a given string. Series: 2, 4, 8, 14, 22, ..., n',
+                                examples: [
+                                  {
+                                    id: 'ex-1',
+                                    input: 'n = 100',
+                                    output: '2,4,8,14,22,32,44,58,74,92',
+                                  },
+                                  {
+                                    id: 'ex-2',
+                                    input: 'n = 200',
+                                    output: '2,4,8,14,22,32,44,58,74,92,112,134,158,184',
+                                  }
+                                ],
+                                testCases: [
+                                  { id: 'tc-1', input: '100', expectedOutput: '2,4,8,14,22,32,44,58,74,92', hidden: false },
+                                  { id: 'tc-2', input: '200', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184', hidden: false },
+                                  { id: 'tc-3', input: '500', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184,212,242,274,308,344,382,422,464', hidden: true },
+                                ]
                               },
-                              {
-                                id: 'ex-2',
-                                input: 'n = 200',
-                                output: '2,4,8,14,22,32,44,58,74,92,112,134,158,184',
-                              }
-                            ],
-                            testCases: [
-                              { id: 'tc-1', input: '100', expectedOutput: '2,4,8,14,22,32,44,58,74,92', hidden: false },
-                              { id: 'tc-2', input: '200', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184', hidden: false },
-                              { id: 'tc-3', input: '500', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184,212,242,274,308,344,382,422,464', hidden: true },
-                            ],
-                            previousData: { course, module: selectedModule }
-                          })}
-                          className="grid grid-cols-12 gap-8 px-8 py-8 items-center cursor-pointer group hover:bg-neutral-50/50 transition-colors"
-                        >
-                          <div className="col-span-12 md:col-span-5 font-bold text-lg text-neutral-800 group-hover:text-orange-600 transition-colors">
-                            {t.title}
-                          </div>
-                          <div className="col-span-6 md:col-span-3 flex md:justify-center">
-                            <span className="bg-neutral-100 text-neutral-600 text-xs font-bold px-4 py-1.5 rounded-lg">
-                              {t.questions}
-                            </span>
-                          </div>
-                          <div className="col-span-6 md:col-span-2 flex md:justify-center">
-                            <span className="text-green-600 bg-green-50 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full">
-                              {t.status}
-                            </span>
-                          </div>
-                          <div className="col-span-12 md:col-span-2 flex items-center justify-end gap-4 mt-4 md:mt-0">
-                            <Button variant="outline" className="h-9 px-5 rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 group-hover:border-orange-200 group-hover:text-orange-600 group-hover:bg-white bg-transparent shadow-none hover:shadow-sm transition-all">
-                              Retake
-                            </Button>
-                            <ChevronRight className="w-5 h-5 text-neutral-300 group-hover:text-neutral-900 transition-colors" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                              module: selectedModule,
+                              course: course,
+                              previousData: { course, module: selectedModule }
+                            })}
+                          >
+                            <TableCell className="pl-8 py-6">
+                              <span className="font-bold text-lg text-neutral-800 group-hover:text-orange-600 transition-colors">
+                                {t.title}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center py-6">
+                              <span className="bg-neutral-100 text-neutral-600 text-xs font-bold px-4 py-1.5 rounded-lg inline-block">
+                                {t.questions}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center py-6">
+                              <span className="text-green-600 bg-green-50 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full inline-block">
+                                {t.status}
+                              </span>
+                            </TableCell>
+                            <TableCell className="pr-8 py-6 text-right">
+                              <div className="flex items-center justify-end gap-3">
+                                <Button variant="outline" className="h-8 px-4 rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 hover:border-orange-200 hover:text-orange-600 hover:bg-white bg-transparent shadow-none transition-all">
+                                  Retake
+                                </Button>
+                                <ChevronRight className="w-5 h-5 text-neutral-300" />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               )}

@@ -82,7 +82,7 @@ export function AssignmentListingPage({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-50 overflow-hidden text-neutral-900 font-sans">
+    <div className="fixed inset-0 z-50 w-screen h-screen bg-neutral-50 overflow-hidden text-neutral-900 font-sans">
       <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-8 flex-shrink-0">
         <div className="flex items-center gap-4">
           <Button variant="ghost" className="text-neutral-500 hover:text-neutral-900 p-0 h-auto" onClick={onBack}>

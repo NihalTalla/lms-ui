@@ -3,9 +3,10 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
 import { Textarea } from './ui/textarea';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { Alert, AlertDescription } from './ui/alert';
-import { Progress } from './ui/progress';
 import {
   Clock,
   Video,
@@ -18,28 +19,28 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Send,
-  X,
-  Trophy,
-  Code2,
   GripHorizontal,
-  Eye,
-  EyeOff,
+  List,
+  Play,
+  Code2,
+  Trophy,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Question {
   id: string;
+  type: 'coding' | 'mcq';
   title: string;
   description: string;
   difficulty: 'easy' | 'medium' | 'hard';
   points: number;
   examples?: { input: string; output: string; explanation?: string }[];
-  testCases?: { input: string; expectedOutput: string }[];
+  options?: string[];
+  correctOption?: number;
 }
 
 interface ContestParticipationProps {
-  contest: {
+  contest?: {
     id: string;
     title: string;
     duration: number; // minutes
@@ -50,31 +51,21 @@ interface ContestParticipationProps {
 }
 
 export function ContestParticipation({ contest, onSubmit, onExit }: ContestParticipationProps) {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [timeRemaining, setTimeRemaining] = useState(contest.duration * 60);
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-  const [isMicEnabled, setIsMicEnabled] = useState(true);
-  const [cameraMinimized, setCameraMinimized] = useState(false);
-  const [showWarningDialog, setShowWarningDialog] = useState(false);
-  const [warningCount, setWarningCount] = useState(0);
-  const [warningMessage, setWarningMessage] = useState('');
-  const [showExitDialog, setShowExitDialog] = useState(false);
-  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
-  const [score, setScore] = useState(0);
-  const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(new Set());
-  const [cameraPosition, setCameraPosition] = useState({ x: 20, y: 20 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Mock questions if none provided
-  const questions: Question[] = contest.questions.length > 0 ? contest.questions : [
+  // --- MOCK DATA FOR DEMO ---
+  const questions: Question[] = [
     {
       id: 'q1',
+      type: 'mcq',
+      title: 'Time Complexity Analysis',
+      description: 'What is the time complexity of searching in a balanced Binary Search Tree (BST)?',
+      difficulty: 'easy',
+      points: 20,
+      options: ['O(n)', 'O(log n)', 'O(n log n)', 'O(1)'],
+      correctOption: 1,
+    },
+    {
+      id: 'q2',
+      type: 'coding',
       title: 'Two Sum',
       description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.',
       difficulty: 'easy',
@@ -85,19 +76,18 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
       ],
     },
     {
-      id: 'q2',
-      title: 'Valid Parentheses',
-      description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid.\n\nAn input string is valid if:\n1. Open brackets must be closed by the same type of brackets.\n2. Open brackets must be closed in the correct order.\n3. Every close bracket has a corresponding open bracket of the same type.',
+      id: 'q3',
+      type: 'mcq',
+      title: 'Stack Operations',
+      description: 'Which data structure follows the LIFO (Last In First Out) principle?',
       difficulty: 'easy',
-      points: 50,
-      examples: [
-        { input: 's = "()"', output: 'true' },
-        { input: 's = "()[]{}"', output: 'true' },
-        { input: 's = "(]"', output: 'false' },
-      ],
+      points: 20,
+      options: ['Queue', 'Stack', 'Linked List', 'Tree'],
+      correctOption: 1,
     },
     {
-      id: 'q3',
+      id: 'q4',
+      type: 'coding',
       title: 'Merge Intervals',
       description: 'Given an array of intervals where intervals[i] = [starti, endi], merge all overlapping intervals, and return an array of the non-overlapping intervals that cover all the intervals in the input.',
       difficulty: 'medium',
@@ -106,31 +96,84 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
         { input: 'intervals = [[1,3],[2,6],[8,10],[15,18]]', output: '[[1,6],[8,10],[15,18]]', explanation: 'Since intervals [1,3] and [2,6] overlap, merge them into [1,6].' },
       ],
     },
-    {
-      id: 'q4',
-      title: 'LRU Cache',
-      description: 'Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\nImplement the LRUCache class:\n- LRUCache(int capacity) Initialize the LRU cache with positive size capacity.\n- int get(int key) Return the value of the key if the key exists, otherwise return -1.\n- void put(int key, int value) Update the value of the key if the key exists. Otherwise, add the key-value pair to the cache.',
-      difficulty: 'hard',
-      points: 150,
-      examples: [
-        { input: '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]', output: '[null, null, null, 1, null, -1, null, -1, 3, 4]' },
-      ],
-    },
-    {
-      id: 'q5',
-      title: 'Word Ladder',
-      description: 'A transformation sequence from word beginWord to word endWord using a dictionary wordList is a sequence of words beginWord -> s1 -> s2 -> ... -> sk such that:\n\n- Every adjacent pair of words differs by a single letter.\n- Every si for 1 <= i <= k is in wordList.\n\nGiven two words, beginWord and endWord, and a dictionary wordList, return the number of words in the shortest transformation sequence from beginWord to endWord, or 0 if no such sequence exists.',
-      difficulty: 'hard',
-      points: 150,
-      examples: [
-        { input: 'beginWord = "hit", endWord = "cog", wordList = ["hot","dot","dog","lot","log","cog"]', output: '5', explanation: 'One shortest transformation sequence is "hit" -> "hot" -> "dot" -> "dog" -> "cog", which is 5 words long.' },
-      ],
-    },
   ];
 
-  const currentQuestion = questions[currentQuestionIndex];
+  const contestTitle = contest?.title || "Data Structures Contest";
+  const contestDuration = 90; // Fixed 90 mins for demo
 
-  // Initialize camera
+  // --- STATE ---
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [timeRemaining, setTimeRemaining] = useState(contestDuration * 60);
+
+  // Resizable State
+  const [leftPanelWidth, setLeftPanelWidth] = useState(33.33); // Percentage
+  const [bottomPanelHeight, setBottomPanelHeight] = useState(250); // Pixels for test cases
+  const [isResizingLeft, setIsResizingLeft] = useState(false);
+  const [isResizingBottom, setIsResizingBottom] = useState(false);
+
+  // Monitoring
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isMicEnabled, setIsMicEnabled] = useState(true);
+  const [cameraMinimized, setCameraMinimized] = useState(false);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [warningCount, setWarningCount] = useState(0);
+  const [warningMessage, setWarningMessage] = useState('');
+
+  // Dialogs
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+
+  // Progress
+  const [score, setScore] = useState(0);
+  const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(new Set());
+
+  // Camera Dragging
+  const [cameraPosition, setCameraPosition] = useState({ x: 20, y: 70 });
+  const [isDraggingCamera, setIsDraggingCamera] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const isCoding = currentQuestion && currentQuestion.type === 'coding';
+
+  // --- RESIZE LOGIC ---
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isResizingLeft) {
+      const newWidth = (e.clientX / window.innerWidth) * 100;
+      if (newWidth > 20 && newWidth < 80) setLeftPanelWidth(newWidth);
+    }
+    if (isResizingBottom) {
+      const newHeight = window.innerHeight - e.clientY;
+      if (newHeight > 100 && newHeight < 600) setBottomPanelHeight(newHeight);
+    }
+    if (isDraggingCamera) {
+      setCameraPosition({
+        x: Math.max(0, Math.min(window.innerWidth - 200, e.clientX - dragOffset.x)),
+        y: Math.max(0, Math.min(window.innerHeight - 160, e.clientY - dragOffset.y)),
+      });
+    }
+  }, [isResizingLeft, isResizingBottom, isDraggingCamera, dragOffset]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizingLeft(false);
+    setIsResizingBottom(false);
+    setIsDraggingCamera(false);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
+  // --- CAMERA INIT ---
   useEffect(() => {
     const initCamera = async () => {
       try {
@@ -141,17 +184,9 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
         }
       } catch (error) {
         console.error('Camera access error:', error);
-        toast.error('Could not access camera/microphone');
       }
     };
-
     initCamera();
-
-    // Enter fullscreen
-    if (containerRef.current) {
-      containerRef.current.requestFullscreen?.().catch(() => { });
-    }
-
     return () => {
       if (mediaStreamRef.current) {
         mediaStreamRef.current.getTracks().forEach(track => track.stop());
@@ -159,7 +194,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
     };
   }, []);
 
-  // Timer
+  // --- TIMER ---
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
@@ -171,11 +206,10 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
-  // Malpractice detection - tab visibility
+  // --- TAB VISIBILITY ---
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
@@ -183,28 +217,25 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
         setWarningCount(newCount);
         setWarningMessage('You switched tabs! This activity has been recorded.');
         setShowWarningDialog(true);
-
         if (newCount >= 3) {
           toast.error('Maximum warnings reached. Your test will be submitted.');
           handleFinalSubmit();
         }
       }
     };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [warningCount]);
 
+  // --- HELPERS ---
   const toggleVideo = () => {
     if (mediaStreamRef.current) {
       const videoTrack = mediaStreamRef.current.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setIsVideoEnabled(videoTrack.enabled);
-
         if (!videoTrack.enabled) {
-          const newCount = warningCount + 1;
-          setWarningCount(newCount);
+          setWarningCount(c => c + 1);
           setWarningMessage('Camera was turned off. Please keep your camera on during the contest.');
           setShowWarningDialog(true);
         }
@@ -222,57 +253,36 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
     }
   };
 
-  // Dragging
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragOffset({
-      x: e.clientX - cameraPosition.x,
-      y: e.clientY - cameraPosition.y,
-    });
+  const startDraggingCamera = (e: React.MouseEvent) => {
+    setIsDraggingCamera(true);
+    setDragOffset({ x: e.clientX - cameraPosition.x, y: e.clientY - cameraPosition.y });
   };
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (isDragging) {
-      setCameraPosition({
-        x: Math.max(0, Math.min(window.innerWidth - 200, e.clientX - dragOffset.x)),
-        y: Math.max(0, Math.min(window.innerHeight - 160, e.clientY - dragOffset.y)),
-      });
-    }
-  }, [isDragging, dragOffset]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, handleMouseMove, handleMouseUp]);
-
   const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return "00:00:00";
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleSubmitQuestion = () => {
+  const handleQuestionSubmit = () => {
     if (!answers[currentQuestion.id]) {
-      toast.error('Please write your solution before submitting');
+      toast.error('Please attempt the question first');
       return;
     }
-
-    // Simulate scoring
-    const earnedPoints = Math.floor(Math.random() * currentQuestion.points);
+    const earnedPoints = Math.floor(Math.random() * currentQuestion.points); // Mock score
     setScore(prev => prev + earnedPoints);
     setSubmittedQuestions(prev => new Set([...prev, currentQuestion.id]));
-    toast.success(`Solution submitted! +${earnedPoints} points`);
+    toast.success('Response Submitted');
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else {
+      setShowSubmitDialog(true);
+    }
   };
 
   const handleFinalSubmit = () => {
@@ -280,368 +290,261 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
     toast.success('Contest completed!');
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-700 border-green-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'hard': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-neutral-100 text-neutral-700';
-    }
-  };
-
-  const getTimerColor = () => {
-    if (timeRemaining <= 300) return 'text-red-500'; // Last 5 minutes
-    if (timeRemaining <= 900) return 'text-orange-500'; // Last 15 minutes
-    return 'text-white';
-  };
-
   return (
-    <div ref={containerRef} className="min-h-screen bg-neutral-200 text-black flex flex-col font-sans">
-      {/* Warning Dialog */}
+    <div ref={containerRef} className="fixed inset-0 z-50 w-screen h-screen bg-white text-neutral-900 flex flex-col font-sans overflow-hidden">
+
+      {/* WARNING DIALOGS */}
       <Dialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
-        <DialogContent className="bg-white border-2 border-black text-black max-w-md">
+        <DialogContent className="bg-white border-2 border-black max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-orange-400">
+            <DialogTitle className="flex items-center gap-2 text-orange-600">
               <AlertTriangle className="w-5 h-5" />
               Warning ({warningCount}/3)
             </DialogTitle>
-            <DialogDescription className="text-slate-300">
-              {warningMessage}
-            </DialogDescription>
+            <DialogDescription>{warningMessage}</DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-              <p className="text-sm text-red-300">
-                {warningCount >= 2
-                  ? 'This is your final warning. One more violation will auto-submit your test.'
-                  : 'Please refrain from such activities. Repeated violations will result in automatic submission.'}
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowWarningDialog(false)} className="bg-black text-white hover:bg-neutral-800 w-full font-bold h-12">
-              I Understand
-            </Button>
-          </DialogFooter>
+          <DialogFooter><Button onClick={() => setShowWarningDialog(false)} className="bg-black text-white w-full">I Understand</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Exit Confirmation */}
       <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
-        <DialogContent className="bg-white border-2 border-black text-black max-w-md">
-          <DialogHeader>
-            <DialogTitle>Exit Contest?</DialogTitle>
-            <DialogDescription className="text-slate-300">
-              Are you sure you want to leave? Your progress will be saved but you cannot return.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="bg-white border-2 border-black max-w-md">
+          <DialogHeader><DialogTitle>Exit Contest?</DialogTitle></DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowExitDialog(false)} className="border-black text-black font-bold h-12">
-              Stay
-            </Button>
-            <Button onClick={() => { onExit(); }} className="bg-black text-white hover:bg-neutral-800 font-bold h-12 px-6">
-              Exit Contest
-            </Button>
+            <Button variant="outline" onClick={() => setShowExitDialog(false)}>Stay</Button>
+            <Button onClick={onExit} className="bg-black text-white">Exit</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Submit Confirmation */}
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-orange-400" />
-              Submit All Solutions?
-            </DialogTitle>
-            <DialogDescription className="text-slate-300">
-              You have submitted {submittedQuestions.size} of {questions.length} questions.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-3">
-            <div className="bg-slate-700/50 rounded-lg p-4">
-              <p className="text-3xl font-bold text-orange-400">{score} pts</p>
-              <p className="text-sm text-slate-400">Current Score</p>
-            </div>
-            <p className="text-sm text-slate-400">
-              Are you sure you want to finish? You cannot return after submitting.
-            </p>
-          </div>
+        <DialogContent className="bg-white border-2 border-black max-w-md">
+          <DialogHeader><DialogTitle>Submit All?</DialogTitle></DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowSubmitDialog(false)} className="border-slate-600 text-slate-300">
-              Continue Working
-            </Button>
-            <Button onClick={handleFinalSubmit} className="bg-green-600 hover:bg-green-700">
-              Finish Contest
-            </Button>
+            <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>Review</Button>
+            <Button onClick={handleFinalSubmit} className="bg-green-600 text-white hover:bg-green-700">Finish Contest</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Header */}
-      <header className="bg-white border-b border-black/10 px-8 py-4 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Code2 className="w-8 h-8 text-black" />
-            <h1 className="font-black text-xl tracking-tight">{contest.title}</h1>
-          </div>
-
-          <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30">
-            Q{currentQuestionIndex + 1} of {questions.length}
-          </Badge>
+      {/* HEADER */}
+      <header className="h-16 bg-white border-b border-neutral-200 px-6 flex items-center justify-between shrink-0 z-50">
+        <div className="flex items-center gap-4">
+          <Code2 className="w-6 h-6 text-neutral-900" />
+          <h1 className="font-bold text-lg">{contestTitle}</h1>
+          <div className="h-6 w-px bg-neutral-200 mx-2" />
+          <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 border-none font-medium">Question {currentQuestionIndex + 1} / {questions.length}</Badge>
         </div>
 
         <div className="flex items-center gap-6">
-          {/* Score */}
-          <div className="flex items-center gap-2 bg-slate-700/50 px-4 py-2 rounded-lg">
-            <Trophy className="w-4 h-4 text-yellow-400" />
-            <span className="font-bold text-yellow-400">{score}</span>
-            <span className="text-slate-400 text-sm">pts</span>
+          {/* Points */}
+          <div className="flex items-center gap-2 bg-neutral-50 px-3 py-1.5 rounded-md border border-neutral-100">
+            <Trophy className="w-4 h-4 text-orange-500" />
+            <span className="font-bold text-neutral-900">{score}</span>
+            <span className="text-xs text-neutral-500">pts</span>
           </div>
-
           {/* Timer */}
-          <div className={`flex items-center gap-2 bg-slate-700/50 px-4 py-2 rounded-lg ${getTimerColor()}`}>
+          <div className={`flex items-center gap-2 font-mono font-bold text-lg ${timeRemaining < 300 ? 'text-red-500 animate-pulse' : 'text-neutral-900'}`}>
             <Clock className="w-4 h-4" />
-            <span className="font-mono font-bold text-lg">{formatTime(timeRemaining)}</span>
+            {formatTime(timeRemaining)}
           </div>
-
-          {/* Exit */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowExitDialog(true)}
-            className="border-black text-black hover:bg-black hover:text-white font-bold px-6 h-10 rounded-xl transition-all"
-          >
-            Exit Contest
-          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowExitDialog(true)} className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold">Exit</Button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left: Problem Description */}
-        <div className="w-1/2 border-r border-black/10 flex flex-col overflow-hidden bg-neutral-100/50">
-          <div className="p-6 overflow-y-auto flex-1">
-            {/* Problem Header */}
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-2xl font-bold text-black">{currentQuestion.title}</h2>
-              <Badge className={getDifficultyColor(currentQuestion.difficulty)}>
-                {currentQuestion.difficulty}
-              </Badge>
-              <Badge className="bg-white text-black border-black/10">
-                {currentQuestion.points} pts
-              </Badge>
-            </div>
+      {/* MAIN CONTENT */}
+      <div className="flex-1 flex overflow-hidden relative" onMouseUp={handleMouseUp} onMouseMove={(e) => handleMouseMove(e as any)}>
 
-            {/* Description */}
-            <div className="prose prose-neutral max-w-none mb-8">
-              <p className="text-neutral-800 whitespace-pre-line leading-relaxed font-medium">
-                {currentQuestion.description}
-              </p>
+        {/* SIDEBAR - Only for MCQ */}
+        {!isCoding && (
+          <aside className="w-64 bg-neutral-50 border-r border-neutral-200 flex flex-col shrink-0">
+            <div className="p-4 border-b border-neutral-200">
+              <h3 className="font-bold text-neutral-500 text-xs uppercase tracking-widest flex items-center gap-2"><List className="w-4 h-4" /> Questions</h3>
             </div>
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {questions.map((q, idx) => (
+                <button
+                  key={q.id}
+                  onClick={() => setCurrentQuestionIndex(idx)}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between group ${currentQuestionIndex === idx ? 'bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-200' : 'text-neutral-500 hover:bg-neutral-100'
+                    }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${currentQuestionIndex === idx ? 'bg-black text-white' : 'bg-neutral-200 text-neutral-500'}`}>{idx + 1}</span>
+                    <span className="truncate w-32">{q.type === 'coding' ? 'Code' : 'MCQ'}</span>
+                  </span>
+                  {submittedQuestions.has(q.id) && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                </button>
+              ))}
+            </div>
+          </aside>
+        )}
 
-            {/* Examples */}
-            {currentQuestion.examples && currentQuestion.examples.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-black">Examples</h3>
-                {currentQuestion.examples.map((example, idx) => (
-                  <div key={idx} className="bg-slate-800/50 rounded-xl p-4 space-y-3 border border-slate-700">
-                    <div>
-                      <span className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Input</span>
-                      <pre className="mt-1 text-sm text-blue-700 bg-white rounded-lg p-3 overflow-x-auto border border-black/5">
-                        {example.input}
-                      </pre>
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Output</span>
-                      <pre className="mt-1 text-sm text-green-700 bg-white rounded-lg p-3 overflow-x-auto border border-black/5">
-                        {example.output}
-                      </pre>
-                    </div>
-                    {example.explanation && (
-                      <div>
-                        <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">Explanation</span>
-                        <p className="mt-1 text-sm text-slate-400">{example.explanation}</p>
-                      </div>
-                    )}
+        {/* CONTENT */}
+        <main className="flex-1 flex flex-col min-w-0 bg-[#F8F9FA] relative">
+          {/* MCQ LAYOUT */}
+          {!isCoding && (
+            <div className="flex-1 overflow-y-auto p-12 flex justify-center">
+              <div className="w-full max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-neutral-900 text-white hover:bg-neutral-800">{currentQuestion.difficulty}</Badge>
+                    <span className="text-neutral-400 text-sm font-bold uppercase tracking-widest">{currentQuestion.points} Points</span>
+                  </div>
+                  <h2 className="text-3xl font-bold text-neutral-900 leading-tight">{currentQuestion.title}</h2>
+                  <p className="text-lg text-neutral-600 leading-relaxed">{currentQuestion.description}</p>
+                </div>
+                <Card className="border-neutral-200 shadow-sm">
+                  <CardContent className="p-8">
+                    <RadioGroup
+                      value={answers[currentQuestion.id] || ''}
+                      onValueChange={(val) => setAnswers({ ...answers, [currentQuestion.id]: val })}
+                      className="space-y-4"
+                    >
+                      {currentQuestion.options?.map((opt, idx) => (
+                        <div key={idx} className={`flex items-center space-x-2 border rounded-xl p-4 transition-all cursor-pointer ${answers[currentQuestion.id] === opt ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900' : 'border-neutral-200 hover:border-neutral-300'}`}>
+                          <RadioGroupItem value={opt} id={`opt-${idx}`} className="text-neutral-900 border-neutral-400" />
+                          <Label htmlFor={`opt-${idx}`} className="flex-1 cursor-pointer font-medium text-lg ml-3 text-neutral-800">{opt}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </CardContent>
+                </Card>
+                <div className="flex items-center gap-4 pt-4">
+                  <Button onClick={handleQuestionSubmit} disabled={submittedQuestions.has(currentQuestion.id)} className="bg-black text-white hover:bg-neutral-800 h-12 px-8 rounded-xl font-bold text-base shadow-lg">{submittedQuestions.has(currentQuestion.id) ? 'Submitted' : 'Submit Answer'}</Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CODING LAYOUT (Split 1/3 - 2/3) */}
+          {isCoding && (
+            <div className="flex-1 flex overflow-hidden">
+              {/* LEFT: Problem (Resizable) */}
+              <div style={{ width: `${leftPanelWidth}%` }} className="bg-white border-r border-neutral-200 overflow-y-auto p-6 space-y-6 relative shrink-0">
+                {/* Drag Handle */}
+                <div
+                  onMouseDown={() => setIsResizingLeft(true)}
+                  className="absolute right-0 top-0 bottom-0 w-1 bg-transparent hover:bg-blue-400 cursor-col-resize z-20 group"
+                >
+                  <div className="w-px h-full bg-neutral-200 group-hover:bg-blue-400 transition-colors mx-auto" />
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-bold text-neutral-900">{currentQuestion.title}</h2>
+                  <div className="flex gap-2">
+                    <Badge variant="outline" className="uppercase text-[10px] font-bold">{currentQuestion.difficulty}</Badge>
+                    <Badge variant="outline" className="uppercase text-[10px] font-bold bg-neutral-50">{currentQuestion.points} pts</Badge>
+                  </div>
+                </div>
+                <div className="prose prose-neutral prose-sm max-w-none text-neutral-600">
+                  <p className="whitespace-pre-wrap">{currentQuestion.description}</p>
+                </div>
+                {currentQuestion.examples?.map((ex, i) => (
+                  <div key={i} className="bg-neutral-50 rounded-lg p-3 border border-neutral-100 text-sm space-y-1">
+                    <p className="font-bold text-neutral-900 text-xs uppercase">Example {i + 1}</p>
+                    <div><span className="text-neutral-500">Input:</span> <code className="text-neutral-900 font-bold">{ex.input}</code></div>
+                    <div><span className="text-neutral-500">Output:</span> <code className="text-neutral-900 font-bold">{ex.output}</code></div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Right: Code Editor */}
-        <div className="w-1/2 flex flex-col overflow-hidden bg-slate-950">
-          {/* Editor Header */}
-          <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-black/10">
-            <span className="text-sm font-bold text-neutral-500 uppercase tracking-widest">Solution</span>
-            {submittedQuestions.has(currentQuestion.id) && (
-              <Badge className="bg-green-100 text-green-700 border-none font-bold">
-                <CheckCircle2 className="w-3 h-3 mr-1" />
-                Submitted
-              </Badge>
-            )}
-          </div>
+              {/* RIGHT: Code + Tests */}
+              <div className="flex-1 flex flex-col bg-[#1e1e1e] border-l border-neutral-800 min-w-0">
+                {/* Top: Editor */}
+                <div className="flex-1 flex flex-col min-h-0 relative">
+                  <div className="h-10 bg-[#252526] flex items-center px-4 justify-between border-b border-[#333] shrink-0">
+                    <span className="text-neutral-400 text-xs font-mono">Solution.java</span>
+                    <Badge variant="outline" className="border-green-800 text-green-500 bg-green-900/10 text-[10px]">Auto-Saved</Badge>
+                  </div>
+                  <div className="flex-1 relative">
+                    <Textarea
+                      value={answers[currentQuestion.id] || ''}
+                      onChange={(e) => setAnswers({ ...answers, [currentQuestion.id]: e.target.value })}
+                      className="w-full h-full bg-[#1e1e1e] text-neutral-300 font-mono text-sm p-4 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar"
+                      placeholder="// Write your solution here..."
+                      spellCheck={false}
+                    />
+                  </div>
+                </div>
 
-          {/* Code Area */}
-          <div className="flex-1 p-6 bg-neutral-50">
-            <Textarea
-              value={answers[currentQuestion.id] || ''}
-              onChange={(e) => setAnswers({ ...answers, [currentQuestion.id]: e.target.value })}
-              placeholder={`// Write your ${currentQuestion.title} solution here\n\nclass Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Your code here\n    }\n}`}
-              className="w-full h-full bg-white border-black/10 text-black font-mono text-base resize-none focus-visible:ring-black rounded-2xl shadow-inner p-6"
-              style={{ minHeight: '400px' }}
-            />
-          </div>
+                {/* Resize Handle (Vertical) */}
+                <div
+                  onMouseDown={() => setIsResizingBottom(true)}
+                  className="h-1 bg-[#333] hover:bg-blue-500 cursor-row-resize shrink-0 z-20"
+                />
 
-          {/* Action Buttons */}
-          <div className="p-6 bg-white border-t border-black/10 flex items-center justify-between">
+                {/* Bottom: Test Cases */}
+                <div style={{ height: bottomPanelHeight }} className="bg-[#1e1e1e] border-t border-[#333] flex flex-col shrink-0">
+                  <div className="h-10 bg-[#252526] flex items-center px-4 justify-between border-b border-[#333] shrink-0">
+                    <div className="flex items-center gap-4">
+                      <span className="text-neutral-400 text-xs font-bold uppercase tracking-wider">Test Cases</span>
+                      <span className="text-neutral-500 text-xs">|</span>
+                      <span className="text-neutral-400 text-xs font-bold uppercase tracking-wider">Console</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-white hover:bg-[#333]"><Play className="w-3 h-3 mr-1" /> Run</Button>
+                    </div>
+                  </div>
+                  <div className="flex-1 p-4 overflow-y-auto">
+                    <div className="text-neutral-500 text-sm font-mono italic">
+                      Run your code to see test case results...
+                      <br />
+                      <br />
+                      {'>'} No output yet.
+                    </div>
+                  </div>
+                  {/* Footer Actions */}
+                  <div className="p-4 border-t border-[#333] flex justify-between bg-[#252526]">
+                    <div className="text-neutral-500 text-xs flex items-center">
+                      Test Cases: 0/2 Passed
+                    </div>
+                    <Button onClick={handleQuestionSubmit} disabled={submittedQuestions.has(currentQuestion.id)} className="bg-white text-black hover:bg-neutral-200 font-bold px-8 h-9 text-xs uppercase tracking-wide">
+                      {submittedQuestions.has(currentQuestion.id) ? 'Submitted' : 'Submit'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* NEXT BUTTON */}
+          <div className="absolute bottom-6 right-6 z-30">
             <Button
-              variant="outline"
-              className="border-black text-black font-bold h-12 px-8 rounded-xl hover:bg-neutral-50"
+              onClick={handleNext}
+              className="h-12 px-6 rounded-full bg-neutral-900 text-white shadow-2xl hover:bg-black hover:scale-105 transition-all font-bold text-sm flex items-center gap-2 border border-white/10"
             >
-              Run Code
-            </Button>
-
-            <Button
-              onClick={handleSubmitQuestion}
-              className="bg-black text-white hover:bg-neutral-800 font-black h-12 px-10 rounded-xl shadow-lg"
-              disabled={submittedQuestions.has(currentQuestion.id)}
-            >
-              <Send className="w-4 h-4 mr-2" />
-              {submittedQuestions.has(currentQuestion.id) ? 'Submitted' : 'Submit Solution'}
+              {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Finish'}
+              <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
-        </div>
+        </main>
       </div>
 
-      {/* Question Navigation */}
-      <div className="bg-white border-t border-black/10 px-8 py-5 flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
-          disabled={currentQuestionIndex === 0}
-          className="border-black text-black font-bold h-11 px-6 rounded-xl"
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Previous
-        </Button>
-
-        {/* Question Dots */}
-        <div className="flex items-center gap-2">
-          {questions.map((q, idx) => (
-            <button
-              key={q.id}
-              onClick={() => setCurrentQuestionIndex(idx)}
-              className={`w-11 h-11 rounded-xl flex items-center justify-center text-sm font-black transition-all ${currentQuestionIndex === idx
-                ? 'bg-black text-white shadow-xl scale-110'
-                : submittedQuestions.has(q.id)
-                  ? 'bg-green-100 text-green-700 border-none'
-                  : answers[q.id]
-                    ? 'bg-neutral-100 text-black border border-black/20'
-                    : 'bg-neutral-50 text-neutral-400 hover:bg-neutral-100 border border-black/5'
-                }`}
-            >
-              {idx + 1}
-            </button>
-          ))}
-        </div>
-
-        {currentQuestionIndex < questions.length - 1 ? (
-          <Button
-            onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-            className="bg-black text-white hover:bg-neutral-800 font-bold h-11 px-8 rounded-xl"
-          >
-            Next
-            <ChevronRight className="w-4 h-4 ml-2" />
-          </Button>
-        ) : (
-          <Button
-            onClick={() => setShowSubmitDialog(true)}
-            className="bg-black text-white hover:bg-neutral-800 font-black h-11 px-8 rounded-xl"
-          >
-            <Trophy className="w-4 h-4 mr-2" />
-            Finish Contest
-          </Button>
-        )}
-      </div>
-
-      {/* Floating Camera Widget */}
+      {/* CAMERA WIDGET */}
       <div
-        className={`fixed z-50 transition-all duration-300 ${cameraMinimized ? 'w-14 h-14' : 'w-48'}`}
+        className={`fixed z-[100] transition-all duration-300 ${cameraMinimized ? 'w-16 h-16' : 'w-56'}`}
         style={{ left: cameraPosition.x, top: cameraPosition.y }}
       >
-        {cameraMinimized ? (
-          <button
-            onClick={() => setCameraMinimized(false)}
-            className="w-14 h-14 bg-slate-800 border border-slate-600 rounded-full flex items-center justify-center hover:bg-slate-700 transition-colors shadow-xl"
-          >
-            <Video className="w-5 h-5 text-slate-300" />
-          </button>
-        ) : (
-          <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-600 overflow-hidden">
-            {/* Drag Handle */}
-            <div
-              className="flex items-center justify-between px-3 py-2 bg-slate-700 cursor-move"
-              onMouseDown={handleMouseDown}
-            >
-              <GripHorizontal className="w-4 h-4 text-slate-400" />
-              <span className="text-xs text-slate-400">Camera</span>
-              <button
-                onClick={() => setCameraMinimized(true)}
-                className="text-slate-400 hover:text-white"
-              >
-                <Minimize2 className="w-3 h-3" />
-              </button>
-            </div>
-
-            {/* Video */}
-            <div className="relative aspect-video bg-slate-900">
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                className={`w-full h-full object-cover ${!isVideoEnabled ? 'hidden' : ''}`}
-              />
-              {!isVideoEnabled && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <VideoOff className="w-8 h-8 text-slate-500" />
+        <div className="bg-black/90 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+          {!cameraMinimized && <div className="h-6 bg-white/10 cursor-move flex items-center justify-center" onMouseDown={startDraggingCamera}><GripHorizontal className="w-8 h-8 text-white/20" /></div>}
+          <div className="relative aspect-video bg-neutral-900 group">
+            {cameraMinimized ? (
+              <button onClick={() => setCameraMinimized(false)} className="w-full h-full flex items-center justify-center text-white"><Video className="w-6 h-6" /></button>
+            ) : (
+              <>
+                <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${!isVideoEnabled && 'hidden'}`} />
+                {!isVideoEnabled && <div className="absolute inset-0 flex items-center justify-center"><VideoOff className="w-8 h-8 text-neutral-500" /></div>}
+                <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={toggleMic} className={`p-1.5 rounded-full ${isMicEnabled ? 'bg-white/20 text-white' : 'bg-red-500 text-white'}`}>{isMicEnabled ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3" />}</button>
+                  <button onClick={toggleVideo} className={`p-1.5 rounded-full ${isVideoEnabled ? 'bg-white/20 text-white' : 'bg-red-500 text-white'}`}>{isVideoEnabled ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3" />}</button>
+                  <button onClick={() => setCameraMinimized(true)} className="p-1.5 rounded-full bg-white/20 text-white"><Minimize2 className="w-3 h-3" /></button>
                 </div>
-              )}
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center justify-center gap-2 p-2 bg-slate-800">
-              <button
-                onClick={toggleMic}
-                className={`p-2 rounded-lg transition-colors ${isMicEnabled ? 'bg-slate-700 text-white' : 'bg-red-500/20 text-red-400'
-                  }`}
-              >
-                {isMicEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-              </button>
-              <button
-                onClick={toggleVideo}
-                className={`p-2 rounded-lg transition-colors ${isVideoEnabled ? 'bg-slate-700 text-white' : 'bg-red-500/20 text-red-400'
-                  }`}
-              >
-                {isVideoEnabled ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-              </button>
-            </div>
+              </>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Warning Indicator */}
-      {warningCount > 0 && (
-        <div className="fixed bottom-4 left-4 z-50">
-          <Badge className="bg-red-500/20 text-red-400 border-red-500/30 px-3 py-1.5">
-            <AlertTriangle className="w-4 h-4 mr-2" />
-            Warnings: {warningCount}/3
-          </Badge>
         </div>
-      )}
+      </div>
     </div>
   );
 }

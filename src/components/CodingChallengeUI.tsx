@@ -124,7 +124,7 @@ export function CodingChallengeUI({
   };
 
   return (
-    <div className={`h-screen w-full flex flex-col ${isDarkMode ? 'dark bg-neutral-900 text-white' : 'bg-white text-neutral-900'} font-sans overflow-hidden`}>
+    <div className={`fixed inset-0 z-50 w-screen h-screen flex flex-col ${isDarkMode ? 'dark bg-neutral-900 text-white' : 'bg-white text-neutral-900'} font-sans overflow-hidden`}>
 
       {/* 🔴 1. SINGLE HEADER ROW */}
       <header className="h-20 border-b border-neutral-100 flex items-center justify-between px-8 bg-white flex-shrink-0 z-20">

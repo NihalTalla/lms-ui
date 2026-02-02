@@ -13,6 +13,7 @@ import { Leaderboard } from './components/Leaderboard';
 import { Messages } from './components/Messages';
 import { ContestNotificationProvider, ContestNotificationPopup } from './components/ContestNotification';
 import { StudentContestDashboard } from './components/StudentContestDashboard';
+import { ContestParticipation } from './components/ContestParticipation';
 import { CoursesPage } from './components/CoursesPage';
 import { GradingQueue } from './components/GradingQueue';
 import { BatchManagement } from './components/BatchManagement';
@@ -200,6 +201,33 @@ function AppContent() {
       );
     }
 
+    // Full-Screen Coding Challenge (no layout)
+    if (currentPage === 'student-coding' && pageData) {
+      return (
+        <StudentCodingChallenge
+          challenge={pageData.challenge}
+          module={pageData.module}
+          course={pageData.course}
+          onNavigate={handleNavigate}
+          onBack={() => setCurrentPage('student-module')}
+        />
+      );
+    }
+
+    // Full-Screen Contest Participation (no layout)
+    if (currentPage === 'contest-play' && pageData) {
+      return (
+        <ContestParticipation
+          contest={pageData.contest}
+          onSubmit={(answers) => {
+            console.log('Contest submitted:', answers);
+            handleNavigate('contests');
+          }}
+          onExit={() => handleNavigate('contests')}
+        />
+      );
+    }
+
     // All other views use Layout
     return (
       <Layout
@@ -262,15 +290,7 @@ function AppContent() {
             canLock={currentUser.role === 'faculty' || currentUser.role === 'trainer'}
           />
         )}
-        {currentPage === 'student-coding' && pageData && (
-          <StudentCodingChallenge
-            challenge={pageData.challenge}
-            module={pageData.module}
-            course={pageData.course}
-            onNavigate={handleNavigate}
-            onBack={() => setCurrentPage('student-module')}
-          />
-        )}
+
         {currentPage === 'test-monitoring' && pageData && (
           <TestMonitoring
             testName={pageData.testName}
