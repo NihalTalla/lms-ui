@@ -1761,11 +1761,20 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                       ))}
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className={`grid gap-2 ${currentUser?.role === 'student' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
                       <Button className="w-full" style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => onNavigate('course-modules', course)}>
                         View Modules
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
+                      {currentUser?.role === 'student' && (
+                        <Button
+                          className="w-full"
+                          variant="outline"
+                          onClick={() => onNavigate('course-tests', { course })}
+                        >
+                          View Tests
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

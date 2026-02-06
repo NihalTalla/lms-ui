@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -10,36 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Plus, Eye, Edit, Trash2, Video, AlertCircle, CheckCircle2, Clock, Users, FileCode } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
+import { batches } from '../lib/data';
+import { loadTests, saveTests, Test, TestCase, TestQuestion } from '../lib/test-store';
 import { toast } from 'sonner';
-
-interface TestCase {
-  input: string;
-  expectedOutput: string;
-  isHidden: boolean;
-}
-
-interface TestQuestion {
-  id: string;
-  title: string;
-  description: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  points: number;
-  testCases: TestCase[];
-}
-
-interface Test {
-  id: string;
-  title: string;
-  batchId: string;
-  batchName: string;
-  duration: number; // in minutes
-  questions: TestQuestion[];
-  status: 'draft' | 'scheduled' | 'active' | 'completed';
-  startDate?: string;
-  endDate?: string;
-  students: number;
-  flagged: number;
-}
 
 interface TestManagementProps {
   onNavigate?: (page: string, data?: any) => void;
@@ -50,7 +23,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
   const isAdmin = currentUser?.role === 'admin';
   const isTrainer = currentUser?.role === 'trainer';
   
-  const [tests, setTests] = useState<Test[]>([
+  const defaultTests: Test[] = [
     {
       id: 'test-1',
       title: 'DSA Midterm Exam',
@@ -64,19 +37,36 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
           description: 'Given an array of integers...',
           difficulty: 'easy',
           points: 20,
+          type: 'coding',
           testCases: [
             { input: '[2,7,11,15], 9', expectedOutput: '[0,1]', isHidden: false },
             { input: '[3,2,4], 6', expectedOutput: '[1,2]', isHidden: true },
           ],
-        }
+        },
+        {
+          id: 'q2',
+          title: 'Time Complexity',
+          description: 'What is the time complexity of binary search?',
+          difficulty: 'easy',
+          points: 10,
+          type: 'mcq',
+          options: ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'],
+          correctAnswer: 'O(log n)',
+        },
       ],
       status: 'active',
       startDate: '2025-01-15T10:00:00',
       endDate: '2025-01-15T12:00:00',
       students: 12,
       flagged: 2,
+      createdAt: '2025-01-01T09:00:00Z',
     },
-  ]);
+  ];
+
+  const [tests, setTests] = useState<Test[]>(() => {
+    const stored = loadTests();
+    return stored.length > 0 ? stored : defaultTests;
+  });
 
   const [questionBank] = useState<TestQuestion[]>([
     {
@@ -85,6 +75,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
       description: 'Given the head of a singly linked list...',
       difficulty: 'medium',
       points: 30,
+      type: 'coding',
       testCases: [
         { input: '1->2->3', expectedOutput: '3->2->1', isHidden: false },
       ],
@@ -95,9 +86,20 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
       description: 'Given a string s containing just the characters...',
       difficulty: 'easy',
       points: 15,
+      type: 'coding',
       testCases: [
         { input: '()[]{}', expectedOutput: 'true', isHidden: false },
       ],
+    },
+    {
+      id: 'bank-3',
+      title: 'Stack Usage',
+      description: 'Which data structure uses LIFO order?',
+      difficulty: 'easy',
+      points: 10,
+      type: 'mcq',
+      options: ['Queue', 'Stack', 'Array', 'Linked List'],
+      correctAnswer: 'Stack',
     },
   ]);
 
@@ -110,7 +112,10 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
     description: '',
     difficulty: 'easy',
     points: 10,
+    type: 'coding',
     testCases: [],
+    options: ['', '', '', ''],
+    correctAnswer: '',
   });
 
   const [newTest, setNewTest] = useState({
@@ -120,6 +125,10 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
     startDate: '',
     endDate: '',
   });
+
+  useEffect(() => {
+    saveTests(tests);
+  }, [tests]);
 
   const handleAddExistingQuestion = (question: TestQuestion) => {
     if (selectedQuestions.find(q => q.id === question.id)) {
@@ -135,18 +144,64 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
       toast.error('Please fill in question title and description');
       return;
     }
-    
+
+    if (newQuestion.type === 'mcq') {
+      const options = (newQuestion.options || []).map(o => o.trim()).filter(o => o);
+      if (options.length < 2) {
+        toast.error('Please add at least two options');
+        return;
+      }
+      if (!newQuestion.correctAnswer) {
+        toast.error('Please select the correct answer');
+        return;
+      }
+      const question: TestQuestion = {
+        id: `new-q-${Date.now()}`,
+        title: newQuestion.title as string,
+        description: newQuestion.description as string,
+        difficulty: newQuestion.difficulty as any,
+        points: newQuestion.points as number,
+        type: 'mcq',
+        options,
+        correctAnswer: newQuestion.correctAnswer as string,
+      };
+      setSelectedQuestions([...selectedQuestions, question]);
+      setNewQuestion({
+        title: '',
+        description: '',
+        difficulty: 'easy',
+        points: 10,
+        type: 'coding',
+        testCases: [],
+        options: ['', '', '', ''],
+        correctAnswer: '',
+      });
+      setIsAddingQuestion(false);
+      toast.success('New question created and added');
+      return;
+    }
+
     const question: TestQuestion = {
       id: `new-q-${Date.now()}`,
       title: newQuestion.title as string,
       description: newQuestion.description as string,
       difficulty: newQuestion.difficulty as any,
       points: newQuestion.points as number,
+      type: 'coding',
       testCases: newQuestion.testCases as TestCase[],
     };
 
     setSelectedQuestions([...selectedQuestions, question]);
-    setNewQuestion({ title: '', description: '', difficulty: 'easy', points: 10, testCases: [] });
+    setNewQuestion({
+      title: '',
+      description: '',
+      difficulty: 'easy',
+      points: 10,
+      type: 'coding',
+      testCases: [],
+      options: ['', '', '', ''],
+      correctAnswer: '',
+    });
     setIsAddingQuestion(false);
     toast.success('New question created and added');
   };
@@ -178,18 +233,35 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
       return;
     }
     
+    const batchName = batches.find(b => b.id === newTest.batchId)?.name || 'Selected Batch';
+    const now = new Date();
+    const startDate = newTest.startDate ? new Date(newTest.startDate) : null;
+    const endDate = newTest.endDate ? new Date(newTest.endDate) : null;
+    let status: Test['status'] = 'draft';
+    if (startDate) {
+      if (endDate && endDate < now) {
+        status = 'completed';
+      } else if (startDate > now) {
+        status = 'scheduled';
+      } else {
+        status = 'active';
+      }
+    }
+
+    const studentCount = batches.find(b => b.id === newTest.batchId)?.students || 0;
     const test: Test = {
       id: `test-${Date.now()}`,
       title: newTest.title,
       batchId: newTest.batchId,
-      batchName: 'Selected Batch',
+      batchName,
       duration: newTest.duration,
       questions: selectedQuestions,
-      status: 'draft',
+      status,
       startDate: newTest.startDate,
       endDate: newTest.endDate,
-      students: 0,
+      students: studentCount,
       flagged: 0,
+      createdAt: new Date().toISOString(),
     };
     
     setTests([...tests, test]);
@@ -283,8 +355,11 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                           <SelectValue placeholder="Select a batch" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="batch-1">DSA Batch - Fall 2025</SelectItem>
-                          <SelectItem value="batch-2">Web Dev Batch - Fall 2025</SelectItem>
+                          {batches.map((batch) => (
+                            <SelectItem key={batch.id} value={batch.id}>
+                              {batch.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -343,6 +418,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                                       <h4 className="font-medium">{q.title}</h4>
                                       <div className="flex gap-2 mt-1">
                                         <Badge variant="outline">{q.difficulty}</Badge>
+                                        <Badge variant="outline" className="text-[10px] h-5">{q.type === 'mcq' ? 'MCQ' : 'Coding'}</Badge>
                                         <span className="text-sm text-neutral-500">{q.points} pts</span>
                                       </div>
                                     </div>
@@ -371,7 +447,10 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                               <span className="font-bold text-neutral-400">#{idx + 1}</span>
                               <div>
                                 <p className="font-medium">{q.title}</p>
-                                <p className="text-xs text-neutral-500">{q.difficulty} • {q.points} points</p>
+                                <p className="text-xs text-neutral-500">{q.difficulty} • {q.points} points • {q.type === 'mcq' ? 'MCQ' : 'Coding'}</p>
+                                {q.type === 'mcq' && q.correctAnswer && (
+                                  <p className="text-xs text-neutral-400">Answer: {q.correctAnswer}</p>
+                                )}
                               </div>
                             </div>
                             <Button variant="ghost" size="sm" onClick={() => setSelectedQuestions(selectedQuestions.filter(sq => sq.id !== q.id))}>
@@ -394,7 +473,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                         <CardTitle className="text-md">Create New Question</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2">
                             <Label>Question Title</Label>
                             <Input 
@@ -402,6 +481,28 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                               onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
                               placeholder="e.g., Bubble Sort Implementation"
                             />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Question Type</Label>
+                            <Select
+                              value={newQuestion.type || 'coding'}
+                              onValueChange={(v) =>
+                                setNewQuestion({
+                                  ...newQuestion,
+                                  type: v as any,
+                                  options: v === 'mcq' ? (newQuestion.options?.length ? newQuestion.options : ['', '', '', '']) : newQuestion.options,
+                                  testCases: v === 'coding' ? (newQuestion.testCases || []) : [],
+                                })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="coding">Coding</SelectItem>
+                                <SelectItem value="mcq">MCQ</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="space-y-2">
                             <Label>Difficulty</Label>
@@ -417,7 +518,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                                 <SelectItem value="medium">Medium</SelectItem>
                                 <SelectItem value="hard">Hard</SelectItem>
                               </SelectContent>
-                            </Select>
+                          </Select>
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -428,46 +529,111 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                             placeholder="Detailed problem description..."
                           />
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label>Test Cases</Label>
-                            <Button type="button" variant="outline" size="sm" onClick={handleAddTestCase}>
-                              <Plus className="w-3 h-3 mr-1" /> Add Case
-                            </Button>
-                          </div>
+                        {newQuestion.type === 'mcq' ? (
                           <div className="space-y-2">
-                            {newQuestion.testCases?.map((tc, idx) => (
-                              <div key={idx} className="p-3 bg-white rounded-md border space-y-2">
-                                <div className="grid grid-cols-2 gap-2">
-                                  <Input 
-                                    placeholder="Input" 
-                                    value={tc.input} 
-                                    onChange={(e) => handleUpdateTestCase(idx, 'input', e.target.value)}
-                                  />
-                                  <Input 
-                                    placeholder="Expected Output" 
-                                    value={tc.expectedOutput} 
-                                    onChange={(e) => handleUpdateTestCase(idx, 'expectedOutput', e.target.value)}
-                                  />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <input 
-                                      type="checkbox" 
-                                      id={`hidden-${idx}`}
-                                      checked={tc.isHidden}
-                                      onChange={(e) => handleUpdateTestCase(idx, 'isHidden', e.target.checked)}
-                                    />
-                                    <Label htmlFor={`hidden-${idx}`} className="text-xs cursor-pointer">Hidden Case</Label>
-                                  </div>
-                                  <Button variant="ghost" size="sm" onClick={() => handleRemoveTestCase(idx)}>
-                                    <Trash2 className="w-3 h-3 text-red-500" />
-                                  </Button>
-                                </div>
+                            <Label>Options</Label>
+                            {(newQuestion.options || []).map((opt, idx) => (
+                              <div key={idx} className="flex gap-2">
+                                <Input
+                                  value={opt}
+                                  onChange={(e) => {
+                                    const options = [...(newQuestion.options || [])];
+                                    options[idx] = e.target.value;
+                                    const cleaned = options.map(o => o.trim()).filter(o => o);
+                                    const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
+                                    setNewQuestion({ ...newQuestion, options, correctAnswer: nextCorrect });
+                                  }}
+                                  placeholder={`Option ${idx + 1}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const options = (newQuestion.options || []).filter((_, i) => i !== idx);
+                                    const cleaned = options.map(o => o.trim()).filter(o => o);
+                                    const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
+                                    setNewQuestion({ ...newQuestion, options, correctAnswer: nextCorrect });
+                                  }}
+                                  className="px-2"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
                               </div>
                             ))}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setNewQuestion({ ...newQuestion, options: [...(newQuestion.options || []), ''] })}
+                              className="w-fit"
+                            >
+                              <Plus className="w-3 h-3 mr-1" /> Add Option
+                            </Button>
+                            <div className="space-y-2">
+                              <Label>Correct Answer</Label>
+                              <Select
+                                value={newQuestion.correctAnswer || ''}
+                                onValueChange={(value) => setNewQuestion({ ...newQuestion, correctAnswer: value })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select correct answer" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {(newQuestion.options || [])
+                                    .map(o => o.trim())
+                                    .filter(o => o)
+                                    .map((opt, idx) => (
+                                      <SelectItem key={`${opt}-${idx}`} value={opt}>
+                                        {opt}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
-                        </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label>Test Cases</Label>
+                              <Button type="button" variant="outline" size="sm" onClick={handleAddTestCase}>
+                                <Plus className="w-3 h-3 mr-1" /> Add Case
+                              </Button>
+                            </div>
+                            <div className="space-y-2">
+                              {newQuestion.testCases?.map((tc, idx) => (
+                                <div key={idx} className="p-3 bg-white rounded-md border space-y-2">
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <Input 
+                                      placeholder="Input" 
+                                      value={tc.input} 
+                                      onChange={(e) => handleUpdateTestCase(idx, 'input', e.target.value)}
+                                    />
+                                    <Input 
+                                      placeholder="Expected Output" 
+                                      value={tc.expectedOutput} 
+                                      onChange={(e) => handleUpdateTestCase(idx, 'expectedOutput', e.target.value)}
+                                    />
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <input 
+                                        type="checkbox" 
+                                        id={`hidden-${idx}`}
+                                        checked={tc.isHidden}
+                                        onChange={(e) => handleUpdateTestCase(idx, 'isHidden', e.target.checked)}
+                                      />
+                                      <Label htmlFor={`hidden-${idx}`} className="text-xs cursor-pointer">Hidden Case</Label>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={() => handleRemoveTestCase(idx)}>
+                                      <Trash2 className="w-3 h-3 text-red-500" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         <div className="flex justify-end gap-2 mt-4">
                           <Button variant="ghost" size="sm" onClick={() => setIsAddingQuestion(false)}>Cancel</Button>
                           <Button size="sm" onClick={handleAddNewQuestion}>Add to Test</Button>

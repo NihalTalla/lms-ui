@@ -36,6 +36,7 @@ import { StudentCodingChallenge } from './components/StudentCodingChallenge';
 import { AssignmentListingPage } from './components/AssignmentListingPage';
 import { TopicDetailsPage } from './components/TopicDetailsPage';
 import { CodingChallengeUI } from './components/CodingChallengeUI';
+import { StudentCourseTests } from './components/StudentCourseTests';
 import { Problem } from './lib/data';
 import { Toaster } from './components/ui/sonner';
 
@@ -233,7 +234,7 @@ function AppContent() {
       <Layout
         currentPage={currentPage}
         onNavigate={handleNavigate}
-        hideSidebar={['courses', 'course-modules', 'student-module', 'assignment-listing', 'topic-details', 'student-coding', 'coding-challenge-ui'].includes(currentPage)}
+        hideSidebar={['courses', 'course-tests', 'course-modules', 'student-module', 'assignment-listing', 'topic-details', 'student-coding', 'coding-challenge-ui'].includes(currentPage)}
       >
         {currentPage === 'dashboard' && (
           <>
@@ -259,6 +260,9 @@ function AppContent() {
           </div>
         )}
         {currentPage === 'courses' && <CoursesPage onNavigate={handleNavigate} />}
+        {currentPage === 'course-tests' && pageData && currentUser.role === 'student' && (
+          <StudentCourseTests course={pageData.course} onBack={() => handleNavigate('courses')} />
+        )}
         {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} initialFilters={pageData} />}
         {currentPage === 'manage-institutions' && <ManageInstitutions />}
         {currentPage === 'batch-years' && <BatchYears onNavigate={handleNavigate} />}

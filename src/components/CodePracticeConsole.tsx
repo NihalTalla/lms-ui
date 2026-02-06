@@ -11,17 +11,16 @@ import { FileManager, SavedFile } from '../lib/fileManager';
 import { toast } from 'sonner';
 
 export function CodePracticeConsole({ onBack, className = "h-screen" }: { onBack?: () => void; className?: string }) {
-  const [language, setLanguage] = useState('javascript');
-  const [code, setCode] = useState(`// Welcome to the Code Practice Console!
-// Write your JavaScript code here and click Run to execute it.
+  const templates: Record<string, string> = {
+    python: `print("Hello, World!")\n\ndef add(a, b):\n    return a + b\n\nprint("2 + 3 =", add(2, 3))`,
+    java: `public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, World!\");\n        System.out.println(\"2 + 3 = \" + add(2, 3));\n    }\n\n    static int add(int a, int b) {\n        return a + b;\n    }\n}\n`,
+    cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint add(int a, int b) {\n    return a + b;\n}\n\nint main() {\n    cout << \"Hello, World!\" << endl;\n    cout << \"2 + 3 = \" << add(2, 3) << endl;\n    return 0;\n}\n`,
+    c: `#include <stdio.h>\n\nint add(int a, int b) {\n    return a + b;\n}\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    printf(\"2 + 3 = %d\\n\", add(2, 3));\n    return 0;\n}\n`,
+  };
 
-console.log("Hello, World!");
-
-function add(a, b) {
-  return a + b;
-}
-
-console.log("2 + 3 =", add(2, 3));`);
+  const [language, setLanguage] = useState('python');
+  const [code, setCode] = useState(templates.python);
+  const allowedLanguages = ['python', 'java', 'cpp', 'c'];
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [savedFiles, setSavedFiles] = useState<SavedFile[]>([]);
@@ -45,28 +44,7 @@ console.log("2 + 3 =", add(2, 3));`);
     setOutput('Running...\n');
 
     try {
-      // Capture console.log outputs
-      let logs: string[] = [];
-      const originalConsoleLog = console.log;
-      console.log = (...args: any[]) => {
-        logs.push(args.map(arg =>
-          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-        ).join(' '));
-      };
-
-      // Execute the code
-      const result = eval(code);
-
-      // Restore console.log
-      console.log = originalConsoleLog;
-
-      // Format output
-      let outputText = logs.join('\n');
-      if (result !== undefined) {
-        outputText += '\n\nResult: ' + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result));
-      }
-
-      setOutput(outputText || 'Code executed successfully (no output)');
+      setOutput(`Execution simulated for ${language}.`);
     } catch (error) {
       setOutput(`Error: ${(error as Error).message}`);
     }
@@ -111,7 +89,7 @@ console.log("2 + 3 =", add(2, 3));`);
 
   const loadFile = (file: SavedFile) => {
     setCode(file.code);
-    setLanguage(file.language);
+    setLanguage(allowedLanguages.includes(file.language) ? file.language : 'python');
     setShowFilesDialog(false);
     toast.success(`Loaded "${file.name}"`);
   };
@@ -121,16 +99,7 @@ console.log("2 + 3 =", add(2, 3));`);
   };
 
   const resetCode = () => {
-    setCode(`// Welcome to the Code Practice Console!
-// Write your JavaScript code here and click Run to execute it.
-
-console.log("Hello, World!");
-
-function add(a, b) {
-  return a + b;
-}
-
-console.log("2 + 3 =", add(2, 3));`);
+    setCode(templates[language] || templates.python);
     setOutput('');
   };
 
@@ -154,12 +123,10 @@ console.log("2 + 3 =", add(2, 3));`);
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="javascript">JavaScript</SelectItem>
                   <SelectItem value="python">Python</SelectItem>
                   <SelectItem value="java">Java</SelectItem>
                   <SelectItem value="cpp">C++</SelectItem>
-                  <SelectItem value="csharp">C#</SelectItem>
-                  <SelectItem value="go">Go</SelectItem>
+                  <SelectItem value="c">C</SelectItem>
                 </SelectContent>
               </Select>
 

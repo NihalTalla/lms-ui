@@ -31,6 +31,8 @@ import { Problem, Submission, TestCaseResult } from '../lib/data';
 import { toast } from 'sonner';
 import Editor from '@monaco-editor/react';
 import { FileManager, SavedFile } from '../lib/fileManager';
+import { useAuth } from '../lib/auth-context';
+import { recordSubmission } from '../lib/submission-store';
 
 interface CodeEditorProps {
   problem: Problem;
@@ -38,8 +40,12 @@ interface CodeEditorProps {
 }
 
 export function CodeEditor({ problem, onBack }: CodeEditorProps) {
+  const { currentUser } = useAuth();
   const [language, setLanguage] = useState('python');
-  const [code, setCode] = useState(problem.starterCode[language] || '');
+  const [code, setCode] = useState(
+    problem.starterCode[language] || problem.starterCode.python || '// Write your solution here'
+  );
+  const allowedLanguages = ['python', 'java', 'cpp', 'c'];
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [output, setOutput] = useState<string>('');
   const [testResults, setTestResults] = useState<TestCaseResult[]>([]);
@@ -54,8 +60,16 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
   const [fileName, setFileName] = useState(`${problem.title} - Solution`);
   const [savedFiles, setSavedFiles] = useState<SavedFile[]>([]);
 
+  const getStarterCode = (lang: string) => {
+    return (
+      problem.starterCode[lang] ||
+      problem.starterCode.python ||
+      '// Write your solution here'
+    );
+  };
+
   useEffect(() => {
-    setCode(problem.starterCode[language] || '');
+    setCode(getStarterCode(language));
     loadSavedFiles();
   }, [language, problem]);
 
@@ -133,8 +147,9 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
   };
 
   const loadFile = (file: SavedFile) => {
+    const nextLanguage = allowedLanguages.includes(file.language) ? file.language : 'python';
     setCode(file.code);
-    setLanguage(file.language);
+    setLanguage(nextLanguage);
     setShowFilesDialog(false);
     toast.success(`Loaded "${file.name}"`);
   };
@@ -187,6 +202,14 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
         description: `${passed}/${allResults.length} test cases passed`,
       });
     }
+
+    if (currentUser) {
+      recordSubmission({
+        userId: currentUser.id,
+        type: 'problem',
+        meta: { problemId: problem.id },
+      });
+    }
   };
 
   const getDifficultyColor = () => {
@@ -226,8 +249,9 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="python">Python</SelectItem>
-              <SelectItem value="javascript">JavaScript</SelectItem>
               <SelectItem value="java">Java</SelectItem>
+              <SelectItem value="cpp">C++</SelectItem>
+              <SelectItem value="c">C</SelectItem>
             </SelectContent>
           </Select>
 

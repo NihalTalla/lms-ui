@@ -91,7 +91,7 @@ The code editor provides a VS Code-like experience with:
 
 **Features:**
 - **Monaco Editor**: Full-featured code editor with syntax highlighting
-- **Multi-language Support**: Python, JavaScript, Java
+- **Multi-language Support**: C, C++, Python, Java
 - **Theme Toggle**: Light/dark editor themes
 - **Auto-save Indicator**: Visual feedback for automatic code saving
 - **File Tree** (conceptual): Ready for multi-file support

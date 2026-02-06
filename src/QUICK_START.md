@@ -114,7 +114,7 @@ For quick testing, these pre-configured accounts are available:
 - 💡 Use quick login buttons for instant role switching
 - 💡 Toast notifications appear in the top-right for all actions
 - 💡 Each role has a different sidebar navigation menu
-- 💡 The Monaco editor supports Python, JavaScript, and Java
+- 💡 The Monaco editor supports C, C++, Python, and Java
 
 ## Need Help?
 

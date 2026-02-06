@@ -30,6 +30,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { useAuth } from '../lib/auth-context';
+import { recordSubmission } from '../lib/submission-store';
 
 interface CodingChallengeUIProps {
   topicTitle: string;
@@ -74,6 +76,7 @@ export function CodingChallengeUI({
   onSubmit,
   onBack,
 }: CodingChallengeUIProps) {
+  const { currentUser } = useAuth();
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('java');
   const [activeTestCase, setActiveTestCase] = useState(0);
@@ -85,8 +88,13 @@ export function CodingChallengeUI({
 
   // Initialize starter code
   useEffect(() => {
-    const javaTemplate = `public class TestClass {\n    public static String printSeries(int n) {\n        // Please write your return statement here\n        String str="";\n        int i=2;\n        int j=2;\n        while(i<n){\n            if(!str.isEmpty()){\n                str+=",";\n            }\n            str+=i;\n            i=i+j;\n            j+=2;\n        }\n        return str;\n        \n        //Please don't modify the below code\n    }\n}`;
-    setCode(starterCode?.[language] || javaTemplate);
+    const templates: Record<string, string> = {
+      java: `public class TestClass {\n    public static String printSeries(int n) {\n        // Please write your return statement here\n        String str = \"\";\n        int i = 2;\n        int j = 2;\n        while (i < n) {\n            if (!str.isEmpty()) {\n                str += \",\";\n            }\n            str += i;\n            i = i + j;\n            j += 2;\n        }\n        return str;\n        \n        // Please don't modify the below code\n    }\n}`,
+      python: `def print_series(n):\n    # Write your solution here\n    return \"\"\n`,
+      cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nstring printSeries(int n) {\n    // Write your solution here\n    return \"\";\n}\n`,
+      c: `#include <stdio.h>\n\n// Write your solution here\n`,
+    };
+    setCode(starterCode?.[language] || templates[language] || templates.java);
   }, [language, starterCode]);
 
   const handleRunCode = () => {
@@ -120,6 +128,13 @@ export function CodingChallengeUI({
       setSubmitResult(result);
       setIsRunning(false);
       setShowResultDialog(true);
+      if (currentUser) {
+        recordSubmission({
+          userId: currentUser.id,
+          type: 'course_challenge',
+          meta: { topicTitle },
+        });
+      }
     }, 1500);
   };
 
@@ -221,6 +236,7 @@ export function CodingChallengeUI({
                   <SelectItem value="java">Java</SelectItem>
                   <SelectItem value="python">Python</SelectItem>
                   <SelectItem value="cpp">C++</SelectItem>
+                  <SelectItem value="c">C</SelectItem>
                 </SelectContent>
               </Select>
             </div>

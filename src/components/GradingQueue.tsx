@@ -66,7 +66,7 @@ export function GradingQueue({ onNavigate }: GradingQueueProps) {
       problem: 'Merge Intervals',
       problemId: 'prob-2',
       difficulty: 'medium',
-      language: 'JavaScript',
+      language: 'C++',
       submittedAt: '2024-12-05 10:15 AM',
       timeAgo: '25 min ago',
       code: `function merge(intervals) {
@@ -140,7 +140,7 @@ export function GradingQueue({ onNavigate }: GradingQueueProps) {
       studentId: 'student-2',
       problem: 'Reverse Linked List',
       difficulty: 'medium',
-      language: 'JavaScript',
+      language: 'C',
       submittedAt: '2024-12-04 3:00 PM',
       gradedAt: '2024-12-04 3:45 PM',
       score: 88,

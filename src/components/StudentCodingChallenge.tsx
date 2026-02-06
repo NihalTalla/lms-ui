@@ -6,6 +6,8 @@ import { Input } from './ui/input';
 import { ArrowLeft, Play, Copy, Maximize2, RotateCcw, Sun, Moon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
+import { useAuth } from '../lib/auth-context';
+import { recordSubmission } from '../lib/submission-store';
 
 interface StudentCodingChallengeProps {
   challenge: any;
@@ -42,6 +44,14 @@ export function StudentCodingChallenge({
   onNavigate,
   onBack,
 }: StudentCodingChallengeProps) {
+  const { currentUser } = useAuth();
+  const templates: Record<string, string> = {
+    python: 'def solve():\n    # Write your solution here\n    pass\n',
+    java: 'class Solution {\n    public static void main(String[] args) {\n        // Write your solution here\n    }\n}\n',
+    cpp: '#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Write your solution here\n    return 0;\n}\n',
+    c: '#include <stdio.h>\n\nint main() {\n    // Write your solution here\n    return 0;\n}\n',
+  };
+  const allowedLanguages = ['java', 'python', 'cpp', 'c'];
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('java');
   const [activeTab, setActiveTab] = useState(0);
@@ -58,13 +68,19 @@ export function StudentCodingChallenge({
       if (starter && typeof starter === 'object') {
         // pick a preferred language if present
         const preferred = starter.java ? 'java' : Object.keys(starter)[0];
-        setLanguage(preferred || 'java');
-        setCode(starter[preferred] || starter[Object.keys(starter)[0]] || '');
+        const safePreferred = allowedLanguages.includes(preferred) ? preferred : 'java';
+        setLanguage(safePreferred);
+        setCode(
+          starter[safePreferred] ||
+          starter[Object.keys(starter)[0]] ||
+          templates[safePreferred] ||
+          '// Write your solution here'
+        );
       } else if (typeof starter === 'string') {
         setCode(starter);
       } else {
         // fallback default
-        setCode('// Write your solution here');
+        setCode(templates[language] || '// Write your solution here');
       }
 
       // initialize test cases
@@ -112,6 +128,14 @@ export function StudentCodingChallenge({
       toast.success('All tests passed. Full score awarded!');
     } else {
       toast('Submission received. Some tests failed. Partial score awarded.');
+    }
+
+    if (currentUser) {
+      recordSubmission({
+        userId: currentUser.id,
+        type: 'course_challenge',
+        meta: { challengeId: challenge?.id || 'challenge' },
+      });
     }
   };
 
@@ -205,7 +229,7 @@ export function StudentCodingChallenge({
                   <SelectItem value="java">Java</SelectItem>
                   <SelectItem value="python">Python</SelectItem>
                   <SelectItem value="cpp">C++</SelectItem>
-                  <SelectItem value="js">JavaScript</SelectItem>
+                  <SelectItem value="c">C</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-2">

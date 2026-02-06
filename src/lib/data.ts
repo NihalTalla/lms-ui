@@ -313,7 +313,7 @@ export const courses: Course[] = [
     duration: '16 weeks',
     lessons: 64,
     enrolled: 312,
-    tags: ['React', 'Node.js', 'MongoDB', 'TypeScript'],
+    tags: ['React', 'Node.js', 'MongoDB', 'Java'],
     institutionId: 'inst-2',
     batchId: 'batch-2',
     isLocked: true,
@@ -389,13 +389,26 @@ export const problems: Problem[] = [
       python: `def two_sum(nums, target):
     # Write your solution here
     pass`,
-      javascript: `function twoSum(nums, target) {
-    // Write your solution here
-}`,
       java: `class Solution {
     public int[] twoSum(int[] nums, int target) {
         // Write your solution here
+        return new int[]{};
     }
+}`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+vector<int> twoSum(vector<int>& nums, int target) {
+    // Write your solution here
+    return {};
+}`,
+      c: `#include <stdio.h>
+#include <stdlib.h>
+
+int* twoSum(int* nums, int numsSize, int target, int* returnSize) {
+    // Write your solution here
+    *returnSize = 0;
+    return NULL;
 }`,
     },
     tags: ['Array', 'Hash Table'],
@@ -442,8 +455,41 @@ export const problems: Problem[] = [
 def reverse_list(head):
     # Write your solution here
     pass`,
-      javascript: `function reverseList(head) {
+      java: `class ListNode {
+    int val;
+    ListNode next;
+    ListNode(int x) { val = x; }
+}
+
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        // Write your solution here
+        return head;
+    }
+}`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+struct ListNode {
+    int val;
+    ListNode* next;
+    ListNode(int x) : val(x), next(nullptr) {}
+};
+
+ListNode* reverseList(ListNode* head) {
     // Write your solution here
+    return head;
+}`,
+      c: `#include <stdio.h>
+
+struct ListNode {
+    int val;
+    struct ListNode* next;
+};
+
+struct ListNode* reverseList(struct ListNode* head) {
+    // Write your solution here
+    return head;
 }`,
     },
     tags: ['Linked List', 'Recursion'],
@@ -485,8 +531,25 @@ def reverse_list(head):
       python: `def is_valid(s):
     # Write your solution here
     pass`,
-      javascript: `function isValid(s) {
+      java: `class Solution {
+    public boolean isValid(String s) {
+        // Write your solution here
+        return false;
+    }
+}`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+bool isValid(string s) {
     // Write your solution here
+    return false;
+}`,
+      c: `#include <stdio.h>
+#include <stdbool.h>
+
+bool isValid(char* s) {
+    // Write your solution here
+    return false;
 }`,
     },
     tags: ['String', 'Stack'],
@@ -529,8 +592,26 @@ def reverse_list(head):
       python: `def merge(intervals):
     # Write your solution here
     pass`,
-      javascript: `function merge(intervals) {
+      java: `class Solution {
+    public int[][] merge(int[][] intervals) {
+        // Write your solution here
+        return new int[][]{};
+    }
+}`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+vector<vector<int>> mergeIntervals(vector<vector<int>>& intervals) {
     // Write your solution here
+    return {};
+}`,
+      c: `#include <stdio.h>
+
+// Write your solution here
+// Return an allocated 2D array and set returnSize/returnColumnSizes.
+int** merge(int** intervals, int intervalsSize, int* intervalsColSize, int* returnSize, int** returnColumnSizes) {
+    *returnSize = 0;
+    return NULL;
 }`,
     },
     tags: ['Array', 'Sorting'],
@@ -571,19 +652,42 @@ def reverse_list(head):
     def put(self, key: int, value: int) -> None:
         # Write your solution here
         pass`,
-      javascript: `class LRUCache {
-    constructor(capacity) {
+      java: `class LRUCache {
+    public LRUCache(int capacity) {
         // Initialize your data structure here
     }
-    
-    get(key) {
+
+    public int get(int key) {
         // Write your solution here
+        return -1;
     }
-    
-    put(key, value) {
+
+    public void put(int key, int value) {
         // Write your solution here
     }
 }`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+class LRUCache {
+public:
+    LRUCache(int capacity) {
+        // Initialize your data structure here
+    }
+
+    int get(int key) {
+        // Write your solution here
+        return -1;
+    }
+
+    void put(int key, int value) {
+        // Write your solution here
+    }
+};`,
+      c: `#include <stdio.h>
+
+// Define your LRUCache struct and functions here.
+`,
     },
     tags: ['Design', 'Hash Table', 'Linked List'],
     points: 350,

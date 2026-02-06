@@ -113,21 +113,10 @@ export const FileManager = {
   // Get file extension by language
   getFileExtension: (language: string): string => {
     const extensions: { [key: string]: string } = {
-      javascript: '.js',
-      typescript: '.ts',
       python: '.py',
       java: '.java',
       cpp: '.cpp',
       c: '.c',
-      csharp: '.cs',
-      go: '.go',
-      rust: '.rs',
-      php: '.php',
-      ruby: '.rb',
-      sql: '.sql',
-      html: '.html',
-      css: '.css',
-      json: '.json',
     };
     return extensions[language] || '.txt';
   },

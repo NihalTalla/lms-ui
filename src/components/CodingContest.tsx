@@ -12,7 +12,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { useContestNotification } from './ContestNotification';
 
-interface Question { id: string; title: string; difficulty: 'easy' | 'medium' | 'hard'; topic: string; points: number; }
+interface Question {
+    id: string;
+    title: string;
+    difficulty: 'easy' | 'medium' | 'hard';
+    topic: string;
+    points: number;
+    type: 'coding' | 'mcq';
+    options?: string[];
+    correctAnswer?: string;
+}
 interface Contest { id: string; name: string; description: string; totalQuestions: number; startTime: string; endTime: string; status: 'draft' | 'scheduled' | 'active' | 'completed'; participants: number; questions: Question[]; }
 
 export function CodingContest() {
@@ -26,28 +35,42 @@ export function CodingContest() {
     const [currentStep, setCurrentStep] = useState(1);
     const [questionMode, setQuestionMode] = useState<'fetch' | 'create' | null>(null);
     const [newContest, setNewContest] = useState({ name: '', description: '', startTime: '', endTime: '', selectedQuestions: [] as string[] });
-    const [newQuestion, setNewQuestion] = useState({ title: '', difficulty: 'medium' as 'easy' | 'medium' | 'hard', topic: '', points: 100 });
+    const [newQuestion, setNewQuestion] = useState({
+        title: '',
+        difficulty: 'medium' as 'easy' | 'medium' | 'hard',
+        topic: '',
+        points: 100,
+        type: 'coding' as 'coding' | 'mcq',
+        options: ['', '', '', ''],
+        correctAnswer: '',
+    });
 
-    const existingQuestions: Question[] = [
-        { id: '1', title: 'Two Sum', difficulty: 'easy', topic: 'Arrays', points: 50 },
-        { id: '2', title: 'Valid Parentheses', difficulty: 'easy', topic: 'Stacks', points: 50 },
-        { id: '3', title: 'Binary Search', difficulty: 'easy', topic: 'Searching', points: 50 },
-        { id: '4', title: 'Merge Intervals', difficulty: 'medium', topic: 'Arrays', points: 100 },
-        { id: '5', title: 'LRU Cache', difficulty: 'medium', topic: 'Design', points: 100 },
-        { id: '6', title: 'Longest Substring', difficulty: 'medium', topic: 'Strings', points: 100 },
-        { id: '7', title: 'Median of Arrays', difficulty: 'hard', topic: 'Arrays', points: 150 },
-        { id: '8', title: 'Word Ladder', difficulty: 'hard', topic: 'Graphs', points: 150 },
-    ];
+    const [questionBank, setQuestionBank] = useState<Question[]>([
+        { id: '1', title: 'Two Sum', difficulty: 'easy', topic: 'Arrays', points: 50, type: 'coding' },
+        { id: '2', title: 'Valid Parentheses', difficulty: 'easy', topic: 'Stacks', points: 50, type: 'coding' },
+        { id: '3', title: 'Binary Search', difficulty: 'easy', topic: 'Searching', points: 50, type: 'coding' },
+        { id: '4', title: 'Merge Intervals', difficulty: 'medium', topic: 'Arrays', points: 100, type: 'coding' },
+        { id: '5', title: 'LRU Cache', difficulty: 'medium', topic: 'Design', points: 100, type: 'coding' },
+        { id: '6', title: 'Longest Substring', difficulty: 'medium', topic: 'Strings', points: 100, type: 'coding' },
+        { id: '7', title: 'Median of Arrays', difficulty: 'hard', topic: 'Arrays', points: 150, type: 'coding' },
+        { id: '8', title: 'Word Ladder', difficulty: 'hard', topic: 'Graphs', points: 150, type: 'coding' },
+        { id: 'mcq-1', title: 'Time Complexity of Binary Search', difficulty: 'easy', topic: 'Complexity', points: 30, type: 'mcq', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'], correctAnswer: 'O(log n)' },
+    ]);
 
     const [contests, setContests] = useState<Contest[]>([
-        { id: '1', name: 'Weekly Challenge #1', description: 'Weekly coding challenge', totalQuestions: 5, startTime: '2026-01-25 09:00', endTime: '2026-01-25 12:00', status: 'scheduled', participants: 45, questions: existingQuestions.slice(0, 5) },
-        { id: '2', name: 'DSA Sprint', description: 'DSA sprint contest', totalQuestions: 8, startTime: '2026-01-20 10:00', endTime: '2026-01-20 14:00', status: 'active', participants: 120, questions: existingQuestions.slice(0, 8) },
-        { id: '3', name: 'Beginner Contest', description: 'For beginners', totalQuestions: 4, startTime: '2026-01-15 09:00', endTime: '2026-01-15 11:00', status: 'completed', participants: 85, questions: existingQuestions.slice(0, 4) },
+        { id: '1', name: 'Weekly Challenge #1', description: 'Weekly coding challenge', totalQuestions: 5, startTime: '2026-01-25 09:00', endTime: '2026-01-25 12:00', status: 'scheduled', participants: 45, questions: questionBank.slice(0, 5) },
+        { id: '2', name: 'DSA Sprint', description: 'DSA sprint contest', totalQuestions: 8, startTime: '2026-01-20 10:00', endTime: '2026-01-20 14:00', status: 'active', participants: 120, questions: questionBank.slice(0, 8) },
+        { id: '3', name: 'Beginner Contest', description: 'For beginners', totalQuestions: 4, startTime: '2026-01-15 09:00', endTime: '2026-01-15 11:00', status: 'completed', participants: 85, questions: questionBank.slice(0, 4) },
     ]);
 
     const filteredContests = contests.filter(c => { const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()); const matchesStatus = statusFilter === 'all' || c.status === statusFilter; return matchesSearch && matchesStatus; });
 
-    const resetForm = () => { setNewContest({ name: '', description: '', startTime: '', endTime: '', selectedQuestions: [] }); setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100 }); setCurrentStep(1); setQuestionMode(null); };
+    const resetForm = () => { 
+        setNewContest({ name: '', description: '', startTime: '', endTime: '', selectedQuestions: [] }); 
+        setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' }); 
+        setCurrentStep(1); 
+        setQuestionMode(null); 
+    };
 
     const handleNextStep = () => { if (!newContest.name || !newContest.startTime || !newContest.endTime) { toast.error('Fill required fields'); return; } if (new Date(newContest.startTime) >= new Date(newContest.endTime)) { toast.error('End time must be after start'); return; } setCurrentStep(2); };
 
@@ -56,7 +79,7 @@ export function CodingContest() {
             toast.error('Add at least one question'); 
             return; 
         } 
-        const selectedQs = existingQuestions.filter(q => newContest.selectedQuestions.includes(q.id)); 
+        const selectedQs = questionBank.filter(q => newContest.selectedQuestions.includes(q.id)); 
         const contest: Contest = { 
             id: String(contests.length + 1), 
             name: newContest.name, 
@@ -85,7 +108,52 @@ export function CodingContest() {
         resetForm(); 
     };
 
-    const handleAddNewQuestion = () => { if (!newQuestion.title || !newQuestion.topic) { toast.error('Fill title and topic'); return; } const q: Question = { id: `new-${Date.now()}`, title: newQuestion.title, difficulty: newQuestion.difficulty, topic: newQuestion.topic, points: newQuestion.points }; existingQuestions.push(q); setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] })); toast.success('Question added'); setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100 }); setQuestionMode('fetch'); };
+    const handleAddNewQuestion = () => { 
+        if (!newQuestion.title || !newQuestion.topic) { 
+            toast.error('Fill title and topic'); 
+            return; 
+        }
+        if (newQuestion.type === 'mcq') {
+            const options = (newQuestion.options || []).map(o => o.trim()).filter(o => o);
+            if (options.length < 2) {
+                toast.error('Please add at least two options');
+                return;
+            }
+            if (!newQuestion.correctAnswer) {
+                toast.error('Select the correct answer');
+                return;
+            }
+            const q: Question = { 
+                id: `new-${Date.now()}`, 
+                title: newQuestion.title, 
+                difficulty: newQuestion.difficulty, 
+                topic: newQuestion.topic, 
+                points: newQuestion.points, 
+                type: 'mcq',
+                options,
+                correctAnswer: newQuestion.correctAnswer,
+            }; 
+            setQuestionBank(prev => [q, ...prev]); 
+            setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] })); 
+            toast.success('Question added'); 
+            setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' }); 
+            setQuestionMode('fetch'); 
+            return;
+        }
+        const q: Question = { 
+            id: `new-${Date.now()}`, 
+            title: newQuestion.title, 
+            difficulty: newQuestion.difficulty, 
+            topic: newQuestion.topic, 
+            points: newQuestion.points, 
+            type: 'coding',
+        }; 
+        setQuestionBank(prev => [q, ...prev]); 
+        setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] })); 
+        toast.success('Question added'); 
+        setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' }); 
+        setQuestionMode('fetch'); 
+    };
 
     const toggleQuestionSelection = (id: string) => { setNewContest(prev => ({ ...prev, selectedQuestions: prev.selectedQuestions.includes(id) ? prev.selectedQuestions.filter(qId => qId !== id) : [...prev.selectedQuestions, id] })); };
 
@@ -96,16 +164,22 @@ export function CodingContest() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div><h2 className="text-3xl font-bold text-neutral-900">Coding Contest</h2><p className="text-neutral-600 mt-1">Create and manage coding competitions</p></div>
-                <Button onClick={() => setShowCreateDialog(true)} className="bg-neutral-900 hover:bg-neutral-800 text-white"><Plus className="w-4 h-4 mr-2" />Create Contest</Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Total Contests</p><h3 className="mt-1 text-2xl font-bold">{contests.length}</h3></div><div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100"><Trophy className="w-6 h-6 text-blue-600" /></div></div></CardContent></Card>
-                <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Active</p><h3 className="mt-1 text-2xl font-bold">{contests.filter(c => c.status === 'active').length}</h3></div><div className="w-12 h-12 rounded-full flex items-center justify-center bg-green-100"><Clock className="w-6 h-6 text-green-600" /></div></div></CardContent></Card>
-                <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Participants</p><h3 className="mt-1 text-2xl font-bold">{contests.reduce((sum, c) => sum + c.participants, 0)}</h3></div><div className="w-12 h-12 rounded-full flex items-center justify-center bg-purple-100"><Users className="w-6 h-6 text-purple-600" /></div></div></CardContent></Card>
-                <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Questions</p><h3 className="mt-1 text-2xl font-bold">{contests.reduce((sum, c) => sum + c.totalQuestions, 0)}</h3></div><div className="w-12 h-12 rounded-full flex items-center justify-center bg-amber-100"><Code className="w-6 h-6 text-amber-600" /></div></div></CardContent></Card>
+            <div className="flex flex-col gap-4 p-6 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-amber-50 border border-neutral-200 shadow-sm">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-3xl font-bold text-neutral-900">Coding Contest</h2>
+                        <p className="text-neutral-600 mt-1">Create and manage coding competitions</p>
+                    </div>
+                    <Button onClick={() => setShowCreateDialog(true)} className="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2 rounded-xl shadow-md">
+                        <Plus className="w-4 h-4 mr-2" />Create Contest
+                    </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card className="shadow-sm border-neutral-200"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Total Contests</p><h3 className="mt-1 text-2xl font-bold">{contests.length}</h3></div><div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100"><Trophy className="w-6 h-6 text-blue-600" /></div></div></CardContent></Card>
+                    <Card className="shadow-sm border-neutral-200"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Active</p><h3 className="mt-1 text-2xl font-bold">{contests.filter(c => c.status === 'active').length}</h3></div><div className="w-12 h-12 rounded-full flex items-center justify-center bg-green-100"><Clock className="w-6 h-6 text-green-600" /></div></div></CardContent></Card>
+                    <Card className="shadow-sm border-neutral-200"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Participants</p><h3 className="mt-1 text-2xl font-bold">{contests.reduce((sum, c) => sum + c.participants, 0)}</h3></div><div className="w-12 h-12 rounded-full flex items-center justify-center bg-purple-100"><Users className="w-6 h-6 text-purple-600" /></div></div></CardContent></Card>
+                    <Card className="shadow-sm border-neutral-200"><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Questions</p><h3 className="mt-1 text-2xl font-bold">{contests.reduce((sum, c) => sum + c.totalQuestions, 0)}</h3></div><div className="w-12 h-12 rounded-full flex items-center justify-center bg-amber-100"><Code className="w-6 h-6 text-amber-600" /></div></div></CardContent></Card>
+                </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">
@@ -113,10 +187,27 @@ export function CodingContest() {
                 <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full md:w-40"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="draft">Draft</SelectItem><SelectItem value="scheduled">Scheduled</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="completed">Completed</SelectItem></SelectContent></Select>
             </div>
 
-            <Card><CardHeader><CardTitle>Contests</CardTitle></CardHeader><CardContent>
+            <Card className="shadow-sm border-neutral-200"><CardHeader><CardTitle>Contests</CardTitle></CardHeader><CardContent>
                 {filteredContests.length === 0 ? (<div className="text-center py-12"><Trophy className="w-12 h-12 mx-auto text-neutral-300 mb-4" /><p className="text-neutral-600">No contests found</p></div>) : (
                     <Table><TableHeader><TableRow className="bg-neutral-50"><TableHead>Contest</TableHead><TableHead>Questions</TableHead><TableHead>Start</TableHead><TableHead>End</TableHead><TableHead>Participants</TableHead><TableHead>Status</TableHead><TableHead className="text-center">Actions</TableHead></TableRow></TableHeader>
-                        <TableBody>{filteredContests.map(c => (<TableRow key={c.id}><TableCell className="font-semibold">{c.name}</TableCell><TableCell>{c.totalQuestions}</TableCell><TableCell className="text-sm">{c.startTime}</TableCell><TableCell className="text-sm">{c.endTime}</TableCell><TableCell>{c.participants}</TableCell><TableCell><Badge className={getStatusColor(c.status)}>{c.status}</Badge></TableCell><TableCell className="text-center"><Button variant="ghost" size="sm" onClick={() => { setSelectedContest(c); setShowQuestionDialog(true); }}><Eye className="w-4 h-4" /></Button><Button variant="ghost" size="sm" onClick={() => { setSelectedContest(c); setShowDeleteDialog(true); }} className="text-red-600"><Trash2 className="w-4 h-4" /></Button></TableCell></TableRow>))}</TableBody>
+                        <TableBody>{filteredContests.map(c => (<TableRow key={c.id} className="hover:bg-neutral-50 transition">
+                            <TableCell className="font-semibold">{c.name}</TableCell>
+                            <TableCell>{c.totalQuestions}</TableCell>
+                            <TableCell className="text-sm">{c.startTime}</TableCell>
+                            <TableCell className="text-sm">{c.endTime}</TableCell>
+                            <TableCell>{c.participants}</TableCell>
+                            <TableCell><Badge className={getStatusColor(c.status)}>{c.status}</Badge></TableCell>
+                            <TableCell className="text-center">
+                                <div className="inline-flex gap-2">
+                                    <Button variant="ghost" size="sm" onClick={() => { setSelectedContest(c); setShowQuestionDialog(true); }}>
+                                        <Eye className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => { setSelectedContest(c); setShowDeleteDialog(true); }} className="text-red-600">
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>))}</TableBody>
                     </Table>
                 )}
             </CardContent></Card>
@@ -124,21 +215,145 @@ export function CodingContest() {
             <Dialog open={showCreateDialog} onOpenChange={(o) => { setShowCreateDialog(o); if (!o) resetForm(); }}>
                 <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader><DialogTitle>Create Contest</DialogTitle><DialogDescription>Step {currentStep} of 2</DialogDescription></DialogHeader>
-                    <div className="flex items-center justify-center mb-6"><div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-neutral-200'}`}>1</div><div className={`w-16 h-1 mx-2 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-neutral-200'}`} /><div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-neutral-200'}`}>2</div></div>
+                    <div className="flex items-center justify-center mb-6">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-neutral-200'}`}>1</div>
+                        <div className="flex-1 mx-3 h-1 bg-neutral-200 rounded-full overflow-hidden">
+                            <div className={`h-full bg-blue-600 transition-all`} style={{ width: currentStep === 1 ? '50%' : '100%' }} />
+                        </div>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-neutral-200'}`}>2</div>
+                    </div>
 
                     {currentStep === 1 && (<div className="space-y-4">
                         <h3 className="font-semibold flex items-center gap-2"><FileText className="w-5 h-5 text-blue-600" />Basic Details</h3>
-                        <div><label className="text-sm font-medium block mb-1">Contest Name *</label><Input placeholder="e.g., Weekly Challenge" value={newContest.name} onChange={(e) => setNewContest(p => ({ ...p, name: e.target.value }))} /></div>
-                        <div><label className="text-sm font-medium block mb-1">Description</label><Textarea placeholder="Describe..." value={newContest.description} onChange={(e) => setNewContest(p => ({ ...p, description: e.target.value }))} /></div>
-                        <div className="grid grid-cols-2 gap-4"><div><label className="text-sm font-medium block mb-1">Start *</label><Input type="datetime-local" value={newContest.startTime} onChange={(e) => setNewContest(p => ({ ...p, startTime: e.target.value }))} /></div><div><label className="text-sm font-medium block mb-1">End *</label><Input type="datetime-local" value={newContest.endTime} onChange={(e) => setNewContest(p => ({ ...p, endTime: e.target.value }))} /></div></div>
-                        <p className="text-sm text-neutral-500">Questions: {newContest.selectedQuestions.length}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-medium block mb-1">Contest Name *</label>
+                                <Input placeholder="e.g., Weekly Challenge" value={newContest.name} onChange={(e) => setNewContest(p => ({ ...p, name: e.target.value }))} />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium block mb-1">Description</label>
+                                <Textarea placeholder="Describe..." value={newContest.description} onChange={(e) => setNewContest(p => ({ ...p, description: e.target.value }))} />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium block mb-1">Start *</label>
+                                <Input type="datetime-local" value={newContest.startTime} onChange={(e) => setNewContest(p => ({ ...p, startTime: e.target.value }))} />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium block mb-1">End *</label>
+                                <Input type="datetime-local" value={newContest.endTime} onChange={(e) => setNewContest(p => ({ ...p, endTime: e.target.value }))} />
+                            </div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-blue-50 text-blue-800 text-sm border border-blue-100">Tip: keep start and end within the same day for smoother scheduling.</div>
+                        <p className="text-sm text-neutral-500">Questions selected: {newContest.selectedQuestions.length}</p>
                     </div>)}
 
                     {currentStep === 2 && (<div className="space-y-4">
                         <h3 className="font-semibold flex items-center gap-2"><Code className="w-5 h-5 text-blue-600" />Add Questions</h3>
                         {!questionMode && (<div className="grid grid-cols-2 gap-4"><Card className="cursor-pointer hover:border-blue-400" onClick={() => setQuestionMode('fetch')}><CardContent className="pt-6 text-center"><Search className="w-10 h-10 mx-auto text-blue-600 mb-2" /><p className="font-semibold">Fetch Existing</p><p className="text-sm text-neutral-500">From question bank</p></CardContent></Card><Card className="cursor-pointer hover:border-purple-400" onClick={() => setQuestionMode('create')}><CardContent className="pt-6 text-center"><Plus className="w-10 h-10 mx-auto text-purple-600 mb-2" /><p className="font-semibold">Create New</p><p className="text-sm text-neutral-500">Add new question</p></CardContent></Card></div>)}
-                        {questionMode === 'fetch' && (<div className="space-y-3"><div className="flex justify-between"><p className="text-sm">Selected: {newContest.selectedQuestions.length}</p><Button variant="outline" size="sm" onClick={() => setQuestionMode(null)}>Back</Button></div><div className="max-h-64 overflow-y-auto border rounded-lg">{existingQuestions.map(q => (<div key={q.id} className={`p-3 border-b cursor-pointer hover:bg-neutral-50 flex justify-between ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-50' : ''}`} onClick={() => toggleQuestionSelection(q.id)}><div className="flex items-center gap-3"><div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-600 border-blue-600 text-white' : 'border-neutral-300'}`}>{newContest.selectedQuestions.includes(q.id) && <CheckCircle2 className="w-3 h-3" />}</div><div><p className="font-medium text-sm">{q.title}</p><p className="text-xs text-neutral-500">{q.topic} • {q.points}pts</p></div></div><Badge className={getDifficultyColor(q.difficulty)}>{q.difficulty}</Badge></div>))}</div></div>)}
-                        {questionMode === 'create' && (<div className="space-y-3"><div className="flex justify-between"><p className="text-sm font-medium">New Question</p><Button variant="outline" size="sm" onClick={() => setQuestionMode('fetch')}>Back</Button></div><div className="grid grid-cols-2 gap-3"><div><label className="text-sm font-medium block mb-1">Title *</label><Input placeholder="Title" value={newQuestion.title} onChange={(e) => setNewQuestion(p => ({ ...p, title: e.target.value }))} /></div><div><label className="text-sm font-medium block mb-1">Topic *</label><Input placeholder="e.g., Arrays" value={newQuestion.topic} onChange={(e) => setNewQuestion(p => ({ ...p, topic: e.target.value }))} /></div></div><div className="grid grid-cols-2 gap-3"><div><label className="text-sm font-medium block mb-1">Difficulty</label><Select value={newQuestion.difficulty} onValueChange={(v: 'easy' | 'medium' | 'hard') => setNewQuestion(p => ({ ...p, difficulty: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="easy">Easy</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="hard">Hard</SelectItem></SelectContent></Select></div><div><label className="text-sm font-medium block mb-1">Points</label><Input type="number" value={newQuestion.points} onChange={(e) => setNewQuestion(p => ({ ...p, points: parseInt(e.target.value) || 0 }))} /></div></div><Button onClick={handleAddNewQuestion} className="w-full"><Plus className="w-4 h-4 mr-2" />Add Question</Button></div>)}
+                        {questionMode === 'fetch' && (<div className="space-y-3"><div className="flex justify-between"><p className="text-sm">Selected: {newContest.selectedQuestions.length}</p><Button variant="outline" size="sm" onClick={() => setQuestionMode(null)}>Back</Button></div><div className="max-h-64 overflow-y-auto border rounded-lg">{questionBank.map(q => (<div key={q.id} className={`p-3 border-b cursor-pointer hover:bg-neutral-50 flex justify-between ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-50' : ''}`} onClick={() => toggleQuestionSelection(q.id)}><div className="flex items-center gap-3"><div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-600 border-blue-600 text-white' : 'border-neutral-300'}`}>{newContest.selectedQuestions.includes(q.id) && <CheckCircle2 className="w-3 h-3" />}</div><div><p className="font-medium text-sm">{q.title}</p><p className="text-xs text-neutral-500">{q.topic} • {q.points}pts</p></div></div><Badge className={getDifficultyColor(q.difficulty)}>{q.difficulty}</Badge></div>))}</div></div>)}
+                        {questionMode === 'create' && (
+                            <div className="space-y-3">
+                                <div className="flex justify-between">
+                                    <p className="text-sm font-medium">New Question</p>
+                                    <Button variant="outline" size="sm" onClick={() => setQuestionMode('fetch')}>Back</Button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium block mb-1">Title *</label>
+                                        <Input placeholder="Title" value={newQuestion.title} onChange={(e) => setNewQuestion(p => ({ ...p, title: e.target.value }))} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium block mb-1">Topic *</label>
+                                        <Input placeholder="e.g., Arrays" value={newQuestion.topic} onChange={(e) => setNewQuestion(p => ({ ...p, topic: e.target.value }))} />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="text-sm font-medium block mb-1">Difficulty</label>
+                                        <Select value={newQuestion.difficulty} onValueChange={(v: 'easy' | 'medium' | 'hard') => setNewQuestion(p => ({ ...p, difficulty: v }))}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="easy">Easy</SelectItem>
+                                                <SelectItem value="medium">Medium</SelectItem>
+                                                <SelectItem value="hard">Hard</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium block mb-1">Points</label>
+                                        <Input type="number" value={newQuestion.points} onChange={(e) => setNewQuestion(p => ({ ...p, points: parseInt(e.target.value) || 0 }))} />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-medium block mb-1">Type</label>
+                                        <Select value={newQuestion.type} onValueChange={(v: 'coding' | 'mcq') => setNewQuestion(p => ({ ...p, type: v }))}>
+                                            <SelectTrigger><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="coding">Coding</SelectItem>
+                                                <SelectItem value="mcq">MCQ</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                {newQuestion.type === 'mcq' && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium block mb-1">Options</label>
+                                        {(newQuestion.options || []).map((opt, idx) => (
+                                            <div key={idx} className="flex gap-2">
+                                                <Input
+                                                    value={opt}
+                                                    onChange={(e) => {
+                                                        const options = [...(newQuestion.options || [])];
+                                                        options[idx] = e.target.value;
+                                                        const cleaned = options.map(o => o.trim()).filter(o => o);
+                                                        const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
+                                                        setNewQuestion(p => ({ ...p, options, correctAnswer: nextCorrect }));
+                                                    }}
+                                                    placeholder={`Option ${idx + 1}`}
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const options = (newQuestion.options || []).filter((_, i) => i !== idx);
+                                                        const cleaned = options.map(o => o.trim()).filter(o => o);
+                                                        const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
+                                                        setNewQuestion(p => ({ ...p, options, correctAnswer: nextCorrect }));
+                                                    }}
+                                                    className="px-2"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setNewQuestion(p => ({ ...p, options: [...(p.options || []), ''] }))}
+                                            className="w-fit"
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" />Add Option
+                                        </Button>
+                                        <div>
+                                            <label className="text-sm font-medium block mb-1">Correct Answer</label>
+                                            <Select value={newQuestion.correctAnswer} onValueChange={(v) => setNewQuestion(p => ({ ...p, correctAnswer: v }))}>
+                                                <SelectTrigger><SelectValue placeholder="Select answer" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {(newQuestion.options || [])
+                                                        .map(o => o.trim())
+                                                        .filter(o => o)
+                                                        .map((opt, idx) => (
+                                                            <SelectItem key={`${opt}-${idx}`} value={opt}>{opt}</SelectItem>
+                                                        ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                )}
+                                <Button onClick={handleAddNewQuestion} className="w-full"><Plus className="w-4 h-4 mr-2" />Add Question</Button>
+                            </div>
+                        )}
                     </div>)}
 
                     <div className="flex justify-between pt-4 border-t">
