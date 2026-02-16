@@ -22,7 +22,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
   const { currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
   const isTrainer = currentUser?.role === 'trainer';
-  
+
   const defaultTests: Test[] = [
     {
       id: 'test-1',
@@ -106,7 +106,8 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<TestQuestion[]>([]);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  
+  const [showNextQuestionPrompt, setShowNextQuestionPrompt] = useState(false);
+
   const [newQuestion, setNewQuestion] = useState<Partial<TestQuestion>>({
     title: '',
     description: '',
@@ -176,7 +177,8 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
         options: ['', '', '', ''],
         correctAnswer: '',
       });
-      setIsAddingQuestion(false);
+      // setIsAddingQuestion(false);
+      setShowNextQuestionPrompt(true);
       toast.success('New question created and added');
       return;
     }
@@ -202,7 +204,8 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
       options: ['', '', '', ''],
       correctAnswer: '',
     });
-    setIsAddingQuestion(false);
+    // setIsAddingQuestion(false);
+    setShowNextQuestionPrompt(true);
     toast.success('New question created and added');
   };
 
@@ -232,7 +235,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
       toast.error('Please add at least one question to the test');
       return;
     }
-    
+
     const batchName = batches.find(b => b.id === newTest.batchId)?.name || 'Selected Batch';
     const now = new Date();
     const startDate = newTest.startDate ? new Date(newTest.startDate) : null;
@@ -263,7 +266,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
       flagged: 0,
       createdAt: new Date().toISOString(),
     };
-    
+
     setTests([...tests, test]);
     setIsCreateDialogOpen(false);
     setNewTest({ title: '', batchId: '', duration: 120, startDate: '', endDate: '' });
@@ -291,16 +294,16 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
       active: 'bg-green-100 text-green-700',
       completed: 'bg-gray-100 text-gray-700',
     };
-    
+
     const icons = {
       draft: Clock,
       scheduled: Clock,
       active: CheckCircle2,
       completed: CheckCircle2,
     };
-    
+
     const Icon = icons[status];
-    
+
     return (
       <Badge className={styles[status]}>
         <Icon className="w-3 h-3 mr-1" />
@@ -316,7 +319,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
         <div>
           <h2 className="text-3xl font-bold text-neutral-900">Test Management</h2>
           <p className="text-neutral-600 mt-1">
-            {isAdmin 
+            {isAdmin
               ? 'Create and manage coding tests with proctoring features'
               : 'Monitor active tests and track student activity'}
           </p>
@@ -329,329 +332,329 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                 Create Test
               </Button>
             </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create New Test</DialogTitle>
-                  <DialogDescription>
-                    Create a new coding test with multiple questions and proctoring features
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-6 py-4">
-                  {/* Basic Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Test Title</Label>
-                      <Input
-                        id="title"
-                        value={newTest.title}
-                        onChange={(e) => setNewTest({ ...newTest, title: e.target.value })}
-                        placeholder="e.g., DSA Midterm Exam"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="batch">Select Batch</Label>
-                      <Select value={newTest.batchId} onValueChange={(value) => setNewTest({ ...newTest, batchId: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a batch" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {batches.map((batch) => (
-                            <SelectItem key={batch.id} value={batch.id}>
-                              {batch.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="duration">Duration (minutes)</Label>
-                      <Input
-                        id="duration"
-                        type="number"
-                        value={newTest.duration}
-                        onChange={(e) => setNewTest({ ...newTest, duration: parseInt(e.target.value) || 120 })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="startDate">Start Date & Time</Label>
-                      <Input
-                        id="startDate"
-                        type="datetime-local"
-                        value={newTest.startDate}
-                        onChange={(e) => setNewTest({ ...newTest, startDate: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="endDate">End Date & Time</Label>
-                      <Input
-                        id="endDate"
-                        type="datetime-local"
-                        value={newTest.endDate}
-                        onChange={(e) => setNewTest({ ...newTest, endDate: e.target.value })}
-                      />
-                    </div>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create New Test</DialogTitle>
+                <DialogDescription>
+                  Create a new coding test with multiple questions and proctoring features
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                {/* Basic Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Test Title</Label>
+                    <Input
+                      id="title"
+                      value={newTest.title}
+                      onChange={(e) => setNewTest({ ...newTest, title: e.target.value })}
+                      placeholder="e.g., DSA Midterm Exam"
+                    />
                   </div>
-
-                  <hr />
-
-                  {/* Selected Questions */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Questions ({selectedQuestions.length})</h3>
-                      <div className="flex gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <Plus className="w-4 h-4 mr-2" />
-                              From Bank
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle>Question Bank</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              {questionBank.map((q) => (
-                                <Card key={q.id}>
-                                  <CardContent className="p-4 flex items-center justify-between">
-                                    <div>
-                                      <h4 className="font-medium">{q.title}</h4>
-                                      <div className="flex gap-2 mt-1">
-                                        <Badge variant="outline">{q.difficulty}</Badge>
-                                        <Badge variant="outline" className="text-[10px] h-5">{q.type === 'mcq' ? 'MCQ' : 'Coding'}</Badge>
-                                        <span className="text-sm text-neutral-500">{q.points} pts</span>
-                                      </div>
-                                    </div>
-                                    <Button size="sm" onClick={() => handleAddExistingQuestion(q)}>
-                                      Add
-                                    </Button>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-
-                        <Button variant="outline" size="sm" onClick={() => setIsAddingQuestion(true)}>
-                          <Plus className="w-4 h-4 mr-2" />
-                          New Question
-                        </Button>
-                      </div>
-                    </div>
-
-                    {selectedQuestions.length > 0 ? (
-                      <div className="space-y-2">
-                        {selectedQuestions.map((q, idx) => (
-                          <div key={q.id} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border">
-                            <div className="flex items-center gap-3">
-                              <span className="font-bold text-neutral-400">#{idx + 1}</span>
-                              <div>
-                                <p className="font-medium">{q.title}</p>
-                                <p className="text-xs text-neutral-500">{q.difficulty} • {q.points} points • {q.type === 'mcq' ? 'MCQ' : 'Coding'}</p>
-                                {q.type === 'mcq' && q.correctAnswer && (
-                                  <p className="text-xs text-neutral-400">Answer: {q.correctAnswer}</p>
-                                )}
-                              </div>
-                            </div>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedQuestions(selectedQuestions.filter(sq => sq.id !== q.id))}>
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="batch">Select Batch</Label>
+                    <Select value={newTest.batchId} onValueChange={(value) => setNewTest({ ...newTest, batchId: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a batch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {batches.map((batch) => (
+                          <SelectItem key={batch.id} value={batch.id}>
+                            {batch.name}
+                          </SelectItem>
                         ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 border-2 border-dashed rounded-lg bg-neutral-50 text-neutral-500">
-                        No questions added yet. Add from bank or create a new one.
-                      </div>
-                    )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Duration (minutes)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={newTest.duration}
+                      onChange={(e) => setNewTest({ ...newTest, duration: parseInt(e.target.value) || 120 })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="startDate">Start Date & Time</Label>
+                    <Input
+                      id="startDate"
+                      type="datetime-local"
+                      value={newTest.startDate}
+                      onChange={(e) => setNewTest({ ...newTest, startDate: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="endDate">End Date & Time</Label>
+                    <Input
+                      id="endDate"
+                      type="datetime-local"
+                      value={newTest.endDate}
+                      onChange={(e) => setNewTest({ ...newTest, endDate: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <hr />
+
+                {/* Selected Questions */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Questions ({selectedQuestions.length})</h3>
+                    <div className="flex gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Plus className="w-4 h-4 mr-2" />
+                            From Bank
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Question Bank</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                            {questionBank.map((q) => (
+                              <Card key={q.id} className="hover:border-blue-300 transition-colors">
+                                <CardContent className="p-4 flex items-center justify-between">
+                                  <div>
+                                    <h4 className="font-semibold text-neutral-800">{q.title}</h4>
+                                    <div className="flex gap-2 mt-1">
+                                      <Badge variant="outline" className="bg-neutral-50">{q.difficulty}</Badge>
+                                      <Badge variant="outline" className="text-[10px] h-5 bg-neutral-50">{q.type === 'mcq' ? 'MCQ' : 'Coding'}</Badge>
+                                      <span className="text-sm text-neutral-500 font-medium">{q.points} pts</span>
+                                    </div>
+                                  </div>
+                                  <Button size="sm" onClick={() => handleAddExistingQuestion(q)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                    Add to Test
+                                  </Button>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
+                      <Button variant="outline" size="sm" onClick={() => setIsAddingQuestion(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Question
+                      </Button>
+                    </div>
                   </div>
 
-                  {/* New Question Form */}
-                  {isAddingQuestion && (
-                    <Card className="border-primary/20 bg-primary/5">
-                      <CardHeader>
-                        <CardTitle className="text-md">Create New Question</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="space-y-2">
-                            <Label>Question Title</Label>
-                            <Input 
-                              value={newQuestion.title} 
-                              onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
-                              placeholder="e.g., Bubble Sort Implementation"
-                            />
+                  {selectedQuestions.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedQuestions.map((q, idx) => (
+                        <div key={q.id} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-neutral-400">#{idx + 1}</span>
+                            <div>
+                              <p className="font-medium">{q.title}</p>
+                              <p className="text-xs text-neutral-500">{q.difficulty} • {q.points} points • {q.type === 'mcq' ? 'MCQ' : 'Coding'}</p>
+                              {q.type === 'mcq' && q.correctAnswer && (
+                                <p className="text-xs text-neutral-400">Answer: {q.correctAnswer}</p>
+                              )}
+                            </div>
                           </div>
+                          <Button variant="ghost" size="sm" onClick={() => setSelectedQuestions(selectedQuestions.filter(sq => sq.id !== q.id))}>
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 border-2 border-dashed rounded-lg bg-neutral-50 text-neutral-500">
+                      No questions added yet. Add from bank or create a new one.
+                    </div>
+                  )}
+                </div>
+
+                {/* New Question Form */}
+                {isAddingQuestion && (
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardHeader>
+                      <CardTitle className="text-md">Create New Question</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label>Question Title</Label>
+                          <Input
+                            value={newQuestion.title}
+                            onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
+                            placeholder="e.g., Bubble Sort Implementation"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Question Type</Label>
+                          <Select
+                            value={newQuestion.type || 'coding'}
+                            onValueChange={(v) =>
+                              setNewQuestion({
+                                ...newQuestion,
+                                type: v as any,
+                                options: v === 'mcq' ? (newQuestion.options?.length ? newQuestion.options : ['', '', '', '']) : newQuestion.options,
+                                testCases: v === 'coding' ? (newQuestion.testCases || []) : [],
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="coding">Coding</SelectItem>
+                              <SelectItem value="mcq">MCQ</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Difficulty</Label>
+                          <Select
+                            value={newQuestion.difficulty}
+                            onValueChange={(v) => setNewQuestion({ ...newQuestion, difficulty: v as any })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="easy">Easy</SelectItem>
+                              <SelectItem value="medium">Medium</SelectItem>
+                              <SelectItem value="hard">Hard</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Description</Label>
+                        <Textarea
+                          value={newQuestion.description}
+                          onChange={(e) => setNewQuestion({ ...newQuestion, description: e.target.value })}
+                          placeholder="Detailed problem description..."
+                        />
+                      </div>
+                      {newQuestion.type === 'mcq' ? (
+                        <div className="space-y-2">
+                          <Label>Options</Label>
+                          {(newQuestion.options || []).map((opt, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <Input
+                                value={opt}
+                                onChange={(e) => {
+                                  const options = [...(newQuestion.options || [])];
+                                  options[idx] = e.target.value;
+                                  const cleaned = options.map(o => o.trim()).filter(o => o);
+                                  const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
+                                  setNewQuestion({ ...newQuestion, options, correctAnswer: nextCorrect });
+                                }}
+                                placeholder={`Option ${idx + 1}`}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const options = (newQuestion.options || []).filter((_, i) => i !== idx);
+                                  const cleaned = options.map(o => o.trim()).filter(o => o);
+                                  const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
+                                  setNewQuestion({ ...newQuestion, options, correctAnswer: nextCorrect });
+                                }}
+                                className="px-2"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setNewQuestion({ ...newQuestion, options: [...(newQuestion.options || []), ''] })}
+                            className="w-fit"
+                          >
+                            <Plus className="w-3 h-3 mr-1" /> Add Option
+                          </Button>
                           <div className="space-y-2">
-                            <Label>Question Type</Label>
+                            <Label>Correct Answer</Label>
                             <Select
-                              value={newQuestion.type || 'coding'}
-                              onValueChange={(v) =>
-                                setNewQuestion({
-                                  ...newQuestion,
-                                  type: v as any,
-                                  options: v === 'mcq' ? (newQuestion.options?.length ? newQuestion.options : ['', '', '', '']) : newQuestion.options,
-                                  testCases: v === 'coding' ? (newQuestion.testCases || []) : [],
-                                })
-                              }
+                              value={newQuestion.correctAnswer || ''}
+                              onValueChange={(value) => setNewQuestion({ ...newQuestion, correctAnswer: value })}
                             >
                               <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Select correct answer" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="coding">Coding</SelectItem>
-                                <SelectItem value="mcq">MCQ</SelectItem>
+                                {(newQuestion.options || [])
+                                  .map(o => o.trim())
+                                  .filter(o => o)
+                                  .map((opt, idx) => (
+                                    <SelectItem key={`${opt}-${idx}`} value={opt}>
+                                      {opt}
+                                    </SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-2">
-                            <Label>Difficulty</Label>
-                            <Select 
-                              value={newQuestion.difficulty} 
-                              onValueChange={(v) => setNewQuestion({ ...newQuestion, difficulty: v as any })}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="easy">Easy</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="hard">Hard</SelectItem>
-                              </SelectContent>
-                          </Select>
-                          </div>
                         </div>
+                      ) : (
                         <div className="space-y-2">
-                          <Label>Description</Label>
-                          <Textarea 
-                            value={newQuestion.description}
-                            onChange={(e) => setNewQuestion({ ...newQuestion, description: e.target.value })}
-                            placeholder="Detailed problem description..."
-                          />
-                        </div>
-                        {newQuestion.type === 'mcq' ? (
+                          <div className="flex items-center justify-between">
+                            <Label>Test Cases</Label>
+                            <Button type="button" variant="outline" size="sm" onClick={handleAddTestCase}>
+                              <Plus className="w-3 h-3 mr-1" /> Add Case
+                            </Button>
+                          </div>
                           <div className="space-y-2">
-                            <Label>Options</Label>
-                            {(newQuestion.options || []).map((opt, idx) => (
-                              <div key={idx} className="flex gap-2">
-                                <Input
-                                  value={opt}
-                                  onChange={(e) => {
-                                    const options = [...(newQuestion.options || [])];
-                                    options[idx] = e.target.value;
-                                    const cleaned = options.map(o => o.trim()).filter(o => o);
-                                    const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
-                                    setNewQuestion({ ...newQuestion, options, correctAnswer: nextCorrect });
-                                  }}
-                                  placeholder={`Option ${idx + 1}`}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    const options = (newQuestion.options || []).filter((_, i) => i !== idx);
-                                    const cleaned = options.map(o => o.trim()).filter(o => o);
-                                    const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
-                                    setNewQuestion({ ...newQuestion, options, correctAnswer: nextCorrect });
-                                  }}
-                                  className="px-2"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
+                            {newQuestion.testCases?.map((tc, idx) => (
+                              <div key={idx} className="p-3 bg-white rounded-md border space-y-2">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <Input
+                                    placeholder="Input"
+                                    value={tc.input}
+                                    onChange={(e) => handleUpdateTestCase(idx, 'input', e.target.value)}
+                                  />
+                                  <Input
+                                    placeholder="Expected Output"
+                                    value={tc.expectedOutput}
+                                    onChange={(e) => handleUpdateTestCase(idx, 'expectedOutput', e.target.value)}
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`hidden-${idx}`}
+                                      checked={tc.isHidden}
+                                      onChange={(e) => handleUpdateTestCase(idx, 'isHidden', e.target.checked)}
+                                    />
+                                    <Label htmlFor={`hidden-${idx}`} className="text-xs cursor-pointer">Hidden Case</Label>
+                                  </div>
+                                  <Button variant="ghost" size="sm" onClick={() => handleRemoveTestCase(idx)}>
+                                    <Trash2 className="w-3 h-3 text-red-500" />
+                                  </Button>
+                                </div>
                               </div>
                             ))}
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setNewQuestion({ ...newQuestion, options: [...(newQuestion.options || []), ''] })}
-                              className="w-fit"
-                            >
-                              <Plus className="w-3 h-3 mr-1" /> Add Option
-                            </Button>
-                            <div className="space-y-2">
-                              <Label>Correct Answer</Label>
-                              <Select
-                                value={newQuestion.correctAnswer || ''}
-                                onValueChange={(value) => setNewQuestion({ ...newQuestion, correctAnswer: value })}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select correct answer" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {(newQuestion.options || [])
-                                    .map(o => o.trim())
-                                    .filter(o => o)
-                                    .map((opt, idx) => (
-                                      <SelectItem key={`${opt}-${idx}`} value={opt}>
-                                        {opt}
-                                      </SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
                           </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label>Test Cases</Label>
-                              <Button type="button" variant="outline" size="sm" onClick={handleAddTestCase}>
-                                <Plus className="w-3 h-3 mr-1" /> Add Case
-                              </Button>
-                            </div>
-                            <div className="space-y-2">
-                              {newQuestion.testCases?.map((tc, idx) => (
-                                <div key={idx} className="p-3 bg-white rounded-md border space-y-2">
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <Input 
-                                      placeholder="Input" 
-                                      value={tc.input} 
-                                      onChange={(e) => handleUpdateTestCase(idx, 'input', e.target.value)}
-                                    />
-                                    <Input 
-                                      placeholder="Expected Output" 
-                                      value={tc.expectedOutput} 
-                                      onChange={(e) => handleUpdateTestCase(idx, 'expectedOutput', e.target.value)}
-                                    />
-                                  </div>
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <input 
-                                        type="checkbox" 
-                                        id={`hidden-${idx}`}
-                                        checked={tc.isHidden}
-                                        onChange={(e) => handleUpdateTestCase(idx, 'isHidden', e.target.checked)}
-                                      />
-                                      <Label htmlFor={`hidden-${idx}`} className="text-xs cursor-pointer">Hidden Case</Label>
-                                    </div>
-                                    <Button variant="ghost" size="sm" onClick={() => handleRemoveTestCase(idx)}>
-                                      <Trash2 className="w-3 h-3 text-red-500" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        <div className="flex justify-end gap-2 mt-4">
-                          <Button variant="ghost" size="sm" onClick={() => setIsAddingQuestion(false)}>Cancel</Button>
-                          <Button size="sm" onClick={handleAddNewQuestion}>Add to Test</Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                      )}
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="ghost" size="sm" onClick={() => setIsAddingQuestion(false)}>Cancel</Button>
+                        <Button size="sm" onClick={handleAddNewQuestion}>Add to Test</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
-                  <div className="flex justify-end gap-2 pt-4 border-t">
-                    <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateTest} style={{ backgroundColor: 'var(--color-primary)' }}>
-                      Create Test
-                    </Button>
-                  </div>
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateTest} style={{ backgroundColor: 'var(--color-primary)' }}>
+                    Create Test
+                  </Button>
                 </div>
-              </DialogContent>
+              </div>
+            </DialogContent>
 
           </Dialog>
         )}
@@ -662,7 +665,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
         <CardHeader>
           <CardTitle>All Tests</CardTitle>
           <CardDescription>
-            {isAdmin 
+            {isAdmin
               ? 'Manage all tests across batches'
               : 'View and monitor tests assigned to your batches'}
           </CardDescription>
@@ -686,9 +689,9 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                 <TableRow key={test.id}>
                   <TableCell className="font-medium">{test.title}</TableCell>
                   <TableCell>{test.batchName}</TableCell>
-                    <TableCell>{test.duration} min</TableCell>
-                    <TableCell>{test.questions.length}</TableCell>
-                    <TableCell>
+                  <TableCell>{test.duration} min</TableCell>
+                  <TableCell>{test.questions.length}</TableCell>
+                  <TableCell>
 
                     <div className="flex items-center gap-1">
                       <Users className="w-4 h-4 text-neutral-500" />
@@ -718,16 +721,16 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                           Monitor
                         </Button>
                       )}
-<Button size="sm" variant="outline" onClick={() => toast.info(`Viewing ${test.title} details`)}>
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
-                        {isAdmin && (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => toast.info(`Editing ${test.title}`)}>
-                              <Edit className="w-4 h-4 mr-1" />
-                              Edit
-                            </Button>
+                      <Button size="sm" variant="outline" onClick={() => toast.info(`Viewing ${test.title} details`)}>
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                      {isAdmin && (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => toast.info(`Editing ${test.title}`)}>
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -793,6 +796,28 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showNextQuestionPrompt} onOpenChange={setShowNextQuestionPrompt}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <CheckCircle2 className="w-6 h-6 text-green-600" />
+              Question Added
+            </DialogTitle>
+            <DialogDescription>
+              The question has been added to this test. Would you like to add another one?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 justify-end mt-4">
+            <Button variant="outline" onClick={() => { setShowNextQuestionPrompt(false); setIsAddingQuestion(false); }}>
+              Done for Now
+            </Button>
+            <Button onClick={() => setShowNextQuestionPrompt(false)} className="bg-blue-600 hover:bg-blue-700">
+              Add Another
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

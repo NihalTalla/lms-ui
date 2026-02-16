@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, Video, BookOpen } from 'lucide-react';
+import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, Video, BookOpen, Lock, Code2 } from 'lucide-react';
 import { batches, courses } from '../lib/data';
 import { toast } from 'sonner';
 
@@ -22,7 +22,7 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const [replyText, setReplyText] = useState('');
   const [sessionData, setSessionData] = useState({ title: '', date: '', time: '', batch: '' });
-  
+
   const activeBatches = batches.length;
   const totalStudents = batches.reduce((sum, batch) => sum + batch.students, 0);
   const pendingGrading = 8;
@@ -101,27 +101,42 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
             </Button>
           </CardContent>
         </Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-gradient-to-br from-blue-50 to-white border-blue-100" onClick={() => onNavigate('trainer-compiler')}>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between font-bold">
+              <div>
+                <p className="text-sm text-blue-600 font-bold uppercase tracking-wider">Coding Sandbox</p>
+                <h3 className="mt-1 text-xl font-bold text-blue-900">Open Compiler</h3>
+              </div>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-600 shadow-lg shadow-blue-200">
+                <FileCode className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <p className="text-xs text-blue-500 mt-2">Practice and share code with students</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Courses Section */}
       <Card>
         <CardHeader>
-          <CardTitle>My Courses</CardTitle>
+          <CardTitle>Course Templates</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.slice(0, 3).map((course) => (
               <div
                 key={course.id}
-                className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => onNavigate('course-modules', course)}
+                className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all group relative"
               >
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Lock className="w-4 h-4 text-neutral-400" />
+                </div>
                 <h4 className="font-semibold mb-1">{course.title}</h4>
                 <p className="text-xs text-neutral-600 mb-3 line-clamp-2">{course.description}</p>
                 <div className="flex items-center justify-between">
                   <Badge variant="outline" className="text-xs capitalize">{course.level}</Badge>
-                  <Button size="sm" variant="ghost" className="h-auto p-0">
-                    <Eye className="w-4 h-4" />
+                  <Button size="sm" variant="ghost" className="h-auto p-0 text-neutral-400 cursor-not-allowed" title="Template view only">
+                    <Lock className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -262,13 +277,13 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
                         Urgent
                       </Badge>
                     </div>
-<p className="text-sm text-neutral-700 mb-3">{question.question}</p>
-                      <Button size="sm" style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => {
-                        setSelectedQuestion(question);
-                        setReplyDialogOpen(true);
-                      }}>
-                        Reply
-                      </Button>
+                    <p className="text-sm text-neutral-700 mb-3">{question.question}</p>
+                    <Button size="sm" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }} onClick={() => {
+                      setSelectedQuestion(question);
+                      setReplyDialogOpen(true);
+                    }}>
+                      Reply
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -316,6 +331,10 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              <Button variant="outline" className="w-full justify-start text-blue-600 border-blue-100 hover:bg-blue-50" onClick={() => onNavigate('trainer-compiler')}>
+                <Code2 className="w-4 h-4 mr-2" />
+                Live Compiler (Sandbox)
+              </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('tests')}>
                 <FileCode className="w-4 h-4 mr-2" />
                 Create Test
@@ -324,10 +343,10 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
                 <TrendingUp className="w-4 h-4 mr-2" />
                 View Leaderboard
               </Button>
-<Button variant="outline" className="w-full justify-start" onClick={() => setScheduleDialogOpen(true)}>
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Schedule Session
-                </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => setScheduleDialogOpen(true)}>
+                <Calendar className="w-4 h-4 mr-2" />
+                Schedule Session
+              </Button>
             </CardContent>
           </Card>
 
@@ -368,8 +387,8 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Session Title</Label>
-              <Input 
-                placeholder="e.g., Trees & Graphs Deep Dive" 
+              <Input
+                placeholder="e.g., Trees & Graphs Deep Dive"
                 value={sessionData.title}
                 onChange={(e) => setSessionData({ ...sessionData, title: e.target.value })}
               />
@@ -390,25 +409,25 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Date</Label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   value={sessionData.date}
                   onChange={(e) => setSessionData({ ...sessionData, date: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Time</Label>
-                <Input 
-                  type="time" 
+                <Input
+                  type="time"
                   value={sessionData.time}
                   onChange={(e) => setSessionData({ ...sessionData, time: e.target.value })}
                 />
               </div>
             </div>
             <div className="flex gap-2">
-              <Button 
-                className="flex-1" 
-                style={{ backgroundColor: 'var(--color-primary)' }}
+              <Button
+                className="flex-1"
+                style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}
                 onClick={() => {
                   if (!sessionData.title || !sessionData.batch || !sessionData.date) {
                     toast.error('Please fill all required fields');
@@ -443,17 +462,17 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
             </div>
             <div className="space-y-2">
               <Label>Your Reply</Label>
-              <Textarea 
-                placeholder="Type your response..." 
+              <Textarea
+                placeholder="Type your response..."
                 rows={4}
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
-              <Button 
-                className="flex-1" 
-                style={{ backgroundColor: 'var(--color-primary)' }}
+              <Button
+                className="flex-1"
+                style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}
                 onClick={() => {
                   if (!replyText) {
                     toast.error('Please enter a reply');

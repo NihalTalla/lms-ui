@@ -220,13 +220,15 @@ export function StudentCourseTests({ course, onBack }: StudentCourseTestsProps) 
       </Card>
 
       <Dialog open={showTestSession} onOpenChange={setShowTestSession}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Start Test</DialogTitle>
-            <DialogDescription>
-              Camera and microphone access are required to proceed.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className={activeTest && showTestSession ? "max-w-[100vw] w-screen h-screen m-0 p-0 rounded-none border-none gap-0" : "max-w-5xl max-h-[90vh] overflow-y-auto"}>
+          {!activeTest || !showTestSession ? (
+            <DialogHeader>
+              <DialogTitle>Start Test</DialogTitle>
+              <DialogDescription>
+                Camera and microphone access are required to proceed.
+              </DialogDescription>
+            </DialogHeader>
+          ) : null}
           {activeTest && (
             <StudentTestSession
               test={activeTest}

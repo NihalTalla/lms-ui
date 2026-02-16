@@ -394,7 +394,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
               topics: [],
             });
             setIsCreateDialogOpen(true);
-          }} style={{ backgroundColor: 'var(--color-primary)' }}>
+          }} style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
             <Plus className="w-4 h-4 mr-2" />
             Create New Course
           </Button>
@@ -402,170 +402,96 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       </div>
 
       {/* Admin Management Drill-down */}
-      {isAdmin && mgmtStep === 'list' && (
-        <Card className="shadow-lg border-none bg-gradient-to-br from-white to-neutral-50/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-6">
-            <div>
-              <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-600">Course Management</CardTitle>
-              <CardDescription className="text-neutral-500">Manage your curriculum, topics, and assessments in one place</CardDescription>
-            </div>
-            <div className="flex gap-3">
-              <div className="relative group">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-primary transition-colors" />
-                <Input placeholder="Search courses..." className="pl-10 w-72 bg-white/50 backdrop-blur-sm focus:bg-white transition-all shadow-sm" />
+      {
+        isAdmin && mgmtStep === 'list' && (
+          <Card className="shadow-lg border-none bg-gradient-to-br from-white to-neutral-50/50">
+            <CardHeader className="flex flex-row items-center justify-between pb-6">
+              <div>
+                <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-600">Course Management</CardTitle>
+                <CardDescription className="text-neutral-500">Manage your curriculum, topics, and assessments in one place</CardDescription>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-neutral-100">
-                  <TableHead className="font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Course Information</TableHead>
-                  <TableHead className="font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Batch details</TableHead>
-                  <TableHead className="font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Level</TableHead>
-                  <TableHead className="font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Visibility</TableHead>
-                  <TableHead className="text-right font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {courseList.map((course) => (
-                  <TableRow key={course.id} className="group cursor-pointer hover:bg-neutral-50/80 transition-all border-neutral-100" onClick={() => handleOpenCourseTopics(course)}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                          {course.title.charAt(0)}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-neutral-900 group-hover:text-primary transition-colors">{course.title}</span>
-                          <span className="text-xs text-neutral-500 flex items-center gap-1">
-                            <BookOpen className="w-3 h-3" /> {course.topics?.length || 0} Modules
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <Badge variant="outline" className="w-fit text-[10px] h-5 bg-white border-neutral-200 font-medium">
-                          {institutions.find(i => i.id === course.institutionId)?.name || 'General Access'}
-                        </Badge>
-                        <span className="text-[10px] text-neutral-400 ml-1">{batches.find(b => b.id === course.batchId)?.name || 'Open Enrollment'}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getLevelBadge(course.level)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`h-6 gap-1.5 ${course.isLocked ? "bg-red-50 text-red-600 border-red-100" : "bg-green-50 text-green-600 border-green-100"}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${course.isLocked ? 'bg-red-500' : 'bg-green-500'} animate-pulse`} />
-                        {course.isLocked ? 'Locked' : 'Active'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setViewCourse(course); setIsViewDialogOpen(true); }}>
-                          <Eye className="w-4 h-4 text-neutral-500 hover:text-primary" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleEditCourse(course)}>
-                          <Edit className="w-4 h-4 text-neutral-500 hover:text-primary" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 px-3 text-primary font-medium hover:bg-primary/10 rounded-full" onClick={() => handleOpenCourseTopics(course)}>
-                          Manage <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      {isAdmin && mgmtStep === 'topics' && activeMgmtCourse && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm" onClick={handleBackToCourses} className="rounded-full h-9 bg-white shadow-sm border-neutral-200">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back
-              </Button>
-              <h2 className="text-xl font-bold text-neutral-800">{activeMgmtCourse.title} <span className="text-neutral-400 font-normal">/ Topics</span></h2>
-            </div>
-            <Button size="sm" className="bg-primary shadow-md hover:shadow-lg transition-all rounded-full h-9" onClick={() => {
-              const newTopic: Topic = {
-                id: `topic-${Date.now()}`,
-                title: 'New Topic',
-                content: '',
-                questions: [],
-                isLocked: false,
-                durationLocked: false,
-                images: [],
-              };
-              const updatedTopics = [...(activeMgmtCourse.topics || []), newTopic];
-              const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
-              setActiveMgmtCourse(updatedCourse);
-              setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-              handleOpenTopicDetails(newTopic, updatedTopics.length - 1);
-              toast.success('New topic added');
-            }}>
-              <Plus className="w-4 h-4 mr-2" /> New Topic
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {activeMgmtCourse.topics?.map((topic: Topic, idx: number) => (
-              <Card key={topic.id} className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer bg-white" onClick={() => handleOpenTopicDetails(topic, idx)}>
-                <div className={`absolute top-0 left-0 w-1 h-full ${topic.isLocked ? 'bg-red-400' : 'bg-primary'}`} />
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start mb-2">
-                    <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 font-bold text-[10px] uppercase tracking-wider">Module {idx + 1}</Badge>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full bg-neutral-50 hover:bg-white" onClick={(e) => {
-                        e.stopPropagation();
-                        const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
-                          i === idx ? { ...t, isLocked: !t.isLocked } : t
-                        );
-                        const updatedCourse = { ...activeMgmtCourse, topics: updated };
-                        setActiveMgmtCourse(updatedCourse);
-                        setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-                        toast.success(`Topic ${updated[idx].isLocked ? 'locked' : 'unlocked'}`);
-                      }}>
-                        {topic.isLocked ? <Lock className="w-3.5 h-3.5 text-red-500" /> : <Unlock className="w-3.5 h-3.5 text-green-500" />}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full bg-neutral-50 hover:bg-red-50" onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm('Are you sure you want to delete this topic? This action cannot be undone.')) {
-                          const updatedTopics = activeMgmtCourse.topics.filter((_: any, i: number) => i !== idx);
-                          const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
-                          setActiveMgmtCourse(updatedCourse);
-                          setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-                          toast.success('Topic deleted successfully');
-                        }
-                      }}>
-                        <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                      </Button>
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors">{topic.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-neutral-500 line-clamp-3 mb-6 min-h-[3rem] leading-relaxed">{topic.content || 'Click to add content...'}</p>
-                  <div className="flex items-center gap-4 py-3 border-t border-neutral-50">
-                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
-                      <FileText className="w-3.5 h-3.5" /> {topic.questions?.length || 0} Questions
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
-                      <Clock className="w-3.5 h-3.5" /> {topic.accessDuration || 'Unlimited'}
-                    </div>
-                  </div>
-                </CardContent>
-                <div className="px-6 py-3 bg-neutral-50/50 flex justify-end">
-                  <span className="text-[10px] font-bold uppercase text-primary tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all">
-                    Configure Topic <ChevronRight className="w-3 h-3" />
-                  </span>
+              <div className="flex gap-3">
+                <div className="relative group">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-primary transition-colors" />
+                  <Input placeholder="Search courses..." className="pl-10 w-72 bg-white/50 backdrop-blur-sm focus:bg-white transition-all shadow-sm" />
                 </div>
-              </Card>
-            ))}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-neutral-100">
+                    <TableHead className="font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Course Information</TableHead>
+                    <TableHead className="font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Batch details</TableHead>
+                    <TableHead className="font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Level</TableHead>
+                    <TableHead className="font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Visibility</TableHead>
+                    <TableHead className="text-right font-bold text-neutral-400 uppercase text-[10px] tracking-widest">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {courseList.map((course) => (
+                    <TableRow key={course.id} className="group cursor-pointer hover:bg-neutral-50/80 transition-all border-neutral-100" onClick={() => handleOpenCourseTopics(course)}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                            {course.title.charAt(0)}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-neutral-900 group-hover:text-primary transition-colors">{course.title}</span>
+                            <span className="text-xs text-neutral-500 flex items-center gap-1">
+                              <BookOpen className="w-3 h-3" /> {course.topics?.length || 0} Modules
+                            </span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="outline" className="w-fit text-[10px] h-5 bg-white border-neutral-200 font-medium">
+                            {institutions.find(i => i.id === course.institutionId)?.name || 'General Access'}
+                          </Badge>
+                          <span className="text-[10px] text-neutral-400 ml-1">{batches.find(b => b.id === course.batchId)?.name || 'Open Enrollment'}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getLevelBadge(course.level)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`h-6 gap-1.5 ${course.isLocked ? "bg-red-50 text-red-600 border-red-100" : "bg-green-50 text-green-600 border-green-100"}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${course.isLocked ? 'bg-red-500' : 'bg-green-500'} animate-pulse`} />
+                          {course.isLocked ? 'Locked' : 'Active'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setViewCourse(course); setIsViewDialogOpen(true); }}>
+                            <Eye className="w-4 h-4 text-neutral-500 hover:text-primary" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleEditCourse(course)}>
+                            <Edit className="w-4 h-4 text-neutral-500 hover:text-primary" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 px-3 text-primary font-medium hover:bg-primary/10 rounded-full" onClick={() => handleOpenCourseTopics(course)}>
+                            Manage <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )
+      }
 
-            <Card className="border-2 border-dashed border-neutral-200 bg-neutral-50/30 flex flex-col items-center justify-center p-12 text-neutral-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group"
-              onClick={() => {
+      {
+        isAdmin && mgmtStep === 'topics' && activeMgmtCourse && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="outline" size="sm" onClick={handleBackToCourses} className="rounded-full h-9 bg-white shadow-sm border-neutral-200">
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                </Button>
+                <h2 className="text-xl font-bold text-neutral-800">{activeMgmtCourse.title} <span className="text-neutral-400 font-normal">/ Topics</span></h2>
+              </div>
+              <Button size="sm" className="bg-primary shadow-md hover:shadow-lg transition-all rounded-full h-9" onClick={() => {
                 const newTopic: Topic = {
                   id: `topic-${Date.now()}`,
                   title: 'New Topic',
@@ -582,206 +508,286 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                 handleOpenTopicDetails(newTopic, updatedTopics.length - 1);
                 toast.success('New topic added');
               }}>
-              <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Plus className="w-8 h-8" />
-              </div>
-              <span className="font-bold text-sm tracking-wide">Add New Module</span>
-            </Card>
-          </div>
-        </div>
-      )}
+                <Plus className="w-4 h-4 mr-2" /> New Topic
+              </Button>
+            </div>
 
-      {isAdmin && mgmtStep === 'details' && activeMgmtTopic && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={handleBackToTopics} className="rounded-full h-9 bg-white shadow-sm border-neutral-200">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
-            </Button>
-            <h2 className="text-xl font-bold text-neutral-800">Topic Configuration <span className="text-neutral-400 font-normal">/ {activeMgmtTopic.title}</span></h2>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="rounded-full h-9" onClick={() => {
-              const deadline = prompt('Enter deadline for this topic (e.g., 2024-12-31):', activeMgmtTopic.deadline || '');
-              if (deadline) {
-                const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
-                  i === activeMgmtTopicIndex ? { ...t, deadline } : t
-                );
-                const updatedCourse = { ...activeMgmtCourse, topics: updated };
-                setActiveMgmtCourse(updatedCourse);
-                setActiveMgmtTopic({ ...activeMgmtTopic, deadline });
-                setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-                toast.success(`Deadline set to ${deadline}`);
-              }
-            }}>
-              <Clock className="w-4 h-4 mr-2" /> Set Deadlines
-            </Button>
-            <Button size="sm" onClick={handleOpenAssessment} className="bg-primary shadow-md hover:shadow-lg transition-all rounded-full h-9 px-6">
-              Manage Assessment <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card className="border-none shadow-lg overflow-hidden">
-                <CardHeader className="bg-neutral-900 text-white pb-8">
-                  <div className="flex justify-between items-center mb-4">
-                    <Badge className="bg-white/20 text-white border-none backdrop-blur-md">Module Content</Badge>
-                    <div className="flex items-center gap-4">
-                      <span className="text-xs font-medium text-neutral-400">Status:</span>
-                      <div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full cursor-pointer hover:bg-white/20 transition-all"
-                        onClick={() => {
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {activeMgmtCourse.topics?.map((topic: Topic, idx: number) => (
+                <Card key={topic.id} className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer bg-white" onClick={() => handleOpenTopicDetails(topic, idx)}>
+                  <div className={`absolute top-0 left-0 w-1 h-full ${topic.isLocked ? 'bg-red-400' : 'bg-primary'}`} />
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 font-bold text-[10px] uppercase tracking-wider">Module {idx + 1}</Badge>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full bg-neutral-50 hover:bg-white" onClick={(e) => {
+                          e.stopPropagation();
                           const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
-                            i === activeMgmtTopicIndex ? { ...t, isLocked: !t.isLocked } : t
+                            i === idx ? { ...t, isLocked: !t.isLocked } : t
                           );
                           const updatedCourse = { ...activeMgmtCourse, topics: updated };
                           setActiveMgmtCourse(updatedCourse);
-                          setActiveMgmtTopic({ ...activeMgmtTopic, isLocked: !activeMgmtTopic.isLocked });
-                          toast.success(`Module ${!activeMgmtTopic.isLocked ? 'Locked' : 'Unlocked'}`);
+                          setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                          toast.success(`Topic ${updated[idx].isLocked ? 'locked' : 'unlocked'}`);
                         }}>
-                        {activeMgmtTopic.isLocked ? (
-                          <><Lock className="w-4 h-4 text-red-400" /> <span className="text-xs font-bold text-red-400">LOCKED</span></>
-                        ) : (
-                          <><Unlock className="w-4 h-4 text-green-400" /> <span className="text-xs font-bold text-green-400">ACCESSIBLE</span></>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full cursor-pointer hover:bg-white/20 transition-all border border-white/10"
-                        onClick={() => {
-                          const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
-                            i === activeMgmtTopicIndex ? { ...t, durationLocked: !t.durationLocked } : t
-                          );
-                          const updatedCourse = { ...activeMgmtCourse, topics: updated };
-                          setActiveMgmtCourse(updatedCourse);
-                          setActiveMgmtTopic({ ...activeMgmtTopic, durationLocked: !activeMgmtTopic.durationLocked });
-                          toast.success(`Duration ${!activeMgmtTopic.durationLocked ? 'Locked' : 'Unlocked'}`);
+                          {topic.isLocked ? <Lock className="w-3.5 h-3.5 text-red-500" /> : <Unlock className="w-3.5 h-3.5 text-green-500" />}
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full bg-neutral-50 hover:bg-red-50" onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm('Are you sure you want to delete this topic? This action cannot be undone.')) {
+                            const updatedTopics = activeMgmtCourse.topics.filter((_: any, i: number) => i !== idx);
+                            const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
+                            setActiveMgmtCourse(updatedCourse);
+                            setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                            toast.success('Topic deleted successfully');
+                          }
                         }}>
-                        {activeMgmtTopic.durationLocked ? (
-                          <><Lock className="w-3.5 h-3.5 text-orange-400" /> <span className="text-[10px] font-bold text-orange-400">DURATION LOCKED</span></>
-                        ) : (
-                          <><Unlock className="w-3.5 h-3.5 text-green-400" /> <span className="text-[10px] font-bold text-green-400">DURATION OPEN</span></>
-                        )}
+                          <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                  <CardTitle className="text-2xl font-bold">{activeMgmtTopic.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-8">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Detailed Description</Label>
-                      <Badge variant="outline" className="text-[9px] border-neutral-200">Supports Markdown</Badge>
+                    <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors">{topic.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-neutral-500 line-clamp-3 mb-6 min-h-[3rem] leading-relaxed">{topic.content || 'Click to add content...'}</p>
+                    <div className="flex items-center gap-4 py-3 border-t border-neutral-50">
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
+                        <FileText className="w-3.5 h-3.5" /> {topic.questions?.length || 0} Questions
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
+                        <Clock className="w-3.5 h-3.5" /> {topic.accessDuration || 'Unlimited'}
+                      </div>
                     </div>
-                    <Textarea
-                      value={activeMgmtTopic.content}
-                      onChange={(e) => setActiveMgmtTopic({ ...activeMgmtTopic, content: e.target.value })}
-                      placeholder="Enter detailed topic description, learning objectives, and key takeaways..."
-                      rows={12}
-                      className="leading-relaxed border-neutral-100 bg-neutral-50/50 focus:bg-white transition-all text-neutral-700 resize-none scrollbar-thin"
-                    />
+                  </CardContent>
+                  <div className="px-6 py-3 bg-neutral-50/50 flex justify-end">
+                    <span className="text-[10px] font-bold uppercase text-primary tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all">
+                      Configure Topic <ChevronRight className="w-3 h-3" />
+                    </span>
                   </div>
+                </Card>
+              ))}
 
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400">
-                        <ImageIcon className="w-4 h-4" /> Reference & Concept Images
-                      </Label>
-                      <Button variant="secondary" size="sm" className="h-8 text-xs font-bold rounded-full" onClick={() => {
-                        const mockImg = "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=600";
-                        const updatedImgs = [...(activeMgmtTopic.images || []), mockImg];
-                        setActiveMgmtTopic({ ...activeMgmtTopic, images: updatedImgs });
-                        toast.success("Image added to gallery");
-                      }}>
-                        <Plus className="w-3.5 h-3.5 mr-1" /> Add Image
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {activeMgmtTopic.images?.map((img: string, i: number) => (
-                        <div key={i} className="relative group rounded-xl overflow-hidden border shadow-sm h-40">
-                          <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-white hover:bg-white/20" onClick={() => window.open(img)}>
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-white hover:bg-red-500/80" onClick={() => {
-                              const updated = activeMgmtTopic.images.filter((_: any, idx: number) => idx !== i);
-                              setActiveMgmtTopic({ ...activeMgmtTopic, images: updated });
-                            }}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                      {(!activeMgmtTopic.images || activeMgmtTopic.images.length === 0) && (
-                        <div className="col-span-full py-12 border-2 border-dashed border-neutral-100 rounded-xl flex flex-col items-center justify-center text-neutral-300 bg-neutral-50/50">
-                          <ImageIcon className="w-10 h-10 mb-2 opacity-20" />
-                          <p className="text-xs font-medium uppercase tracking-wider">No concept images added</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-                <div className="p-6 bg-neutral-50/80 border-t flex justify-end gap-3">
-                  <Button variant="ghost" onClick={handleBackToTopics} className="font-bold text-xs uppercase tracking-widest text-neutral-400">Discard</Button>
-                  <Button onClick={() => {
-                    const updatedTopics = activeMgmtCourse.topics.map((t: any, i: number) =>
-                      i === activeMgmtTopicIndex ? activeMgmtTopic : t
-                    );
-                    const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
-                    setActiveMgmtCourse(updatedCourse);
-                    setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-                    toast.success("Topic configuration synced");
-                    handleBackToTopics();
-                  }} className="px-8 font-bold">Save Module</Button>
+              <Card className="border-2 border-dashed border-neutral-200 bg-neutral-50/30 flex flex-col items-center justify-center p-12 text-neutral-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group"
+                onClick={() => {
+                  const newTopic: Topic = {
+                    id: `topic-${Date.now()}`,
+                    title: 'New Topic',
+                    content: '',
+                    questions: [],
+                    isLocked: false,
+                    durationLocked: false,
+                    images: [],
+                  };
+                  const updatedTopics = [...(activeMgmtCourse.topics || []), newTopic];
+                  const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
+                  setActiveMgmtCourse(updatedCourse);
+                  setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                  handleOpenTopicDetails(newTopic, updatedTopics.length - 1);
+                  toast.success('New topic added');
+                }}>
+                <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Plus className="w-8 h-8" />
                 </div>
-              </Card>
-            </div>
-
-            <div className="space-y-6">
-              <Card className="border-none shadow-lg">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-bold uppercase tracking-widest text-neutral-400">Topic Stats</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between">
-                    <span className="text-xs font-medium text-neutral-600">Total Questions</span>
-                    <span className="text-xl font-bold text-primary">{activeMgmtTopic.questions?.length || 0}</span>
-                  </div>
-                  <div className="p-4 rounded-xl bg-orange-50 border border-orange-100 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-neutral-600">Access Duration</span>
-                      <span className="text-sm font-bold text-orange-600">{activeMgmtTopic.accessDuration || 'Unlimited'}</span>
-                    </div>
-                    <Input
-                      placeholder="e.g. 2h 30m"
-                      value={activeMgmtTopic.accessDuration || ''}
-                      onChange={(e) => setActiveMgmtTopic({ ...activeMgmtTopic, accessDuration: e.target.value })}
-                      className="h-7 text-[10px] bg-white border-orange-200"
-                    />
-                  </div>
-                  <div className="p-4 rounded-xl bg-green-50 border border-green-100 flex items-center justify-between">
-                    <span className="text-xs font-medium text-neutral-600">Estimated Effort</span>
-                    <span className="text-sm font-bold text-green-600">45 Minutes</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-none shadow-lg bg-gradient-to-br from-primary to-primary-dark text-white overflow-hidden relative">
-                <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold">Manage Assessment</CardTitle>
-                  <CardDescription className="text-white/70">Create MCQs and Coding problems for this module</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="secondary" className="w-full font-bold shadow-md hover:shadow-lg transition-all" onClick={handleOpenAssessment}>
-                    Open Question Builder
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </CardContent>
+                <span className="font-bold text-sm tracking-wide">Add New Module</span>
               </Card>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
+      {
+        isAdmin && mgmtStep === 'details' && activeMgmtTopic && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm" onClick={handleBackToTopics} className="rounded-full h-9 bg-white shadow-sm border-neutral-200">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Modules
+              </Button>
+              <h2 className="text-xl font-bold text-neutral-800">Topic Configuration <span className="text-neutral-400 font-normal">/ {activeMgmtTopic.title}</span></h2>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="rounded-full h-9" onClick={() => {
+                const deadline = prompt('Enter deadline for this topic (e.g., 2024-12-31):', activeMgmtTopic.deadline || '');
+                if (deadline) {
+                  const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
+                    i === activeMgmtTopicIndex ? { ...t, deadline } : t
+                  );
+                  const updatedCourse = { ...activeMgmtCourse, topics: updated };
+                  setActiveMgmtCourse(updatedCourse);
+                  setActiveMgmtTopic({ ...activeMgmtTopic, deadline });
+                  setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                  toast.success(`Deadline set to ${deadline}`);
+                }
+              }}>
+                <Clock className="w-4 h-4 mr-2" /> Set Deadlines
+              </Button>
+              <Button size="sm" onClick={handleOpenAssessment} className="bg-primary shadow-md hover:shadow-lg transition-all rounded-full h-9 px-6" style={{ color: 'white' }}>
+                Manage Assessment <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <Card className="border-none shadow-lg overflow-hidden">
+                  <CardHeader className="bg-neutral-900 text-white pb-8">
+                    <div className="flex justify-between items-center mb-4">
+                      <Badge className="bg-white/20 text-white border-none backdrop-blur-md">Module Content</Badge>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs font-medium text-neutral-400">Status:</span>
+                        <div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full cursor-pointer hover:bg-white/20 transition-all"
+                          onClick={() => {
+                            const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
+                              i === activeMgmtTopicIndex ? { ...t, isLocked: !t.isLocked } : t
+                            );
+                            const updatedCourse = { ...activeMgmtCourse, topics: updated };
+                            setActiveMgmtCourse(updatedCourse);
+                            setActiveMgmtTopic({ ...activeMgmtTopic, isLocked: !activeMgmtTopic.isLocked });
+                            toast.success(`Module ${!activeMgmtTopic.isLocked ? 'Locked' : 'Unlocked'}`);
+                          }}>
+                          {activeMgmtTopic.isLocked ? (
+                            <><Lock className="w-4 h-4 text-red-400" /> <span className="text-xs font-bold text-red-400">LOCKED</span></>
+                          ) : (
+                            <><Unlock className="w-4 h-4 text-green-400" /> <span className="text-xs font-bold text-green-400">ACCESSIBLE</span></>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full cursor-pointer hover:bg-white/20 transition-all border border-white/10"
+                          onClick={() => {
+                            const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
+                              i === activeMgmtTopicIndex ? { ...t, durationLocked: !t.durationLocked } : t
+                            );
+                            const updatedCourse = { ...activeMgmtCourse, topics: updated };
+                            setActiveMgmtCourse(updatedCourse);
+                            setActiveMgmtTopic({ ...activeMgmtTopic, durationLocked: !activeMgmtTopic.durationLocked });
+                            toast.success(`Duration ${!activeMgmtTopic.durationLocked ? 'Locked' : 'Unlocked'}`);
+                          }}>
+                          {activeMgmtTopic.durationLocked ? (
+                            <><Lock className="w-3.5 h-3.5 text-orange-400" /> <span className="text-[10px] font-bold text-orange-400">DURATION LOCKED</span></>
+                          ) : (
+                            <><Unlock className="w-3.5 h-3.5 text-green-400" /> <span className="text-[10px] font-bold text-green-400">DURATION OPEN</span></>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <CardTitle className="text-2xl font-bold">{activeMgmtTopic.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-8">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Detailed Description</Label>
+                        <Badge variant="outline" className="text-[9px] border-neutral-200">Supports Markdown</Badge>
+                      </div>
+                      <Textarea
+                        value={activeMgmtTopic.content}
+                        onChange={(e) => setActiveMgmtTopic({ ...activeMgmtTopic, content: e.target.value })}
+                        placeholder="Enter detailed topic description, learning objectives, and key takeaways..."
+                        rows={12}
+                        className="leading-relaxed border-neutral-100 bg-neutral-50/50 focus:bg-white transition-all text-neutral-700 resize-none scrollbar-thin"
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400">
+                          <ImageIcon className="w-4 h-4" /> Reference & Concept Images
+                        </Label>
+                        <Button variant="secondary" size="sm" className="h-8 text-xs font-bold rounded-full" onClick={() => {
+                          const mockImg = "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=600";
+                          const updatedImgs = [...(activeMgmtTopic.images || []), mockImg];
+                          setActiveMgmtTopic({ ...activeMgmtTopic, images: updatedImgs });
+                          toast.success("Image added to gallery");
+                        }}>
+                          <Plus className="w-3.5 h-3.5 mr-1" /> Add Image
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {activeMgmtTopic.images?.map((img: string, i: number) => (
+                          <div key={i} className="relative group rounded-xl overflow-hidden border shadow-sm h-40">
+                            <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-white hover:bg-white/20" onClick={() => window.open(img)}>
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-white hover:bg-red-500/80" onClick={() => {
+                                const updated = activeMgmtTopic.images.filter((_: any, idx: number) => idx !== i);
+                                setActiveMgmtTopic({ ...activeMgmtTopic, images: updated });
+                              }}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        {(!activeMgmtTopic.images || activeMgmtTopic.images.length === 0) && (
+                          <div className="col-span-full py-12 border-2 border-dashed border-neutral-100 rounded-xl flex flex-col items-center justify-center text-neutral-300 bg-neutral-50/50">
+                            <ImageIcon className="w-10 h-10 mb-2 opacity-20" />
+                            <p className="text-xs font-medium uppercase tracking-wider">No concept images added</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                  <div className="p-6 bg-neutral-50/80 border-t flex justify-end gap-3">
+                    <Button variant="ghost" onClick={handleBackToTopics} className="font-bold text-xs uppercase tracking-widest text-neutral-600">Discard</Button>
+                    <Button onClick={() => {
+                      const updatedTopics = activeMgmtCourse.topics.map((t: any, i: number) =>
+                        i === activeMgmtTopicIndex ? activeMgmtTopic : t
+                      );
+                      const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
+                      setActiveMgmtCourse(updatedCourse);
+                      setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                      toast.success("Topic configuration synced");
+                      handleBackToTopics();
+                    }} className="px-8 font-bold text-white" style={{ color: 'white' }}>Save Module</Button>
+                  </div>
+                </Card>
+              </div>
+
+              <div className="space-y-6">
+                <Card className="border-none shadow-lg">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-bold uppercase tracking-widest text-neutral-400">Topic Stats</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between">
+                      <span className="text-xs font-medium text-neutral-600">Total Questions</span>
+                      <span className="text-xl font-bold text-primary">{activeMgmtTopic.questions?.length || 0}</span>
+                    </div>
+                    <div className="p-4 rounded-xl bg-orange-50 border border-orange-100 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-neutral-600">Access Duration</span>
+                        <span className="text-sm font-bold text-orange-600">{activeMgmtTopic.accessDuration || 'Unlimited'}</span>
+                      </div>
+                      <Input
+                        placeholder="e.g. 2h 30m"
+                        value={activeMgmtTopic.accessDuration || ''}
+                        onChange={(e) => setActiveMgmtTopic({ ...activeMgmtTopic, accessDuration: e.target.value })}
+                        className="h-7 text-[10px] bg-white border-orange-200"
+                      />
+                    </div>
+                    <div className="p-4 rounded-xl bg-green-50 border border-green-100 flex items-center justify-between">
+                      <span className="text-xs font-medium text-neutral-600">Estimated Effort</span>
+                      <span className="text-sm font-bold text-green-600">45 Minutes</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-none shadow-lg bg-gradient-to-br from-primary to-primary-dark text-white overflow-hidden relative">
+                  <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold">Manage Assessment</CardTitle>
+                    <CardDescription className="text-white/70">Create MCQs and Coding problems for this module</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button variant="secondary" className="w-full font-bold shadow-md hover:shadow-lg transition-all" onClick={handleOpenAssessment}>
+                      Open Question Builder
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div >
+        )
+      }
 
       {
         isAdmin && mgmtStep === 'assessment' && activeMgmtTopic && (
@@ -1078,7 +1084,8 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
               }}>Complete Setup</Button>
             </div>
           </div>
-        )}
+        )
+      }
 
 
       {/* Edit Dialog */}
@@ -1365,7 +1372,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdateCourse} style={{ backgroundColor: 'var(--color-primary)' }}>
+              <Button onClick={handleUpdateCourse} style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
                 Save Changes
               </Button>
             </div>
@@ -1373,7 +1380,6 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -1645,7 +1651,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                                       <p className="font-medium text-sm">{q.question}</p>
                                       <div className="flex gap-2 items-center mt-1">
                                         <Badge variant="outline" className="text-[10px] h-5">{q.type === 'coding' ? 'Coding' : 'MCQ'}</Badge>
-                                        {q.type === 'mcq' && <span className="text-xs text-neutral-500">Ans: {q.correctAnswer}</span>}
+                                        {q.type === 'multiple_choice' && <span className="text-xs text-neutral-500">Ans: {q.correctAnswer}</span>}
                                       </div>
                                     </div>
                                     <Button
@@ -1679,7 +1685,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
             </div>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog >
 
       {/* Enrolled Courses */}
       {
@@ -1762,10 +1768,17 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                     </div>
 
                     <div className={`grid gap-2 ${currentUser?.role === 'student' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
-                      <Button className="w-full" style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => onNavigate('course-modules', course)}>
-                        View Modules
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
+                      {currentUser?.role === 'faculty' || currentUser?.role === 'trainer' ? (
+                        <Button className="w-full cursor-not-allowed opacity-70" variant="secondary">
+                          <Lock className="w-4 h-4 mr-2" />
+                          Template View
+                        </Button>
+                      ) : (
+                        <Button className="w-full" style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => onNavigate('course-modules', course)}>
+                          View Modules
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      )}
                       {currentUser?.role === 'student' && (
                         <Button
                           className="w-full"

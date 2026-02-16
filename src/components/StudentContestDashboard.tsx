@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { toast } from 'sonner';
 import { ContestParticipation } from './ContestParticipation';
+import { loadContests, Contest as StoreContest } from '../lib/contest-store';
 import {
   Calendar,
   Clock,
@@ -54,7 +55,7 @@ export function StudentContestDashboard({
   const [selectedContest, setSelectedContest] = useState<Contest | null>(null);
   const [activeContest, setActiveContest] = useState<Contest | null>(null);
 
-  const contests: Contest[] = [
+  const defaultContests: Contest[] = [
     {
       id: '1',
       name: 'Dynamic Programming Contest',
@@ -88,6 +89,18 @@ export function StudentContestDashboard({
       createdAt: new Date().toISOString(),
     },
   ];
+
+  const [contests, setContests] = useState<Contest[]>(() => {
+    const stored = loadContests();
+    // Merge stored contests with default ones, filter out duplicates by id
+    const merged = [...(stored as any)];
+    defaultContests.forEach(dc => {
+      if (!merged.find(mc => mc.id === dc.id)) {
+        merged.push(dc);
+      }
+    });
+    return merged;
+  });
 
   const liveContests = contests.filter(c => c.status === 'active');
   const upcomingContests = contests.filter(c => c.status === 'scheduled');

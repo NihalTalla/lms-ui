@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, BookOpen } from 'lucide-react';
+import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, BookOpen, Lock } from 'lucide-react';
 import { batches, courses } from '../lib/data';
 import { toast } from 'sonner';
 
@@ -24,7 +24,7 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
   const [replyText, setReplyText] = useState('');
   const [sessionData, setSessionData] = useState({ title: '', date: '', time: '', batch: '' });
   const [assignmentData, setAssignmentData] = useState({ title: '', description: '', dueDate: '', batch: '' });
-  
+
   const activeBatches = batches.length;
   const totalStudents = batches.reduce((sum, batch) => sum + batch.students, 0);
   const pendingGrading = 12;
@@ -113,25 +113,26 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
         </Card>
       </div>
 
-      {/* Courses Section */}
       <Card>
         <CardHeader>
-          <CardTitle>My Courses</CardTitle>
+          <CardTitle>Course Templates</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {courses.slice(0, 3).map((course) => (
               <div
                 key={course.id}
-                className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all cursor-pointer"
-                onClick={() => onNavigate('course-modules', course)}
+                className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all group relative"
               >
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Lock className="w-4 h-4 text-neutral-400" />
+                </div>
                 <h4 className="font-semibold mb-1">{course.title}</h4>
                 <p className="text-xs text-neutral-600 mb-3 line-clamp-2">{course.description}</p>
                 <div className="flex items-center justify-between">
                   <Badge variant="outline" className="text-xs capitalize">{course.level}</Badge>
-                  <Button size="sm" variant="ghost" className="h-auto p-0">
-                    <Eye className="w-4 h-4" />
+                  <Button size="sm" variant="ghost" className="h-auto p-0 text-neutral-400 cursor-not-allowed" title="Template view only">
+                    <Lock className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -262,12 +263,12 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
                       </Badge>
                     </div>
                     <p className="text-sm text-neutral-700 mb-3">{question.question}</p>
-<Button size="sm" style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => {
-                        setSelectedQuestion(question);
-                        setReplyDialogOpen(true);
-                      }}>
-                        Reply
-                      </Button>
+                    <Button size="sm" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }} onClick={() => {
+                      setSelectedQuestion(question);
+                      setReplyDialogOpen(true);
+                    }}>
+                      Reply
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -309,26 +310,26 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
             </CardContent>
           </Card>
 
-{/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start" onClick={() => setScheduleDialogOpen(true)}>
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Schedule Live Session
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={() => setAssignmentDialogOpen(true)}>
-                  <FileCode className="w-4 h-4 mr-2" />
-                  Create Assignment
-                </Button>
-                <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('analytics')}>
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  View Analytics
-                </Button>
-              </CardContent>
-            </Card>
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button variant="outline" className="w-full justify-start" onClick={() => setScheduleDialogOpen(true)}>
+                <Calendar className="w-4 h-4 mr-2" />
+                Schedule Live Session
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => setAssignmentDialogOpen(true)}>
+                <FileCode className="w-4 h-4 mr-2" />
+                Create Assignment
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('analytics')}>
+                <TrendingUp className="w-4 h-4 mr-2" />
+                View Analytics
+              </Button>
+            </CardContent>
+          </Card>
 
           {/* Upcoming Sessions */}
           <Card>
@@ -367,8 +368,8 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Session Title</Label>
-              <Input 
-                placeholder="e.g., Trees & Graphs Deep Dive" 
+              <Input
+                placeholder="e.g., Trees & Graphs Deep Dive"
                 value={sessionData.title}
                 onChange={(e) => setSessionData({ ...sessionData, title: e.target.value })}
               />
@@ -389,25 +390,25 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Date</Label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   value={sessionData.date}
                   onChange={(e) => setSessionData({ ...sessionData, date: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Time</Label>
-                <Input 
-                  type="time" 
+                <Input
+                  type="time"
                   value={sessionData.time}
                   onChange={(e) => setSessionData({ ...sessionData, time: e.target.value })}
                 />
               </div>
             </div>
             <div className="flex gap-2">
-              <Button 
-                className="flex-1" 
-                style={{ backgroundColor: 'var(--color-primary)' }}
+              <Button
+                className="flex-1"
+                style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}
                 onClick={() => {
                   if (!sessionData.title || !sessionData.batch || !sessionData.date) {
                     toast.error('Please fill all required fields');
@@ -436,16 +437,16 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Assignment Title</Label>
-              <Input 
-                placeholder="e.g., Week 5 - Binary Trees" 
+              <Input
+                placeholder="e.g., Week 5 - Binary Trees"
                 value={assignmentData.title}
                 onChange={(e) => setAssignmentData({ ...assignmentData, title: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>Description</Label>
-              <Textarea 
-                placeholder="Assignment description..." 
+              <Textarea
+                placeholder="Assignment description..."
                 value={assignmentData.description}
                 onChange={(e) => setAssignmentData({ ...assignmentData, description: e.target.value })}
               />
@@ -465,16 +466,16 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
             </div>
             <div className="space-y-2">
               <Label>Due Date</Label>
-              <Input 
-                type="date" 
+              <Input
+                type="date"
                 value={assignmentData.dueDate}
                 onChange={(e) => setAssignmentData({ ...assignmentData, dueDate: e.target.value })}
               />
             </div>
             <div className="flex gap-2">
-              <Button 
-                className="flex-1" 
-                style={{ backgroundColor: 'var(--color-primary)' }}
+              <Button
+                className="flex-1"
+                style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}
                 onClick={() => {
                   if (!assignmentData.title || !assignmentData.batch) {
                     toast.error('Please fill all required fields');
@@ -509,17 +510,17 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
             </div>
             <div className="space-y-2">
               <Label>Your Reply</Label>
-              <Textarea 
-                placeholder="Type your response..." 
+              <Textarea
+                placeholder="Type your response..."
                 rows={4}
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
               />
             </div>
             <div className="flex gap-2">
-              <Button 
-                className="flex-1" 
-                style={{ backgroundColor: 'var(--color-primary)' }}
+              <Button
+                className="flex-1"
+                style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}
                 onClick={() => {
                   if (!replyText) {
                     toast.error('Please enter a reply');

@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { useContestNotification } from './ContestNotification';
+import { loadContests, saveContests, Contest as StoreContest, Question as StoreQuestion } from '../lib/contest-store';
 
 interface Question {
     id: string;
@@ -22,7 +23,7 @@ interface Question {
     options?: string[];
     correctAnswer?: string;
 }
-interface Contest { id: string; name: string; description: string; totalQuestions: number; startTime: string; endTime: string; status: 'draft' | 'scheduled' | 'active' | 'completed'; participants: number; questions: Question[]; }
+interface Contest { id: string; name: string; description: string; totalQuestions: number; startTime: string; endTime: string; status: 'draft' | 'scheduled' | 'active' | 'completed'; participants: number; questions: Question[]; createdAt?: string; duration?: string; }
 
 export function CodingContest() {
     const { addNotification } = useContestNotification();
@@ -31,6 +32,7 @@ export function CodingContest() {
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [showQuestionDialog, setShowQuestionDialog] = useState(false);
+    const [showNextQuestionPrompt, setShowNextQuestionPrompt] = useState(false);
     const [selectedContest, setSelectedContest] = useState<Contest | null>(null);
     const [currentStep, setCurrentStep] = useState(1);
     const [questionMode, setQuestionMode] = useState<'fetch' | 'create' | null>(null);
@@ -57,61 +59,87 @@ export function CodingContest() {
         { id: 'mcq-1', title: 'Time Complexity of Binary Search', difficulty: 'easy', topic: 'Complexity', points: 30, type: 'mcq', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'], correctAnswer: 'O(log n)' },
     ]);
 
-    const [contests, setContests] = useState<Contest[]>([
+    const defaultContests: Contest[] = [
         { id: '1', name: 'Weekly Challenge #1', description: 'Weekly coding challenge', totalQuestions: 5, startTime: '2026-01-25 09:00', endTime: '2026-01-25 12:00', status: 'scheduled', participants: 45, questions: questionBank.slice(0, 5) },
         { id: '2', name: 'DSA Sprint', description: 'DSA sprint contest', totalQuestions: 8, startTime: '2026-01-20 10:00', endTime: '2026-01-20 14:00', status: 'active', participants: 120, questions: questionBank.slice(0, 8) },
         { id: '3', name: 'Beginner Contest', description: 'For beginners', totalQuestions: 4, startTime: '2026-01-15 09:00', endTime: '2026-01-15 11:00', status: 'completed', participants: 85, questions: questionBank.slice(0, 4) },
-    ]);
+    ];
+
+    const [contests, setContests] = useState<Contest[]>(() => {
+        const stored = loadContests();
+        return stored.length > 0 ? (stored as any) : defaultContests;
+    });
+
+    React.useEffect(() => {
+        saveContests(contests as any);
+    }, [contests]);
 
     const filteredContests = contests.filter(c => { const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()); const matchesStatus = statusFilter === 'all' || c.status === statusFilter; return matchesSearch && matchesStatus; });
 
-    const resetForm = () => { 
-        setNewContest({ name: '', description: '', startTime: '', endTime: '', selectedQuestions: [] }); 
-        setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' }); 
-        setCurrentStep(1); 
-        setQuestionMode(null); 
+    const resetForm = () => {
+        setNewContest({ name: '', description: '', startTime: '', endTime: '', selectedQuestions: [] });
+        setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' });
+        setCurrentStep(1);
+        setQuestionMode(null);
     };
 
     const handleNextStep = () => { if (!newContest.name || !newContest.startTime || !newContest.endTime) { toast.error('Fill required fields'); return; } if (new Date(newContest.startTime) >= new Date(newContest.endTime)) { toast.error('End time must be after start'); return; } setCurrentStep(2); };
 
-    const handleCreateContest = () => { 
-        if (newContest.selectedQuestions.length === 0) { 
-            toast.error('Add at least one question'); 
-            return; 
-        } 
-        const selectedQs = questionBank.filter(q => newContest.selectedQuestions.includes(q.id)); 
-        const contest: Contest = { 
-            id: String(contests.length + 1), 
-            name: newContest.name, 
-            description: newContest.description, 
-            totalQuestions: selectedQs.length, 
-            startTime: newContest.startTime, 
-            endTime: newContest.endTime, 
-            status: 'draft', 
-            participants: 0, 
-            questions: selectedQs 
-        }; 
-        setContests([contest, ...contests]); 
-        
+    const handleCreateContest = () => {
+        if (newContest.selectedQuestions.length === 0) {
+            toast.error('Add at least one question');
+            return;
+        }
+        const selectedQs = questionBank.filter(q => newContest.selectedQuestions.includes(q.id));
+        const now = new Date();
+        const start = new Date(newContest.startTime);
+        const end = new Date(newContest.endTime);
+        let status: 'draft' | 'scheduled' | 'active' | 'completed' = 'draft';
+
+        if (now >= start && now <= end) status = 'active';
+        else if (now < start) status = 'scheduled';
+        else if (now > end) status = 'completed';
+
+        const diffMs = end.getTime() - start.getTime();
+        const diffHrs = Math.floor(diffMs / 3600000);
+        const diffMins = Math.round((diffMs % 3600000) / 60000);
+        const duration = diffHrs > 0 ? `${diffHrs}h ${diffMins}m` : `${diffMins}m`;
+
+        const contest: Contest = {
+            id: String(Date.now()),
+            name: newContest.name,
+            description: newContest.description,
+            totalQuestions: selectedQs.length,
+            startTime: newContest.startTime,
+            endTime: newContest.endTime,
+            status,
+            participants: 0,
+            questions: selectedQs,
+            createdAt: new Date().toISOString(),
+            duration
+        };
+        setContests([contest, ...contests]);
+
         // Trigger notification to all students
         addNotification({
             id: contest.id,
-            title: `New Contest: ${contest.name}`,
+            contestId: contest.id,
+            contestName: contest.name,
             message: contest.description || 'A new coding contest has been created!',
-            type: 'contest_created',
-            timestamp: new Date(),
+            type: 'new_contest',
+            timestamp: Date.now(),
             read: false
         });
-        
-        toast.success('Contest created and students notified!'); 
-        setShowCreateDialog(false); 
-        resetForm(); 
+
+        toast.success('Contest created and students notified!');
+        setShowCreateDialog(false);
+        resetForm();
     };
 
-    const handleAddNewQuestion = () => { 
-        if (!newQuestion.title || !newQuestion.topic) { 
-            toast.error('Fill title and topic'); 
-            return; 
+    const handleAddNewQuestion = () => {
+        if (!newQuestion.title || !newQuestion.topic) {
+            toast.error('Fill title and topic');
+            return;
         }
         if (newQuestion.type === 'mcq') {
             const options = (newQuestion.options || []).map(o => o.trim()).filter(o => o);
@@ -123,36 +151,36 @@ export function CodingContest() {
                 toast.error('Select the correct answer');
                 return;
             }
-            const q: Question = { 
-                id: `new-${Date.now()}`, 
-                title: newQuestion.title, 
-                difficulty: newQuestion.difficulty, 
-                topic: newQuestion.topic, 
-                points: newQuestion.points, 
+            const q: Question = {
+                id: `new-${Date.now()}`,
+                title: newQuestion.title,
+                difficulty: newQuestion.difficulty,
+                topic: newQuestion.topic,
+                points: newQuestion.points,
                 type: 'mcq',
                 options,
                 correctAnswer: newQuestion.correctAnswer,
-            }; 
-            setQuestionBank(prev => [q, ...prev]); 
-            setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] })); 
-            toast.success('Question added'); 
-            setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' }); 
-            setQuestionMode('fetch'); 
+            };
+            setQuestionBank(prev => [q, ...prev]);
+            setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] }));
+            toast.success('Question added');
+            setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' });
+            setShowNextQuestionPrompt(true);
             return;
         }
-        const q: Question = { 
-            id: `new-${Date.now()}`, 
-            title: newQuestion.title, 
-            difficulty: newQuestion.difficulty, 
-            topic: newQuestion.topic, 
-            points: newQuestion.points, 
+        const q: Question = {
+            id: `new-${Date.now()}`,
+            title: newQuestion.title,
+            difficulty: newQuestion.difficulty,
+            topic: newQuestion.topic,
+            points: newQuestion.points,
             type: 'coding',
-        }; 
-        setQuestionBank(prev => [q, ...prev]); 
-        setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] })); 
-        toast.success('Question added'); 
-        setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' }); 
-        setQuestionMode('fetch'); 
+        };
+        setQuestionBank(prev => [q, ...prev]);
+        setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] }));
+        toast.success('Question added');
+        setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' });
+        setShowNextQuestionPrompt(true);
     };
 
     const toggleQuestionSelection = (id: string) => { setNewContest(prev => ({ ...prev, selectedQuestions: prev.selectedQuestions.includes(id) ? prev.selectedQuestions.filter(qId => qId !== id) : [...prev.selectedQuestions, id] })); };
@@ -170,8 +198,8 @@ export function CodingContest() {
                         <h2 className="text-3xl font-bold text-neutral-900">Coding Contest</h2>
                         <p className="text-neutral-600 mt-1">Create and manage coding competitions</p>
                     </div>
-                    <Button onClick={() => setShowCreateDialog(true)} className="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2 rounded-xl shadow-md">
-                        <Plus className="w-4 h-4 mr-2" />Create Contest
+                    <Button onClick={() => setShowCreateDialog(true)} className="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2 rounded-xl shadow-md font-medium" style={{ color: 'white' }}>
+                        <Plus className="w-4 h-4 mr-2" style={{ color: 'white' }} />Create Contest
                     </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -213,7 +241,7 @@ export function CodingContest() {
             </CardContent></Card>
 
             <Dialog open={showCreateDialog} onOpenChange={(o) => { setShowCreateDialog(o); if (!o) resetForm(); }}>
-                <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader><DialogTitle>Create Contest</DialogTitle><DialogDescription>Step {currentStep} of 2</DialogDescription></DialogHeader>
                     <div className="flex items-center justify-center mb-6">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-neutral-200'}`}>1</div>
@@ -250,7 +278,7 @@ export function CodingContest() {
                     {currentStep === 2 && (<div className="space-y-4">
                         <h3 className="font-semibold flex items-center gap-2"><Code className="w-5 h-5 text-blue-600" />Add Questions</h3>
                         {!questionMode && (<div className="grid grid-cols-2 gap-4"><Card className="cursor-pointer hover:border-blue-400" onClick={() => setQuestionMode('fetch')}><CardContent className="pt-6 text-center"><Search className="w-10 h-10 mx-auto text-blue-600 mb-2" /><p className="font-semibold">Fetch Existing</p><p className="text-sm text-neutral-500">From question bank</p></CardContent></Card><Card className="cursor-pointer hover:border-purple-400" onClick={() => setQuestionMode('create')}><CardContent className="pt-6 text-center"><Plus className="w-10 h-10 mx-auto text-purple-600 mb-2" /><p className="font-semibold">Create New</p><p className="text-sm text-neutral-500">Add new question</p></CardContent></Card></div>)}
-                        {questionMode === 'fetch' && (<div className="space-y-3"><div className="flex justify-between"><p className="text-sm">Selected: {newContest.selectedQuestions.length}</p><Button variant="outline" size="sm" onClick={() => setQuestionMode(null)}>Back</Button></div><div className="max-h-64 overflow-y-auto border rounded-lg">{questionBank.map(q => (<div key={q.id} className={`p-3 border-b cursor-pointer hover:bg-neutral-50 flex justify-between ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-50' : ''}`} onClick={() => toggleQuestionSelection(q.id)}><div className="flex items-center gap-3"><div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-600 border-blue-600 text-white' : 'border-neutral-300'}`}>{newContest.selectedQuestions.includes(q.id) && <CheckCircle2 className="w-3 h-3" />}</div><div><p className="font-medium text-sm">{q.title}</p><p className="text-xs text-neutral-500">{q.topic} • {q.points}pts</p></div></div><Badge className={getDifficultyColor(q.difficulty)}>{q.difficulty}</Badge></div>))}</div></div>)}
+                        {questionMode === 'fetch' && (<div className="space-y-3"><div className="flex justify-between items-center bg-neutral-50 p-3 rounded-lg border border-neutral-200"><p className="font-semibold text-lg text-blue-700">Selected: {newContest.selectedQuestions.length}</p><Button variant="outline" size="sm" onClick={() => setQuestionMode(null)} className="hover:bg-neutral-100"><ArrowLeft className="w-4 h-4 mr-2" />Back</Button></div><div className="max-h-[500px] overflow-y-auto border rounded-xl shadow-inner scrollbar-thin scrollbar-thumb-neutral-200">{questionBank.map(q => (<div key={q.id} className={`p-4 border-b last:border-0 cursor-pointer hover:bg-blue-50/30 transition-colors flex justify-between items-center ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''}`} onClick={() => toggleQuestionSelection(q.id)}><div className="flex items-center gap-4"><div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-600 border-blue-600 text-white scale-110 shadow-sm' : 'border-neutral-300'}`}>{newContest.selectedQuestions.includes(q.id) && <CheckCircle2 className="w-4 h-4" />}</div><div><p className="font-semibold text-neutral-800">{q.title}</p><p className="text-sm text-neutral-500 font-medium">{q.topic} • {q.points}pts</p></div></div><Badge className={`${getDifficultyColor(q.difficulty)} px-3 py-1 rounded-full uppercase text-[10px] tracking-wider`}>{q.difficulty}</Badge></div>))}</div></div>)}
                         {questionMode === 'create' && (
                             <div className="space-y-3">
                                 <div className="flex justify-between">
@@ -351,19 +379,41 @@ export function CodingContest() {
                                         </div>
                                     </div>
                                 )}
-                                <Button onClick={handleAddNewQuestion} className="w-full"><Plus className="w-4 h-4 mr-2" />Add Question</Button>
+                                <Button onClick={handleAddNewQuestion} className="w-full" style={{ color: 'white' }}><Plus className="w-4 h-4 mr-2" style={{ color: 'white' }} />Add Question</Button>
                             </div>
                         )}
                     </div>)}
 
                     <div className="flex justify-between pt-4 border-t">
                         <Button variant="outline" onClick={currentStep === 1 ? () => setShowCreateDialog(false) : () => setCurrentStep(1)} style={{ color: 'oklch(.205 0 0)' }}><ArrowLeft className="w-4 h-4 mr-2" />{currentStep === 1 ? 'Cancel' : 'Previous'}</Button>
-                        {currentStep === 1 ? <Button onClick={handleNextStep} style={{ color: 'white' }}>Next<ArrowRight className="w-4 h-4 ml-2" style={{ color: 'white' }} /></Button> : <Button onClick={handleCreateContest} className="bg-green-600 hover:bg-green-700 text-white"><Trophy className="w-4 h-4 mr-2" />Create</Button>}
+                        {currentStep === 1 ? <Button onClick={handleNextStep} style={{ color: 'white' }}>Next<ArrowRight className="w-4 h-4 ml-2" style={{ color: 'white' }} /></Button> : <Button onClick={handleCreateContest} className="bg-green-600 hover:bg-green-700 text-white" style={{ color: 'white' }}><Trophy className="w-4 h-4 mr-2" style={{ color: 'white' }} />Create</Button>}
                     </div>
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={showQuestionDialog} onOpenChange={setShowQuestionDialog}><DialogContent className="max-w-2xl"><DialogHeader><DialogTitle>{selectedContest?.name} - Questions</DialogTitle></DialogHeader>{selectedContest && (<div className="space-y-3 max-h-96 overflow-y-auto">{selectedContest.questions.map((q, i) => (<div key={q.id} className="p-3 border rounded-lg flex justify-between"><div className="flex items-center gap-3"><span className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold text-sm">{i + 1}</span><div><p className="font-medium">{q.title}</p><p className="text-sm text-neutral-500">{q.topic} • {q.points}pts</p></div></div><Badge className={getDifficultyColor(q.difficulty)}>{q.difficulty}</Badge></div>))}</div>)}</DialogContent></Dialog>
+            <Dialog open={showQuestionDialog} onOpenChange={setShowQuestionDialog}><DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle className="text-2xl">{selectedContest?.name} - Questions</DialogTitle></DialogHeader>{selectedContest && (<div className="space-y-4 mt-4">{selectedContest.questions.map((q, i) => (<div key={q.id} className="p-4 border rounded-xl flex justify-between items-center hover:bg-neutral-50 transition-colors shadow-sm"><div className="flex items-center gap-4"><span className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-base">{i + 1}</span><div><p className="font-bold text-neutral-800 text-lg">{q.title}</p><p className="text-sm text-neutral-500 font-medium italic">{q.topic} • {q.points}pts</p></div></div><Badge className={`${getDifficultyColor(q.difficulty)} px-4 py-1.5 rounded-full text-xs font-semibold`}>{q.difficulty}</Badge></div>))}</div>)}</DialogContent></Dialog>
+
+            <AlertDialog open={showNextQuestionPrompt} onOpenChange={setShowNextQuestionPrompt}>
+                <AlertDialogContent className="max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl flex items-center gap-2">
+                            <CheckCircle2 className="w-6 h-6 text-green-600" />
+                            Question Added Successfully
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-neutral-600">
+                            The question has been added to your contest. Would you like to add another one now?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex gap-3 justify-end mt-4">
+                        <AlertDialogCancel onClick={() => { setShowNextQuestionPrompt(false); setQuestionMode('fetch'); }} className="border-neutral-200">
+                            No, View All
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={() => { setShowNextQuestionPrompt(false); setQuestionMode('create'); }} className="bg-blue-600 hover:bg-blue-700">
+                            Yes, Add Another
+                        </AlertDialogAction>
+                    </div>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete</AlertDialogTitle><AlertDialogDescription>Delete "{selectedContest?.name}"?</AlertDialogDescription></AlertDialogHeader><div className="flex gap-3 justify-end"><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteContest} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction></div></AlertDialogContent></AlertDialog>
         </div>

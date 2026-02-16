@@ -31,6 +31,7 @@ import { StudentProfile } from './components/StudentProfile';
 import { TestManagement } from './components/TestManagement';
 import { CourseModulesPage } from './components/CourseModulesPage';
 import { TestMonitoring } from './components/TestMonitoring';
+import { ProgramizCompiler } from './components/ProgramizCompiler';
 import { StudentModuleView } from './components/StudentModuleView';
 import { StudentCodingChallenge } from './components/StudentCodingChallenge';
 import { AssignmentListingPage } from './components/AssignmentListingPage';
@@ -303,6 +304,7 @@ function AppContent() {
             userRole={currentUser.role as 'faculty' | 'trainer'}
           />
         )}
+        {currentPage === 'trainer-compiler' && <ProgramizCompiler onBack={() => setCurrentPage('dashboard')} />}
       </Layout>
     );
   };

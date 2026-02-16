@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Trophy, Clock, CheckCircle2, TrendingUp, ArrowRight, Calendar, Code, Users, Flame } from 'lucide-react';
 import { problems, courses, batches, assessments } from '../lib/data';
 import { toast } from 'sonner';
+import { loadContests, Contest } from '../lib/contest-store';
 
 interface StudentDashboardProps {
   onNavigate: (page: string, data?: any) => void;
@@ -35,6 +36,11 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
 
   const recommendedProblems = problems.slice(0, 3);
   const studentAssessments = assessments.filter(assessment => assessment.batchId === 'batch-1'); // Assuming student is in batch-1
+
+  const [activeContests, setActiveContests] = useState<Contest[]>(() => {
+    const contests = loadContests();
+    return contests.filter(c => c.status === 'active' || c.status === 'scheduled');
+  });
 
   return (
     <div className="space-y-6">
@@ -144,15 +150,15 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
                     Instructor: {upcomingSession.instructor}
                   </div>
                 </div>
-<div className="flex gap-3">
-                    <Button style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => {
-                      toast.success('Joining session... Please wait');
-                      setTimeout(() => toast.info('Live session will start in 2 days'), 1000);
-                    }}>
-                      Join Session
-                    </Button>
-                    <Button variant="outline" onClick={() => setSessionDetailsOpen(true)}>View Details</Button>
-                  </div>
+                <div className="flex gap-3">
+                  <Button style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => {
+                    toast.success('Joining session... Please wait');
+                    setTimeout(() => toast.info('Live session will start in 2 days'), 1000);
+                  }}>
+                    Join Session
+                  </Button>
+                  <Button variant="outline" onClick={() => setSessionDetailsOpen(true)}>View Details</Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -228,8 +234,8 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
                             problem.difficulty === 'easy'
                               ? 'border-green-300 text-green-700'
                               : problem.difficulty === 'medium'
-                              ? 'border-yellow-300 text-yellow-700'
-                              : 'border-red-300 text-red-700'
+                                ? 'border-yellow-300 text-yellow-700'
+                                : 'border-red-300 text-red-700'
                           }
                         >
                           {problem.difficulty}
@@ -252,6 +258,71 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Active Contests */}
+          {activeContests.length > 0 && (
+            <Card className="border-indigo-100 shadow-sm overflow-hidden">
+              <CardHeader className="bg-indigo-50/50 border-b border-indigo-100/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-indigo-900 font-bold">Live & Upcoming Contests</CardTitle>
+                    <CardDescription className="text-indigo-700/70 font-medium">
+                      Compete with peers and improve your ranking
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onNavigate('contests')}
+                    className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100 font-bold"
+                  >
+                    Enter Arena
+                    <Trophy className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-indigo-50">
+                  {activeContests.map((contest) => (
+                    <div
+                      key={contest.id}
+                      className="flex items-center justify-between p-5 hover:bg-indigo-50/30 transition-all duration-200 cursor-pointer group"
+                      onClick={() => onNavigate('contests')}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${contest.status === 'active' ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'
+                          }`}>
+                          {contest.status === 'active' ? <Flame className="w-6 h-6 animate-pulse" /> : <Calendar className="w-6 h-6" />}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors uppercase text-sm tracking-tight">{contest.name}</p>
+                          <div className="flex items-center gap-4 mt-1.5 text-xs text-slate-500 font-semibold uppercase tracking-wider">
+                            <span className="flex items-center gap-1.5">
+                              <Users className="w-3.5 h-3.5" />
+                              {contest.participants || 0} participants
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                              {contest.prize || 'Award Points'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2.5">
+                        <Badge className={`${contest.status === 'active'
+                            ? 'bg-rose-50 text-rose-700 border-rose-100'
+                            : 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                          } uppercase text-[10px] font-bold px-3 py-1 rounded-full shadow-sm`}>
+                          {contest.status === 'active' ? 'Live Now' : 'Starts Soon'}
+                        </Badge>
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transform group-hover:translate-x-1 transition-all" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Assessments */}
           {studentAssessments.length > 0 && (
@@ -307,44 +378,44 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
-{/* Current Batch */}
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-all duration-200"
-              onClick={() => onNavigate('problems')}
-            >
-              <CardHeader>
-                <CardTitle>Current Batch</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-base">{batches[0].name}</h4>
-                    <p className="text-sm text-neutral-600 mt-1">{courses[0].title}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-neutral-600">Progress</span>
-                      <span>{studentProgress}%</span>
-                    </div>
-                    <Progress value={studentProgress} />
-                  </div>
-                  <div className="pt-2 space-y-2 text-sm text-neutral-600">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      {batches[0].schedule}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      {batches[0].students} students
-                    </div>
-                  </div>
-                  <Button style={{ backgroundColor: 'var(--color-primary)' }} className="w-full">
-                    View Problems
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
+          {/* Current Batch */}
+          <Card
+            className="cursor-pointer hover:shadow-md transition-all duration-200"
+            onClick={() => onNavigate('problems')}
+          >
+            <CardHeader>
+              <CardTitle>Current Batch</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-base">{batches[0].name}</h4>
+                  <p className="text-sm text-neutral-600 mt-1">{courses[0].title}</p>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Progress</span>
+                    <span>{studentProgress}%</span>
+                  </div>
+                  <Progress value={studentProgress} />
+                </div>
+                <div className="pt-2 space-y-2 text-sm text-neutral-600">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    {batches[0].schedule}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    {batches[0].students} students
+                  </div>
+                </div>
+                <Button style={{ backgroundColor: 'var(--color-primary)' }} className="w-full">
+                  View Problems
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Leaderboard */}
           <Card>
@@ -413,65 +484,65 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
                   </div>
                 </div>
               </div>
-</CardContent>
-            </Card>
-          </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
 
-        {/* Session Details Dialog */}
-        <Dialog open={sessionDetailsOpen} onOpenChange={setSessionDetailsOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Session Details</DialogTitle>
-              <DialogDescription>Upcoming live session information</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="p-4 bg-neutral-50 rounded-lg space-y-3">
-                <h4 className="font-semibold">{upcomingSession.title}</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-neutral-500" />
-                    <span>{upcomingSession.date}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-neutral-500" />
-                    <span>{upcomingSession.time}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-neutral-500" />
-                    <span>Instructor: {upcomingSession.instructor}</span>
-                  </div>
+      {/* Session Details Dialog */}
+      <Dialog open={sessionDetailsOpen} onOpenChange={setSessionDetailsOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Session Details</DialogTitle>
+            <DialogDescription>Upcoming live session information</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-neutral-50 rounded-lg space-y-3">
+              <h4 className="font-semibold">{upcomingSession.title}</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-neutral-500" />
+                  <span>{upcomingSession.date}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-neutral-500" />
+                  <span>{upcomingSession.time}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-neutral-500" />
+                  <span>Instructor: {upcomingSession.instructor}</span>
                 </div>
               </div>
-              <div className="space-y-2">
-                <h5 className="font-medium text-sm">Topics Covered</h5>
-                <ul className="text-sm text-neutral-600 list-disc list-inside space-y-1">
-                  <li>Binary Trees & Binary Search Trees</li>
-                  <li>Tree Traversals (DFS, BFS)</li>
-                  <li>Graph Representations</li>
-                  <li>Graph Algorithms Introduction</li>
-                </ul>
-              </div>
-              <div className="space-y-2">
-                <h5 className="font-medium text-sm">Prerequisites</h5>
-                <p className="text-sm text-neutral-600">Complete "Introduction to Trees" module before the session.</p>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  className="flex-1" 
-                  style={{ backgroundColor: 'var(--color-primary)' }}
-                  onClick={() => {
-                    toast.success('Added to calendar');
-                    setSessionDetailsOpen(false);
-                  }}
-                >
-                  Add to Calendar
-                </Button>
-                <Button variant="outline" onClick={() => setSessionDetailsOpen(false)}>Close</Button>
-              </div>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    );
-  }
+            <div className="space-y-2">
+              <h5 className="font-medium text-sm">Topics Covered</h5>
+              <ul className="text-sm text-neutral-600 list-disc list-inside space-y-1">
+                <li>Binary Trees & Binary Search Trees</li>
+                <li>Tree Traversals (DFS, BFS)</li>
+                <li>Graph Representations</li>
+                <li>Graph Algorithms Introduction</li>
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <h5 className="font-medium text-sm">Prerequisites</h5>
+              <p className="text-sm text-neutral-600">Complete "Introduction to Trees" module before the session.</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
+                style={{ backgroundColor: 'var(--color-primary)' }}
+                onClick={() => {
+                  toast.success('Added to calendar');
+                  setSessionDetailsOpen(false);
+                }}
+              >
+                Add to Calendar
+              </Button>
+              <Button variant="outline" onClick={() => setSessionDetailsOpen(false)}>Close</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
