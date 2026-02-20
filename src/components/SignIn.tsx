@@ -286,8 +286,8 @@ export function SignIn() {
               className="w-full h-12 text-white rounded-xl relative overflow-hidden group transition-all"
               disabled={loading}
               style={{
-                background: 'linear-gradient(135deg, #FF6B35, #F7931E)',
-                boxShadow: '0 4px 15px rgba(255, 107, 53, 0.3)',
+                background: '#000',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.35)',
               }}
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
@@ -295,7 +295,7 @@ export function SignIn() {
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </span>
               <div 
-                className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute inset-0 bg-gradient-to-r from-neutral-900 to-neutral-700 opacity-0 group-hover:opacity-100 transition-opacity"
               />
             </Button>
           </form>

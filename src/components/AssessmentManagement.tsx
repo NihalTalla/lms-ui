@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { institutions, batches } from '../lib/data';
+import { exportToCSV, exportToPDF } from '../lib/exportUtils';
 
 interface Category {
   id: string;
@@ -142,9 +143,34 @@ export function AssessmentManagement() {
     toast.success('Report generated successfully');
   };
 
-  const handleDownloadConsolidatedReport = () => {
-    toast.success('Downloading consolidated report...');
-    // In a real implementation, this would generate and download a PDF/Excel report
+  const getReportRows = () => {
+    const data = filteredReports.length ? filteredReports : reports;
+    return data.map(report => ([
+      report.categoryName,
+      report.assessmentName,
+      report.totalStudents,
+      report.passedStudents,
+      `${report.averageScore}%`,
+      report.generatedAt
+    ]));
+  };
+
+  const handleDownloadConsolidatedReport = (format: 'excel' | 'pdf') => {
+    const headers = ['Category', 'Assessment', 'Total Students', 'Passed', 'Average Score', 'Generated On'];
+    const rows = getReportRows();
+
+    if (rows.length === 0) {
+      toast.error('No reports to export');
+      return;
+    }
+
+    if (format === 'pdf') {
+      exportToPDF('assessment_reports', 'Assessment Reports', headers, rows);
+      toast.success('PDF download started');
+    } else {
+      exportToCSV('assessment_reports', headers, rows);
+      toast.success('Excel download started');
+    }
   };
 
   return (
@@ -157,12 +183,22 @@ export function AssessmentManagement() {
             Manage assessment categories and generate performance reports
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleDownloadConsolidatedReport}>
-            <Download className="w-4 h-4 mr-2" />
-            Download Consolidated Report
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button>
+              <Download className="w-4 h-4 mr-2" />
+              Download Consolidated Report
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleDownloadConsolidatedReport('excel')}>
+              Export as Excel
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDownloadConsolidatedReport('pdf')}>
+              Export as PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Assessment Actions */}
@@ -187,15 +223,26 @@ export function AssessmentManagement() {
               <DropdownMenuContent align="start" className="w-96 p-0">
                 <div className="p-3 border-b bg-neutral-50 flex justify-between items-center">
                   <span className="text-sm font-semibold">Assessment Reports</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs bg-white"
-                    onClick={handleDownloadConsolidatedReport}
-                  >
-                    <Download className="w-3 h-3 mr-1" />
-                    Download
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs bg-white"
+                      onClick={() => handleDownloadConsolidatedReport('excel')}
+                    >
+                      <Download className="w-3 h-3 mr-1" />
+                      Excel
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs bg-white"
+                      onClick={() => handleDownloadConsolidatedReport('pdf')}
+                    >
+                      <FileText className="w-3 h-3 mr-1" />
+                      PDF
+                    </Button>
+                  </div>
                 </div>
                 <div className="p-4 space-y-3">
                   <div className="space-y-1">

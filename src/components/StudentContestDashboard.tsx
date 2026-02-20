@@ -110,6 +110,21 @@ export function StudentContestDashboard({
     setShowPermissionDialog(true);
   };
 
+  const enrollAndEnter = () => {
+    if (!selectedContest) return;
+    // Mark contest as enrolled in state
+    setContests(prev =>
+      prev.map(contest =>
+        contest.id === selectedContest.id ? { ...contest, enrolled: true } : contest
+      )
+    );
+    const enrolledContest = { ...selectedContest, enrolled: true };
+    setSelectedContest(enrolledContest);
+    setShowEnrollDialog(false);
+    setShowPermissionDialog(true);
+    toast.success('You are registered. Review permissions to start.');
+  };
+
   const startContest = () => {
     setShowPermissionDialog(false);
     // If parent provided navigation handler, delegate to App to render full-screen contest
@@ -348,7 +363,7 @@ export function StudentContestDashboard({
             <Button
               className="bg-indigo-100 hover:bg-indigo-200 border border-indigo-200 rounded-xl h-11 font-bold"
               style={{ color: '#000' }}
-              onClick={() => { toast.success('Enrolled!'); setShowEnrollDialog(false); }}
+              onClick={enrollAndEnter}
             >
               Confirm Registration
             </Button>

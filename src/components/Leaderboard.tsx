@@ -5,10 +5,12 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Trophy, Medal, Award, TrendingUp, Flame, Code, CheckCircle2, Download, FileSpreadsheet } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Trophy, Medal, Award, TrendingUp, Flame, Code, CheckCircle2, Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
 import { batches } from '../lib/data';
 import { toast } from 'sonner';
+import { exportToCSV, exportToPDF } from '../lib/exportUtils';
 
 export function Leaderboard() {
   const { currentUser } = useAuth();
@@ -60,30 +62,26 @@ export function Leaderboard() {
     }
   };
 
-  const exportToCSV = () => {
+  const exportLeaderboard = (format: 'excel' | 'pdf') => {
     const data = selectedBatch === 'all' ? globalLeaderboard : globalLeaderboard;
-    const csvContent = [
-      ['Rank', 'Name', 'Points', 'Solved', 'Streak', 'Badges'].join(','),
-      ...data.map(user => [
-        user.rank,
-        user.name,
-        user.points,
-        user.solved,
-        user.streak,
-        user.badges
-      ].join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `leaderboard_${selectedBatch === 'all' ? 'all_batches' : selectedBatch}_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    toast.success('Leaderboard exported successfully!');
+    const headers = ['Rank', 'Name', 'Points', 'Solved', 'Streak', 'Badges'];
+    const rows = data.map(user => [
+      user.rank,
+      user.name,
+      user.points,
+      user.solved,
+      user.streak,
+      user.badges
+    ]);
+    const filenameBase = `leaderboard_${selectedBatch === 'all' ? 'all_batches' : selectedBatch}_${new Date().toISOString().split('T')[0]}`;
+
+    if (format === 'pdf') {
+      exportToPDF(filenameBase, 'Leaderboard', headers, rows);
+      toast.success('PDF export started');
+    } else {
+      exportToCSV(filenameBase, headers, rows);
+      toast.success('Excel export started');
+    }
   };
 
   return (
@@ -111,10 +109,24 @@ export function Leaderboard() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={exportToCSV} style={{ backgroundColor: 'var(--color-primary)' }}>
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportLeaderboard('excel')}>
+                  <FileSpreadsheet className="w-3 h-3 mr-2" />
+                  Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportLeaderboard('pdf')}>
+                  <FileText className="w-3 h-3 mr-2" />
+                  PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>

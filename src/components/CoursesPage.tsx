@@ -460,15 +460,15 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => { setViewCourse(course); setIsViewDialogOpen(true); }}>
                             <Eye className="w-4 h-4 text-neutral-500 hover:text-primary" />
                           </Button>
                           <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleEditCourse(course)}>
                             <Edit className="w-4 h-4 text-neutral-500 hover:text-primary" />
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-8 px-3 text-primary font-medium hover:bg-primary/10 rounded-full" onClick={() => handleOpenCourseTopics(course)}>
-                            Manage <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                          <Button size="sm" className="h-8 px-3 rounded-full font-semibold flex items-center gap-1 text-white" style={{ backgroundColor: '#000' }} onClick={() => handleOpenCourseTopics(course)}>
+                            Manage <ChevronRight className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       </TableCell>
@@ -491,7 +491,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                 </Button>
                 <h2 className="text-xl font-bold text-neutral-800">{activeMgmtCourse.title} <span className="text-neutral-400 font-normal">/ Topics</span></h2>
               </div>
-              <Button size="sm" className="bg-primary shadow-md hover:shadow-lg transition-all rounded-full h-9" onClick={() => {
+              <Button size="sm" className="bg-primary text-primary-foreground shadow-md hover:shadow-lg transition-all rounded-full h-9" onClick={() => {
                 const newTopic: Topic = {
                   id: `topic-${Date.now()}`,
                   title: 'New Topic',
@@ -1679,7 +1679,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleCreateCourse} style={{ backgroundColor: 'var(--color-primary)' }}>
+              <Button onClick={handleCreateCourse} style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>
                 Create Course
               </Button>
             </div>
@@ -1769,12 +1769,16 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
 
                     <div className={`grid gap-2 ${currentUser?.role === 'student' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
                       {currentUser?.role === 'faculty' || currentUser?.role === 'trainer' ? (
-                        <Button className="w-full cursor-not-allowed opacity-70" variant="secondary">
-                          <Lock className="w-4 h-4 mr-2" />
-                          Template View
+                        <Button
+                          className="w-full"
+                          variant="outline"
+                          onClick={() => onNavigate('course-modules', course)}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Course
                         </Button>
                       ) : (
-                        <Button className="w-full" style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => onNavigate('course-modules', course)}>
+                        <Button className="w-full" style={{ backgroundColor: 'var(--color-primary)', color: 'white' }} onClick={() => onNavigate('course-modules', course)}>
                           View Modules
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>

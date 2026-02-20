@@ -83,12 +83,8 @@ export function CourseModulesPage({ course, onNavigate, userRole, canLock = fals
           modules.map((module, idx) => (
             <Card
               key={module.id}
-              className={`shadow-md hover:shadow-lg transition-shadow ${userRole === 'student' ? 'cursor-pointer hover:border-blue-400' : ''}`}
-              onClick={() => {
-                if (userRole === 'student') {
-                  onNavigate('student-module', { course, module });
-                }
-              }}
+              className="shadow-md hover:shadow-lg transition-shadow cursor-pointer hover:border-blue-400"
+              onClick={() => onNavigate('student-module', { course, module })}
             >
               <CardContent className="p-6 space-y-4">
                 {/* Top Row: Title and Badge */}

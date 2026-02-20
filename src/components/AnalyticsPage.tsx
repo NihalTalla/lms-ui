@@ -4,21 +4,21 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
   AreaChart,
   Area,
-  PieChart, 
-  Pie, 
-  Cell, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   RadarChart,
   PolarGrid,
@@ -26,10 +26,10 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { 
+import {
   TrendingUp,
-  TrendingDown, 
-  Users, 
+  TrendingDown,
+  Users,
   BookOpen,
   Award,
   Clock,
@@ -38,6 +38,9 @@ import {
   Download,
   Calendar
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { exportToCSV, exportToPDF } from '../lib/exportUtils';
+import { toast } from 'sonner';
 
 interface AnalyticsPageProps {
   onNavigate: (page: string, data?: any) => void;
@@ -63,6 +66,24 @@ export function AnalyticsPage({ onNavigate }: AnalyticsPageProps) {
     { course: 'React Advanced', avgScore: 85, enrolled: 178, completed: 132 },
     { course: 'Node.js Deep Dive', avgScore: 81, enrolled: 134, completed: 89 },
   ];
+
+  const exportReport = (format: 'excel' | 'pdf') => {
+    const headers = ['Course', 'Enrolled', 'Completed', 'Avg Score'];
+    const rows = coursePerformanceData.map((course) => [
+      course.course,
+      course.enrolled,
+      course.completed,
+      `${course.avgScore}%`,
+    ]);
+
+    if (format === 'pdf') {
+      exportToPDF('analytics_report', 'Course Performance', headers, rows);
+      toast.success('PDF export started');
+    } else {
+      exportToCSV('analytics_report', headers, rows);
+      toast.success('Excel export started');
+    }
+  };
 
   // Problem Difficulty Distribution
   const problemDifficultyData = [
@@ -131,8 +152,8 @@ export function AnalyticsPage({ onNavigate }: AnalyticsPageProps) {
         </div>
         <div className="flex gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-36">
-              <Calendar className="w-4 h-4 mr-2" />
+            <SelectTrigger className="w-36 text-neutral-900">
+              <Calendar className="w-4 h-4 mr-2 text-neutral-700" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -142,10 +163,18 @@ export function AnalyticsPage({ onNavigate }: AnalyticsPageProps) {
               <SelectItem value="1y">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="text-neutral-900">
+                <Download className="w-4 h-4 mr-2 text-neutral-700" />
+                Export Report
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => exportReport('excel')}>Export as Excel</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportReport('pdf')}>Export as PDF</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -243,19 +272,19 @@ export function AnalyticsPage({ onNavigate }: AnalyticsPageProps) {
                     <YAxis stroke="#94A3B8" />
                     <Tooltip />
                     <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="active" 
+                    <Area
+                      type="monotone"
+                      dataKey="active"
                       stackId="1"
-                      stroke="#7C3AED" 
+                      stroke="#7C3AED"
                       fill="#7C3AED"
                       fillOpacity={0.6}
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="new" 
+                    <Area
+                      type="monotone"
+                      dataKey="new"
                       stackId="2"
-                      stroke="#14B8A6" 
+                      stroke="#14B8A6"
                       fill="#14B8A6"
                       fillOpacity={0.6}
                     />
@@ -368,12 +397,12 @@ export function AnalyticsPage({ onNavigate }: AnalyticsPageProps) {
                     <PolarGrid stroke="#E2E8F0" />
                     <PolarAngleAxis dataKey="subject" stroke="#94A3B8" />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} stroke="#94A3B8" />
-                    <Radar 
-                      name="Performance" 
-                      dataKey="value" 
-                      stroke="#7C3AED" 
-                      fill="#7C3AED" 
-                      fillOpacity={0.6} 
+                    <Radar
+                      name="Performance"
+                      dataKey="value"
+                      stroke="#7C3AED"
+                      fill="#7C3AED"
+                      fillOpacity={0.6}
                     />
                     <Tooltip />
                   </RadarChart>
@@ -397,7 +426,7 @@ export function AnalyticsPage({ onNavigate }: AnalyticsPageProps) {
                   { rank: 4, name: 'Isabella Garcia', points: 1150, streak: 8, badge: '' },
                   { rank: 5, name: 'Olivia Taylor', points: 1095, streak: 7, badge: '' },
                 ].map((student) => (
-                  <div 
+                  <div
                     key={student.rank}
                     className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg"
                   >
@@ -439,17 +468,17 @@ export function AnalyticsPage({ onNavigate }: AnalyticsPageProps) {
                   <YAxis stroke="#94A3B8" />
                   <Tooltip />
                   <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="#10B981" 
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#10B981"
                     fill="#10B981"
                     fillOpacity={0.6}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="expenses" 
-                    stroke="#EF4444" 
+                  <Area
+                    type="monotone"
+                    dataKey="expenses"
+                    stroke="#EF4444"
                     fill="#EF4444"
                     fillOpacity={0.6}
                   />

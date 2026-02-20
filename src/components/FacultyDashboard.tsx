@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, BookOpen, Lock } from 'lucide-react';
+import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, BookOpen, Lock, Flame, Award } from 'lucide-react';
 import { batches, courses } from '../lib/data';
 import { toast } from 'sonner';
 
@@ -278,6 +278,37 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Student Engagement (Streaks) */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-orange-500" />
+                <CardTitle>Student Engagement</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { name: 'Emma Wilson', streak: 15, avatar: 'EW' },
+                  { name: 'Liam Martinez', streak: 12, avatar: 'LM' },
+                  { name: 'Sophia Chen', streak: 10, avatar: 'SC' },
+                ].map((student, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="text-[10px]">{student.avatar}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold truncate">{student.name}</p>
+                      <div className="flex items-center gap-1">
+                        <Flame className="w-3 h-3 text-orange-500" />
+                        <span className="text-xs font-bold text-orange-600">{student.streak}d streak</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
           {/* My Batches */}
           <Card>
             <CardHeader>
@@ -316,17 +347,17 @@ export function FacultyDashboard({ onNavigate }: FacultyDashboardProps) {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('leaderboard')}>
+                <Award className="w-4 h-4 mr-2" />
+                Batch Leaderboard
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('batches')}>
+                <Flame className="w-4 h-4 mr-2" />
+                Student Streaks
+              </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => setScheduleDialogOpen(true)}>
                 <Calendar className="w-4 h-4 mr-2" />
                 Schedule Live Session
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => setAssignmentDialogOpen(true)}>
-                <FileCode className="w-4 h-4 mr-2" />
-                Create Assignment
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('analytics')}>
-                <TrendingUp className="w-4 h-4 mr-2" />
-                View Analytics
               </Button>
             </CardContent>
           </Card>

@@ -162,7 +162,7 @@ export function AttendancePage() {
                   <Calendar className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                   <span className="text-sm font-medium">Today's Session</span>
                 </div>
-                <Badge style={{ backgroundColor: 'var(--color-primary)' }}>Active</Badge>
+                <Badge style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>Active</Badge>
               </div>
               <p className="text-sm text-neutral-700 mb-1">Data Structures - Trees</p>
               <p className="text-xs text-neutral-600">Monday, {today}</p>

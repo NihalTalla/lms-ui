@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, Video, BookOpen, Lock, Code2 } from 'lucide-react';
+import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, Video, BookOpen, Lock, Code2, Flame, Award, ChevronRight } from 'lucide-react';
 import { batches, courses } from '../lib/data';
 import { toast } from 'sonner';
 
@@ -126,17 +126,18 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
             {courses.slice(0, 3).map((course) => (
               <div
                 key={course.id}
-                className="p-4 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:shadow-md transition-all group relative"
+                className="p-4 rounded-lg border border-neutral-200 hover:border-primary/30 hover:shadow-md transition-all group relative cursor-pointer"
+                onClick={() => onNavigate('course-modules', course)}
               >
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Lock className="w-4 h-4 text-neutral-400" />
+                  <Eye className="w-4 h-4 text-primary" />
                 </div>
-                <h4 className="font-semibold mb-1">{course.title}</h4>
+                <h4 className="font-semibold mb-1 group-hover:text-primary transition-colors">{course.title}</h4>
                 <p className="text-xs text-neutral-600 mb-3 line-clamp-2">{course.description}</p>
                 <div className="flex items-center justify-between">
                   <Badge variant="outline" className="text-xs capitalize">{course.level}</Badge>
-                  <Button size="sm" variant="ghost" className="h-auto p-0 text-neutral-400 cursor-not-allowed" title="Template view only">
-                    <Lock className="w-4 h-4" />
+                  <Button size="sm" variant="ghost" className="h-auto p-0 text-primary opacity-0 group-hover:opacity-100 transition-all">
+                    <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -293,6 +294,37 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Student Engagement (Streaks) */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-orange-500" />
+                <CardTitle>Student Engagement</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { name: 'Emma Wilson', streak: 15, avatar: 'EW' },
+                  { name: 'Liam Martinez', streak: 12, avatar: 'LM' },
+                  { name: 'Sophia Chen', streak: 10, avatar: 'SC' },
+                ].map((student, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-lg">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="text-[10px]">{student.avatar}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold truncate">{student.name}</p>
+                      <div className="flex items-center gap-1">
+                        <Flame className="w-3 h-3 text-orange-500" />
+                        <span className="text-xs font-bold text-orange-600">{student.streak}d streak</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
           {/* My Batches */}
           <Card className="shadow-sm">
             <CardHeader>
@@ -335,12 +367,12 @@ export function TrainerDashboard({ onNavigate }: TrainerDashboardProps) {
                 <Code2 className="w-4 h-4 mr-2" />
                 Live Compiler (Sandbox)
               </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('tests')}>
-                <FileCode className="w-4 h-4 mr-2" />
-                Create Test
+              <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('batches')}>
+                <Flame className="w-4 h-4 mr-2" />
+                Student Streaks
               </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => onNavigate('leaderboard')}>
-                <TrendingUp className="w-4 h-4 mr-2" />
+                <Award className="w-4 h-4 mr-2" />
                 View Leaderboard
               </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => setScheduleDialogOpen(true)}>

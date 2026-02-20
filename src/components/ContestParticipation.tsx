@@ -13,11 +13,9 @@ import {
   VideoOff,
   Mic,
   MicOff,
-  Maximize2,
   Minimize2,
   AlertTriangle,
   CheckCircle2,
-  ChevronLeft,
   ChevronRight,
   GripHorizontal,
   List,
@@ -129,9 +127,24 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
   const [submittedQuestions, setSubmittedQuestions] = useState<Set<string>>(new Set());
 
   // Camera Dragging
-  const [cameraPosition, setCameraPosition] = useState({ x: 20, y: 70 });
+  const [cameraPosition, setCameraPosition] = useState({
+    x: typeof window !== 'undefined' ? window.innerWidth - 240 : 20,
+    y: 80
+  });
   const [isDraggingCamera, setIsDraggingCamera] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setCameraPosition(prev => ({
+        x: Math.min(prev.x, window.innerWidth - 240),
+        y: Math.min(prev.y, window.innerHeight - 140)
+      }));
+    };
+    setCameraPosition({ x: window.innerWidth - 240, y: 80 });
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -163,6 +176,11 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
     setIsResizingBottom(false);
     setIsDraggingCamera(false);
   }, []);
+
+  const startDraggingCamera = (e: React.MouseEvent) => {
+    setIsDraggingCamera(true);
+    setDragOffset({ x: e.clientX - cameraPosition.x, y: e.clientY - cameraPosition.y });
+  };
 
   useEffect(() => {
     window.addEventListener('mousemove', handleMouseMove);
@@ -251,11 +269,6 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
         setIsMicEnabled(audioTrack.enabled);
       }
     }
-  };
-
-  const startDraggingCamera = (e: React.MouseEvent) => {
-    setIsDraggingCamera(true);
-    setDragOffset({ x: e.clientX - cameraPosition.x, y: e.clientY - cameraPosition.y });
   };
 
   const formatTime = (seconds: number) => {
@@ -412,6 +425,14 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                 </Card>
                 <div className="flex items-center gap-4 pt-4">
                   <Button onClick={handleQuestionSubmit} disabled={submittedQuestions.has(currentQuestion.id)} className="bg-black text-white hover:bg-neutral-800 h-12 px-8 rounded-xl font-bold text-base shadow-lg">{submittedQuestions.has(currentQuestion.id) ? 'Submitted' : 'Submit Answer'}</Button>
+                  <Button
+                    onClick={handleNext}
+                    className="h-12 px-8 rounded-xl font-bold text-base flex items-center gap-2 shadow-lg border-none"
+                    style={{ backgroundColor: '#000', color: '#fff' }}
+                  >
+                    {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Finish'}
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -484,6 +505,14 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-white hover:bg-[#333]"><Play className="w-3 h-3 mr-1" /> Run</Button>
+                      <Button
+                        onClick={handleNext}
+                        className="h-7 px-4 rounded-md font-bold text-xs flex items-center gap-1 border-none"
+                        style={{ backgroundColor: '#000', color: '#fff' }}
+                      >
+                        {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Finish'}
+                        <ChevronRight className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
                   <div className="flex-1 p-4 overflow-y-auto">
@@ -508,20 +537,11 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
             </div>
           )}
 
-          {/* NEXT BUTTON */}
-          <div className="absolute bottom-6 right-6 z-30">
-            <Button
-              onClick={handleNext}
-              className="h-12 px-6 rounded-full bg-neutral-900 text-white shadow-2xl hover:bg-black hover:scale-105 transition-all font-bold text-sm flex items-center gap-2 border border-white/10"
-            >
-              {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Finish'}
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
+
         </main>
       </div>
 
-      {/* CAMERA WIDGET */}
+      {/* CAMERA WIDGET - Floating & Draggable */}
       <div
         className={`fixed z-[100] transition-all duration-300 ${cameraMinimized ? 'w-16 h-16' : 'w-56'}`}
         style={{ left: cameraPosition.x, top: cameraPosition.y }}

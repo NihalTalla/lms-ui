@@ -200,7 +200,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
             </div>
 
             <div className="flex justify-end mt-6">
-              <Button style={{ backgroundColor: '#FF6B35' }}>
+              <Button style={{ backgroundColor: '#000' }}>
                 Next
               </Button>
             </div>
@@ -247,7 +247,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
             </div>
 
             <div className="flex justify-end mt-6">
-              <Button style={{ backgroundColor: '#FF6B35' }}>
+              <Button style={{ backgroundColor: '#000', color: 'white' }}>
                 Save Changes
               </Button>
             </div>
@@ -397,7 +397,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
                   ? 'text-white shadow-md'
                   : 'text-neutral-700 hover:bg-neutral-100'
                   }`}
-                style={isActive ? { backgroundColor: '#FF6B35' } : {}}
+                style={isActive ? { backgroundColor: '#000', color: 'white' } : {}}
               >
                 <Icon className="w-5 h-5" />
                 <span className="text-sm font-medium">{item.label}</span>

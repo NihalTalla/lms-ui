@@ -26,7 +26,9 @@ import {
   EyeOff,
   UserPlus,
   ClipboardList,
-  Building2
+  Building2,
+  Flame,
+  Activity
 } from 'lucide-react';
 import { batches, courses, users, problems, institutions } from '../lib/data';
 import { toast } from 'sonner';
@@ -48,6 +50,7 @@ export function BatchManagement({ onNavigate, role = 'faculty', initialFilters }
   const [assignFacultyDialogOpen, setAssignFacultyDialogOpen] = useState(false);
   const [addProblemDialogOpen, setAddProblemDialogOpen] = useState(false);
   const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
+  const [activeSubView, setActiveSubView] = useState<'none' | 'leaderboard' | 'streaks' | 'insights'>('none');
   const [problemMode, setProblemMode] = useState<'select' | 'existing' | 'create'>('select');
   const [selectedFaculty, setSelectedFaculty] = useState<string[]>([]);
   const [selectedExistingProblem, setSelectedExistingProblem] = useState('');
@@ -153,6 +156,19 @@ export function BatchManagement({ onNavigate, role = 'faculty', initialFilters }
     });
     setTestCases([{ input: '', expectedOutput: '', hidden: false }]);
   };
+
+  const batchStudents = users
+    .filter(u => u.role === 'student' && u.batchId === selectedBatch?.id)
+    .map((u, i) => ({
+      ...u,
+      rank: i + 1,
+      points: 2500 - (i * 150) + Math.floor(Math.random() * 50),
+      streak: 15 - (i % 5) + Math.floor(Math.random() * 3),
+      solved: 42 - i + Math.floor(Math.random() * 2),
+      accuracy: 94 - (i * 3),
+      progress: 85 - (i * i),
+      activity: [4, 7, 5, 8, 6, 9, 7].map(v => v + Math.floor(Math.random() * 3))
+    }));
 
   const isSelectionMade = selectedInstitution && selectedYear;
 
@@ -284,7 +300,7 @@ export function BatchManagement({ onNavigate, role = 'faculty', initialFilters }
       ) : (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={() => setSelectedBatch(null)}>
+            <Button variant="outline" onClick={() => { setSelectedBatch(null); setActiveSubView('none'); }}>
               ← Back to Batches
             </Button>
             <div className="flex gap-2">
@@ -334,48 +350,226 @@ export function BatchManagement({ onNavigate, role = 'faculty', initialFilters }
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-bold text-neutral-900">Management Controls</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setAssignFacultyDialogOpen(true)}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-indigo-50 rounded-lg">
-                          <UserPlus className="w-6 h-6 text-indigo-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-neutral-900">Assign Staff</h4>
-                          <p className="text-sm text-neutral-600">Faculty & trainers</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setAssessmentDialogOpen(true)}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-emerald-50 rounded-lg">
-                          <ClipboardList className="w-6 h-6 text-emerald-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-neutral-900">Assessments</h4>
-                          <p className="text-sm text-neutral-600">Create & schedule</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setAddProblemDialogOpen(true)}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-blue-50 rounded-lg">
-                          <FileText className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-neutral-900">Add Problems</h4>
-                          <p className="text-sm text-neutral-600">DSA & Coding tasks</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-neutral-900">
+                    {activeSubView === 'none' ? 'Student Management' : (
+                      activeSubView === 'leaderboard' ? 'Batch Leaderboard' :
+                        activeSubView === 'streaks' ? 'Student Streaks' : 'Performance Insights'
+                    )}
+                  </h3>
+                  {activeSubView !== 'none' && (
+                    <Button variant="ghost" size="sm" onClick={() => setActiveSubView('none')}>
+                      Back to Controls
+                    </Button>
+                  )}
                 </div>
+
+                {activeSubView === 'none' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {role === 'trainer' || role === 'faculty' ? (
+                      <>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setActiveSubView('leaderboard')}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-start gap-4">
+                              <div className="p-3 bg-amber-50 rounded-lg">
+                                <Award className="w-6 h-6 text-amber-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-neutral-900">Leaderboard</h4>
+                                <p className="text-sm text-neutral-600">Ranking & performance</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setActiveSubView('streaks')}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-start gap-4">
+                              <div className="p-3 bg-orange-50 rounded-lg">
+                                <Flame className="w-6 h-6 text-orange-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-neutral-900">Student Streaks</h4>
+                                <p className="text-sm text-neutral-600">Engagement insights</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setActiveSubView('insights')}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-start gap-4">
+                              <div className="p-3 bg-indigo-50 rounded-lg">
+                                <Activity className="w-6 h-6 text-indigo-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-neutral-900">Batch Insights</h4>
+                                <p className="text-sm text-neutral-600">Performance analytics</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </>
+                    ) : (
+                      <>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setAssignFacultyDialogOpen(true)}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-start gap-4">
+                              <div className="p-3 bg-indigo-50 rounded-lg">
+                                <UserPlus className="w-6 h-6 text-indigo-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-neutral-900">Assign Staff</h4>
+                                <p className="text-sm text-neutral-600">Faculty & trainers</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setAssessmentDialogOpen(true)}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-start gap-4">
+                              <div className="p-3 bg-emerald-50 rounded-lg">
+                                <ClipboardList className="w-6 h-6 text-emerald-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-neutral-900">Assessments</h4>
+                                <p className="text-sm text-neutral-600">Create & schedule</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setAddProblemDialogOpen(true)}>
+                          <CardContent className="pt-6">
+                            <div className="flex items-start gap-4">
+                              <div className="p-3 bg-blue-50 rounded-lg">
+                                <FileText className="w-6 h-6 text-blue-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-neutral-900">Add Problems</h4>
+                                <p className="text-sm text-neutral-600">DSA & Coding tasks</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </>
+                    )}
+                  </div>
+                ) : activeSubView === 'leaderboard' ? (
+                  <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead className="bg-neutral-50 border-b border-neutral-200">
+                          <tr>
+                            <th className="px-6 py-3 text-xs font-semibold text-neutral-500 uppercase">Rank</th>
+                            <th className="px-6 py-3 text-xs font-semibold text-neutral-500 uppercase">Student</th>
+                            <th className="px-6 py-3 text-xs font-semibold text-neutral-500 uppercase">Problems Solved</th>
+                            <th className="px-6 py-3 text-xs font-semibold text-neutral-500 uppercase">Streak</th>
+                            <th className="px-6 py-3 text-xs font-semibold text-neutral-500 uppercase text-right">Points</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-neutral-200">
+                          {batchStudents.map((student, i) => (
+                            <tr key={student.id} className="hover:bg-neutral-50 transition-colors">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${i === 0 ? 'bg-yellow-100 text-yellow-700' :
+                                    i === 1 ? 'bg-neutral-100 text-neutral-600' :
+                                      i === 2 ? 'bg-amber-100 text-amber-700' : 'text-neutral-500'
+                                  }`}>
+                                  {i + 1}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarFallback>{student.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium text-neutral-900">{student.name}</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-neutral-600">
+                                {student.solved}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-1.5 text-orange-600 font-medium">
+                                  <Flame className="w-4 h-4" />
+                                  {student.streak}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-indigo-600 font-mono">
+                                {student.points.toLocaleString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : activeSubView === 'streaks' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {batchStudents.map(student => (
+                      <Card key={student.id}>
+                        <CardContent className="pt-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-10 h-10">
+                                <AvatarFallback>{student.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-bold text-neutral-900">{student.name}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <Flame className={`w-4 h-4 ${student.streak >= 10 ? 'text-orange-500 animate-pulse' : 'text-orange-400'}`} />
+                                  <span className="text-sm font-bold text-orange-600">{student.streak} Day Streak</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-neutral-500 uppercase tracking-tighter">Status</p>
+                              <Badge className="bg-emerald-50 text-emerald-700 border-0">On Fire</Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Class Distribution</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-48 flex items-end justify-between gap-2 px-2">
+                          {['Points', 'Solved', 'Streak', 'Accuracy'].map((label, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center">
+                              <div
+                                className="w-full bg-indigo-600 rounded-t-lg transition-all duration-500"
+                                style={{ height: `${[75, 60, 45, 90][i]}%` }}
+                              />
+                              <span className="text-[10px] font-medium text-neutral-500 mt-2 uppercase">{label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Student Performance</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {batchStudents.slice(0, 3).map(student => (
+                          <div key={student.id} className="space-y-1.5">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-neutral-600">{student.name}</span>
+                              <span className="font-bold text-indigo-600">{student.accuracy}%</span>
+                            </div>
+                            <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-indigo-600" style={{ width: `${student.accuracy}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                        <p className="text-center text-xs text-neutral-500 mt-2">Top performers accuracy metrics</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

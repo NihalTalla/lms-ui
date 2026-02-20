@@ -4,8 +4,10 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Download, FileText, Building2, Users, IndianRupee, CheckCircle2, XCircle, Clock, Filter, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportToCSV, exportToPDF } from '../lib/exportUtils';
 
 interface InvoiceRecord { id: string; institutionId: string; institutionName: string; batchName: string; totalStudents: number; amountDue: number; amountPaid: number; paymentStatus: 'paid' | 'pending' | 'overdue' | 'partial'; invoiceDate: string; dueDate: string; }
 
@@ -48,8 +50,51 @@ export function Billing() {
         overdueCount: invoices.filter(i => i.paymentStatus === 'overdue').length,
     };
 
-    const handleDownloadHistory = () => { toast.success('Payment history download started'); };
-    const handleDownloadInvoice = (id: string) => { toast.success(`Downloading ${id}...`); };
+    const invoiceHeaders = ['Invoice', 'Institution', 'Batch', 'Students', 'Amount Due', 'Amount Paid', 'Status', 'Invoice Date', 'Due Date'];
+    const buildInvoiceRows = (data: InvoiceRecord[]) => data.map(inv => ([
+        inv.id,
+        inv.institutionName,
+        inv.batchName,
+        inv.totalStudents,
+        inv.amountDue,
+        inv.amountPaid,
+        inv.paymentStatus,
+        inv.invoiceDate,
+        inv.dueDate,
+    ]));
+
+    const handleDownloadHistory = (format: 'excel' | 'pdf') => {
+        const rows = buildInvoiceRows(filteredInvoices);
+        if (rows.length === 0) {
+            toast.error('No invoices to export');
+            return;
+        }
+
+        if (format === 'pdf') {
+            exportToPDF('invoice_history', 'Payment History', invoiceHeaders, rows);
+            toast.success('Payment history PDF started');
+        } else {
+            exportToCSV('invoice_history', invoiceHeaders, rows);
+            toast.success('Payment history Excel started');
+        }
+    };
+
+    const handleDownloadInvoice = (id: string, format: 'excel' | 'pdf' = 'pdf') => {
+        const invoice = invoices.find((inv) => inv.id === id);
+        if (!invoice) {
+            toast.error('Invoice not found');
+            return;
+        }
+        const rows = buildInvoiceRows([invoice]);
+
+        if (format === 'pdf') {
+            exportToPDF(`invoice_${id}`, `Invoice ${id}`, invoiceHeaders, rows);
+            toast.success(`${id} PDF started`);
+        } else {
+            exportToCSV(`invoice_${id}`, invoiceHeaders, rows);
+            toast.success(`${id} Excel started`);
+        }
+    };
 
     const getStatusColor = (s: string) => { switch (s) { case 'paid': return 'bg-green-100 text-green-700'; case 'pending': return 'bg-yellow-100 text-yellow-700'; case 'partial': return 'bg-blue-100 text-blue-700'; case 'overdue': return 'bg-red-100 text-red-700'; default: return 'bg-neutral-100 text-neutral-700'; } };
     const getStatusIcon = (s: string) => { switch (s) { case 'paid': return <CheckCircle2 className="w-4 h-4" />; case 'pending': case 'partial': return <Clock className="w-4 h-4" />; case 'overdue': return <XCircle className="w-4 h-4" />; default: return null; } };
@@ -60,7 +105,18 @@ export function Billing() {
                 <div><h2 className="text-3xl font-bold text-neutral-900">Billing</h2><p className="text-neutral-600 mt-1">Manage invoices and track payments</p></div>
                 <div className="flex gap-2">
                     <Select value="invoice"><SelectTrigger className="w-40"><FileText className="w-4 h-4 mr-2" /><SelectValue placeholder="Invoice" /></SelectTrigger><SelectContent><SelectItem value="invoice">Invoice</SelectItem></SelectContent></Select>
-                    <Button onClick={handleDownloadHistory} variant="outline" style={{ color: 'oklch(.205 0 0)' }}><Download className="w-4 h-4 mr-2" />Download Payment History</Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <Download className="w-4 h-4 mr-2" />
+                                Download Payment History
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleDownloadHistory('excel')}>Excel</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadHistory('pdf')}>PDF</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 

@@ -100,8 +100,9 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
       locked: false,
       assignment: {
         topics: [
-          { title: 'Series – Level 1', questions: '3/3 Completed', status: 'Submitted', difficulty: 'Easy' },
-          { title: 'Series – Level 2', questions: '2/2 Completed', status: 'Submitted', difficulty: 'Medium' },
+          { title: 'Series – Level 1', questions: '0/3 Completed', status: 'Not Started', difficulty: 'Easy' },
+          { title: 'Series – Level 2', questions: '1/2 Completed', status: 'In Progress', difficulty: 'Medium' },
+          { title: 'Series – Level 3', questions: '3/3 Completed', status: 'Submitted', difficulty: 'Hard' },
         ],
       },
     },
@@ -248,11 +249,21 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
               <div className="flex flex-col">
                 {/* Updated Breadcrumb */}
                 <div className="flex items-center gap-3 text-sm font-medium text-neutral-500">
-                  <span className="hover:text-neutral-900 transition-colors cursor-pointer">Cohort 46</span>
+                  <button
+                    onClick={() => onNavigate('batches')}
+                    className="hover:text-neutral-900 transition-colors cursor-pointer underline-offset-2 hover:underline"
+                  >
+                    Cohort 46
+                  </button>
                   <ChevronRight className="w-4 h-4 text-neutral-300" />
-                  <span className="hover:text-neutral-900 transition-colors cursor-pointer">DSA</span>
+                  <button
+                    onClick={onBack}
+                    className="hover:text-neutral-900 transition-colors cursor-pointer underline-offset-2 hover:underline"
+                  >
+                    {course.title}
+                  </button>
                   <ChevronRight className="w-4 h-4 text-neutral-300" />
-                  <span className="text-neutral-900 font-bold">Problem-Solving with Iteration</span>
+                  <span className="text-neutral-900 font-bold">{selectedModule.title}</span>
                 </div>
               </div>
 
@@ -351,8 +362,22 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
               {activeItem.type === 'assignment' && activeItem.assignment && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
                   <div className="flex items-center gap-4">
-                    <Badge className="bg-green-100/50 text-green-700 hover:bg-green-100 border-green-200 uppercase text-[10px] px-3 py-1 font-black tracking-wider">Submitted</Badge>
-                    <span className="text-neutral-400 text-sm font-medium">Score: 100/100</span>
+                    {(() => {
+                      const topics = activeItem.assignment!.topics;
+                      const allSubmitted = topics.every(t => t.status === 'Submitted');
+                      const anyInProgress = topics.some(t => t.status === 'In Progress');
+                      const submittedCount = topics.filter(t => t.status === 'Submitted').length;
+                      return allSubmitted ? (
+                        <><Badge className="bg-green-100/50 text-green-700 hover:bg-green-100 border-green-200 uppercase text-[10px] px-3 py-1 font-black tracking-wider">All Submitted</Badge>
+                          <span className="text-neutral-400 text-sm font-medium">Score: 100/100</span></>
+                      ) : anyInProgress ? (
+                        <><Badge className="bg-amber-100/50 text-amber-700 hover:bg-amber-100 border-amber-200 uppercase text-[10px] px-3 py-1 font-black tracking-wider">In Progress</Badge>
+                          <span className="text-neutral-400 text-sm font-medium">{submittedCount}/{topics.length} topics completed</span></>
+                      ) : (
+                        <><Badge className="bg-blue-100/50 text-blue-700 hover:bg-blue-100 border-blue-200 uppercase text-[10px] px-3 py-1 font-black tracking-wider">Not Started</Badge>
+                          <span className="text-neutral-400 text-sm font-medium">{topics.length} topics to complete</span></>
+                      );
+                    })()}
                   </div>
 
                   <div className="border border-neutral-100 rounded-[24px] overflow-hidden bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
@@ -366,64 +391,75 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {activeItem.assignment.topics.map((t, i) => (
-                          <TableRow
-                            key={i}
-                            className="cursor-pointer hover:bg-neutral-50/50 transition-colors border-b border-neutral-50 last:border-0"
-                            onClick={() => onNavigate('student-coding', {
-                              challenge: {
-                                title: t.title,
-                                question: t.title,
-                                difficulty: t.difficulty,
-                                description: 'Find the length of the longest substring without repeating characters in a given string. Series: 2, 4, 8, 14, 22, ..., n',
-                                examples: [
-                                  {
-                                    id: 'ex-1',
-                                    input: 'n = 100',
-                                    output: '2,4,8,14,22,32,44,58,74,92',
-                                  },
-                                  {
-                                    id: 'ex-2',
-                                    input: 'n = 200',
-                                    output: '2,4,8,14,22,32,44,58,74,92,112,134,158,184',
-                                  }
-                                ],
-                                testCases: [
-                                  { id: 'tc-1', input: '100', expectedOutput: '2,4,8,14,22,32,44,58,74,92', hidden: false },
-                                  { id: 'tc-2', input: '200', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184', hidden: false },
-                                  { id: 'tc-3', input: '500', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184,212,242,274,308,344,382,422,464', hidden: true },
-                                ]
-                              },
-                              module: selectedModule,
-                              course: course,
-                              previousData: { course, module: selectedModule }
-                            })}
-                          >
-                            <TableCell className="pl-8 py-6">
-                              <span className="font-bold text-lg text-neutral-800 group-hover:text-orange-600 transition-colors">
-                                {t.title}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-center py-6">
-                              <span className="bg-neutral-100 text-neutral-600 text-xs font-bold px-4 py-1.5 rounded-lg inline-block">
-                                {t.questions}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-center py-6">
-                              <span className="text-green-600 bg-green-50 text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full inline-block">
-                                {t.status}
-                              </span>
-                            </TableCell>
-                            <TableCell className="pr-8 py-6 text-right">
-                              <div className="flex items-center justify-end gap-3">
-                                <Button variant="outline" className="h-8 px-4 rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 hover:border-orange-200 hover:text-orange-600 hover:bg-white bg-transparent shadow-none transition-all">
-                                  Retake
-                                </Button>
-                                <ChevronRight className="w-5 h-5 text-neutral-300" />
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {activeItem.assignment.topics.map((t, i) => {
+                          const navigateToChallenge = () => onNavigate('student-coding', {
+                            challenge: {
+                              title: t.title,
+                              question: t.title,
+                              difficulty: t.difficulty,
+                              description: 'Find the length of the longest substring without repeating characters in a given string. Series: 2, 4, 8, 14, 22, ..., n',
+                              examples: [
+                                { id: 'ex-1', input: 'n = 100', output: '2,4,8,14,22,32,44,58,74,92' },
+                                { id: 'ex-2', input: 'n = 200', output: '2,4,8,14,22,32,44,58,74,92,112,134,158,184' },
+                              ],
+                              testCases: [
+                                { id: 'tc-1', input: '100', expectedOutput: '2,4,8,14,22,32,44,58,74,92', hidden: false },
+                                { id: 'tc-2', input: '200', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184', hidden: false },
+                                { id: 'tc-3', input: '500', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184,212,242,274,308,344,382,422,464', hidden: true },
+                              ]
+                            },
+                            module: selectedModule,
+                            course: course,
+                            previousData: { course, module: selectedModule }
+                          });
+                          return (
+                            <TableRow
+                              key={i}
+                              className="cursor-pointer hover:bg-neutral-50/50 transition-colors border-b border-neutral-50 last:border-0"
+                              onClick={navigateToChallenge}
+                            >
+                              <TableCell className="pl-8 py-6">
+                                <span className="font-bold text-lg text-neutral-800 group-hover:text-orange-600 transition-colors">
+                                  {t.title}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-center py-6">
+                                <span className="bg-neutral-100 text-neutral-600 text-xs font-bold px-4 py-1.5 rounded-lg inline-block">
+                                  {t.questions}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-center py-6">
+                                <span className={`text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full inline-block ${t.status === 'Submitted' ? 'text-green-600 bg-green-50' :
+                                  t.status === 'In Progress' ? 'text-amber-600 bg-amber-50' :
+                                    'text-blue-600 bg-blue-50'
+                                  }`}>
+                                  {t.status}
+                                </span>
+                              </TableCell>
+                              <TableCell className="pr-8 py-6 text-right">
+                                <div className="flex items-center justify-end gap-3">
+                                  {t.status === 'Not Started' ? (
+                                    <Button variant="outline" className="h-8 w-[80px] rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 hover:border-green-200 hover:text-green-600 hover:bg-white bg-transparent shadow-none transition-all"
+                                      onClick={(e) => { e.stopPropagation(); navigateToChallenge(); }}>
+                                      Start
+                                    </Button>
+                                  ) : t.status === 'In Progress' ? (
+                                    <Button variant="outline" className="h-8 w-[80px] rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 hover:border-amber-200 hover:text-amber-600 hover:bg-white bg-transparent shadow-none transition-all"
+                                      onClick={(e) => { e.stopPropagation(); navigateToChallenge(); }}>
+                                      Resume
+                                    </Button>
+                                  ) : (
+                                    <Button variant="outline" className="h-8 w-[80px] rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 hover:border-orange-200 hover:text-orange-600 hover:bg-white bg-transparent shadow-none transition-all"
+                                      onClick={(e) => { e.stopPropagation(); navigateToChallenge(); }}>
+                                      Retake
+                                    </Button>
+                                  )}
+                                  <ChevronRight className="w-5 h-5 text-neutral-300" />
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -434,10 +470,11 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
             <div className="mt-20 flex justify-end pb-10 border-t border-neutral-50 pt-10">
               <Button
                 onClick={handleNext}
-                className="bg-neutral-900 hover:bg-black text-white text-base font-bold rounded-2xl px-10 py-7 h-auto shadow-2xl hover:shadow-neutral-500/20 active:scale-95 transition-all flex items-center gap-3"
+                className="text-white text-base font-bold rounded-2xl px-10 py-7 h-auto shadow-2xl active:scale-95 transition-all flex items-center gap-3"
+                style={{ backgroundColor: '#000' }} // Vivid Purple (Indigo-600)
               >
-                Next Chapter
-                <ArrowRight className="w-5 h-5" />
+                <span className="text-white">Next Chapter</span>
+                <ArrowRight className="w-5 h-5 text-white" />
               </Button>
             </div>
 

@@ -62,10 +62,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <FolderPlus className="w-4 h-4" />
+              <Button variant="outline" className="flex items-center gap-2 text-neutral-900">
+                <FolderPlus className="w-4 h-4 text-neutral-700" />
                 Assessment
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-4 h-4 text-neutral-700" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -75,75 +75,75 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" onClick={() => onNavigate('users')}>
-            <UserPlus className="w-4 h-4 mr-2" />
+          <Button variant="outline" className="text-neutral-900" onClick={() => onNavigate('users')}>
+            <UserPlus className="w-4 h-4 mr-2 text-neutral-700" />
             Add User
           </Button>
         </div>
       </div>
 
-{/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('users')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-600 ">Total Users</p>
-                  <h3 className="mt-1">{totalUsers}</h3>
-                  <p className="text-xs text-green-600 mt-1">+{monthlyGrowth}% this month</p>
-                </div>
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
-                  <Users className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
-                </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('users')}>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-neutral-600 ">Total Users</p>
+                <h3 className="mt-1">{totalUsers}</h3>
+                <p className="text-xs text-green-600 mt-1">+{monthlyGrowth}% this month</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
+                <Users className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('courses')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-600">Active Courses</p>
-                  <h3 className="mt-1">{activeCourses}</h3>
-                  <p className="text-xs text-neutral-600 mt-1">Across 8 categories</p>
-                </div>
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(20, 184, 166, 0.1)' }}>
-                  <BookOpen className="w-6 h-6" style={{ color: 'var(--color-secondary)' }} />
-                </div>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('courses')}>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-neutral-600">Active Courses</p>
+                <h3 className="mt-1">{activeCourses}</h3>
+                <p className="text-xs text-neutral-600 mt-1">Across 8 categories</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(20, 184, 166, 0.1)' }}>
+                <BookOpen className="w-6 h-6" style={{ color: 'var(--color-secondary)' }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => toast.success('All systems operational')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-600">System Health</p>
-                  <h3 className="mt-1">{systemHealth}%</h3>
-                  <p className="text-xs text-green-600 mt-1">All systems operational</p>
-                </div>
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-                  <Activity className="w-6 h-6" style={{ color: 'var(--color-accent)' }} />
-                </div>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => toast.success('All systems operational')}>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-neutral-600">System Health</p>
+                <h3 className="mt-1">{systemHealth}%</h3>
+                <p className="text-xs text-green-600 mt-1">All systems operational</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+                <Activity className="w-6 h-6" style={{ color: 'var(--color-accent)' }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('analytics')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-600">Monthly Growth</p>
-                  <h3 className="mt-1">+{monthlyGrowth}%</h3>
-                  <p className="text-xs text-neutral-600 mt-1">User acquisition rate</p>
-                </div>
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
-                  <TrendingUp className="w-6 h-6" style={{ color: 'var(--color-warning)' }} />
-                </div>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('analytics')}>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-neutral-600">Monthly Growth</p>
+                <h3 className="mt-1">+{monthlyGrowth}%</h3>
+                <p className="text-xs text-neutral-600 mt-1">User acquisition rate</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                <TrendingUp className="w-6 h-6" style={{ color: 'var(--color-warning)' }} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -159,10 +159,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 <YAxis stroke="#94A3B8" />
                 <Tooltip />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="students" 
-                  stroke="#7C3AED" 
+                <Line
+                  type="monotone"
+                  dataKey="students"
+                  stroke="#7C3AED"
                   strokeWidth={2}
                   dot={{ fill: '#7C3AED', r: 4 }}
                   activeDot={{ r: 6 }}
@@ -227,11 +227,10 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             <div className="space-y-4">
               {recentActivity.map((activity, index) => (
                 <div key={index} className="flex gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    activity.status === 'success' 
-                      ? 'bg-green-100' 
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${activity.status === 'success'
+                      ? 'bg-green-100'
                       : 'bg-yellow-100'
-                  }`}>
+                    }`}>
                     {activity.status === 'success' ? (
                       <CheckCircle2 className="w-4 h-4 text-green-600" />
                     ) : (
