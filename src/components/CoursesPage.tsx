@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -73,6 +73,23 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const [activeMgmtTopic, setActiveMgmtTopic] = useState<any>(null);
   const [activeMgmtTopicIndex, setActiveMgmtTopicIndex] = useState<number>(-1);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+
+  // Guard against stale selections causing blank screens
+  useEffect(() => {
+    if ((mgmtStep === 'topics' || mgmtStep === 'details' || mgmtStep === 'assessment') && activeMgmtCourse) {
+      const exists = courseList.find(c => c.id === activeMgmtCourse.id);
+      if (!exists) {
+        setMgmtStep('list');
+        setActiveMgmtCourse(null);
+        setActiveMgmtTopic(null);
+        setActiveMgmtTopicIndex(-1);
+      }
+    }
+    if ((mgmtStep === 'details' || mgmtStep === 'assessment') && !activeMgmtTopic) {
+      setMgmtStep('topics');
+      setActiveMgmtTopicIndex(-1);
+    }
+  }, [courseList, activeMgmtCourse, activeMgmtTopic, mgmtStep]);
 
   const handleTopicToggleLock = (topicIndex: number) => {
     const updatedTopics = newCourse.topics.map((t, i) =>

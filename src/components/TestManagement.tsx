@@ -225,6 +225,45 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
     setNewQuestion({ ...newQuestion, testCases });
   };
 
+  const handleTestQuestionFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = evt.target?.result as string;
+        const parsed = JSON.parse(text);
+        const items = Array.isArray(parsed) ? parsed : parsed.questions || [];
+        if (!Array.isArray(items) || items.length === 0) {
+          toast.error('No questions found in file');
+          return;
+        }
+        const mapped: TestQuestion[] = items.map((q: any, idx: number) => ({
+          id: q.id || `upload-${Date.now()}-${idx}`,
+          title: q.title || `Imported Question ${idx + 1}`,
+          description: q.description || '',
+          difficulty: (q.difficulty || 'easy') as any,
+          points: q.points || 10,
+          type: q.type === 'mcq' ? 'mcq' : 'coding',
+          options: q.type === 'mcq' ? (q.options || ['', '', '', '']) : undefined,
+          correctAnswer: q.correctAnswer,
+          testCases: q.type === 'coding'
+            ? (q.testCases || [{ input: '', expectedOutput: '', isHidden: false }])
+            : undefined,
+        }));
+        setSelectedQuestions(prev => {
+          const deduped = mapped.filter(m => !prev.some(p => p.id === m.id));
+          return [...prev, ...deduped];
+        });
+        toast.success(`Imported ${mapped.length} question(s)`);
+      } catch {
+        toast.error('Upload failed. Please use a JSON file with question fields.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const handleCreateTest = () => {
     if (!newTest.title || !newTest.batchId) {
       toast.error('Please fill in all required fields');
@@ -399,8 +438,8 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
 
                 {/* Selected Questions */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Questions ({selectedQuestions.length})</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Questions ({selectedQuestions.length})</h3>
                     <div className="flex gap-2">
                       <Dialog>
                         <DialogTrigger asChild>
@@ -439,6 +478,15 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                         <Plus className="w-4 h-4 mr-2" />
                         New Question
                       </Button>
+                      <div className="relative">
+                        <input id="test-question-upload" type="file" className="hidden" accept=".json,.txt" onChange={handleTestQuestionFileUpload} />
+                        <Button variant="outline" size="sm" asChild>
+                          <label htmlFor="test-question-upload" className="flex items-center gap-2 cursor-pointer">
+                            <FileCode className="w-4 h-4" />
+                            Upload
+                          </label>
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
@@ -711,16 +759,16 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {test.status === 'active' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleMonitorTest(test)}
-                        >
-                          <Video className="w-4 h-4 mr-1" />
-                          Monitor
-                        </Button>
-                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={test.status !== 'active'}
+                        onClick={() => handleMonitorTest(test)}
+                        className={test.status !== 'active' ? 'opacity-60 cursor-not-allowed' : ''}
+                      >
+                        <Video className="w-4 h-4 mr-1" />
+                        Monitor
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => toast.info(`Viewing ${test.title} details`)}>
                         <Eye className="w-4 h-4 mr-1" />
                         View

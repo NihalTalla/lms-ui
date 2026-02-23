@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Users, FileCode, MessageSquare, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, Video, BookOpen, Lock, Code2, Flame, Award, ChevronRight } from 'lucide-react';
+import { Users, FileCode, Calendar, TrendingUp, AlertCircle, CheckCircle2, Clock, Eye, Video, BookOpen, Lock, Code2, Flame, Award, ChevronRight } from 'lucide-react';
 import { batches, courses } from '../lib/data';
 import { toast } from 'sonner';
 

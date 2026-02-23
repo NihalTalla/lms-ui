@@ -127,9 +127,13 @@ export function CourseManagement() {
       isLocked: false
     };
     setCourseList([...courseList, course]);
+    // Also push into the shared course templates so it appears across views
+    initialCourses.push(course as any);
+    setSelectedCourse(course);
+    setCurrentView('topics');
     setIsCreateCourseOpen(false);
     setNewCourse({ title: '', description: '', level: 'beginner', duration: '', lessons: 0, tags: '' });
-    toast.success('Course created');
+    toast.success('Course created and added to templates');
   };
 
   const handleDeleteCourse = (id: string) => {

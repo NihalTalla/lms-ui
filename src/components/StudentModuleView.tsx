@@ -250,10 +250,10 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                 {/* Updated Breadcrumb */}
                 <div className="flex items-center gap-3 text-sm font-medium text-neutral-500">
                   <button
-                    onClick={() => onNavigate('batches')}
+                    onClick={() => onNavigate('dashboard')}
                     className="hover:text-neutral-900 transition-colors cursor-pointer underline-offset-2 hover:underline"
                   >
-                    Cohort 46
+                    Dashboard
                   </button>
                   <ChevronRight className="w-4 h-4 text-neutral-300" />
                   <button

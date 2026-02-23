@@ -85,6 +85,47 @@ export function CodingContest() {
 
     const handleNextStep = () => { if (!newContest.name || !newContest.startTime || !newContest.endTime) { toast.error('Fill required fields'); return; } if (new Date(newContest.startTime) >= new Date(newContest.endTime)) { toast.error('End time must be after start'); return; } setCurrentStep(2); };
 
+    const handleQuestionFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const text = evt.target?.result as string;
+                const parsed = JSON.parse(text);
+                const questionsArr = Array.isArray(parsed) ? parsed : (parsed.questions || []);
+                if (!Array.isArray(questionsArr) || questionsArr.length === 0) {
+                    toast.error('No questions found in file');
+                    return;
+                }
+                const mapped: Question[] = questionsArr.map((q: any, idx: number) => ({
+                    id: q.id || `upload-${Date.now()}-${idx}`,
+                    title: q.title || `Imported Question ${idx + 1}`,
+                    difficulty: (q.difficulty || 'medium') as 'easy' | 'medium' | 'hard',
+                    topic: q.topic || 'General',
+                    points: q.points || 100,
+                    type: q.type === 'mcq' ? 'mcq' : 'coding',
+                    options: q.options || ['', '', '', ''],
+                    correctAnswer: q.correctAnswer || '',
+                }));
+
+                setQuestionBank(prev => {
+                    const deduped = mapped.filter(m => !prev.some(p => p.id === m.id));
+                    return [...prev, ...deduped];
+                });
+                setNewContest(prev => ({
+                    ...prev,
+                    selectedQuestions: Array.from(new Set([...(prev.selectedQuestions || []), ...mapped.map(m => m.id)]))
+                }));
+                toast.success(`Imported ${mapped.length} question(s) from file`);
+            } catch {
+                toast.error('Unable to read file. Please upload valid JSON with question fields.');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
+
     const handleCreateContest = () => {
         if (newContest.selectedQuestions.length === 0) {
             toast.error('Add at least one question');
@@ -242,13 +283,18 @@ export function CodingContest() {
 
             <Dialog open={showCreateDialog} onOpenChange={(o) => { setShowCreateDialog(o); if (!o) resetForm(); }}>
                 <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader><DialogTitle>Create Contest</DialogTitle><DialogDescription>Step {currentStep} of 2</DialogDescription></DialogHeader>
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold text-neutral-900">Create Contest</DialogTitle>
+                        <DialogDescription className="text-neutral-600">
+                            Step {currentStep} of 2 · Provide basic details then add questions
+                        </DialogDescription>
+                    </DialogHeader>
                     <div className="flex items-center justify-center mb-6">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-neutral-200'}`}>1</div>
+                        <div className={`w-10 h-10 rounded-full border border-blue-200 flex items-center justify-center font-semibold ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-neutral-50 text-neutral-600'}`}>1</div>
                         <div className="flex-1 mx-3 h-1 bg-neutral-200 rounded-full overflow-hidden">
                             <div className={`h-full bg-blue-600 transition-all`} style={{ width: currentStep === 1 ? '50%' : '100%' }} />
                         </div>
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-neutral-200'}`}>2</div>
+                        <div className={`w-10 h-10 rounded-full border border-blue-200 flex items-center justify-center font-semibold ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-neutral-50 text-neutral-600'}`}>2</div>
                     </div>
 
                     {currentStep === 1 && (<div className="space-y-4">
@@ -277,6 +323,11 @@ export function CodingContest() {
 
                     {currentStep === 2 && (<div className="space-y-4">
                         <h3 className="font-semibold flex items-center gap-2"><Code className="w-5 h-5 text-blue-600" />Add Questions</h3>
+                        <div className="p-4 border-2 border-dashed border-neutral-200 rounded-xl bg-neutral-50">
+                            <p className="text-sm font-medium text-neutral-800">Upload questions file</p>
+                            <p className="text-xs text-neutral-600 mb-3">JSON array with fields: title, topic, difficulty, points, type, options, correctAnswer.</p>
+                            <Input type="file" accept=".json,.txt" onChange={handleQuestionFileUpload} />
+                        </div>
                         {!questionMode && (<div className="grid grid-cols-2 gap-4"><Card className="cursor-pointer hover:border-blue-400" onClick={() => setQuestionMode('fetch')}><CardContent className="pt-6 text-center"><Search className="w-10 h-10 mx-auto text-blue-600 mb-2" /><p className="font-semibold">Fetch Existing</p><p className="text-sm text-neutral-500">From question bank</p></CardContent></Card><Card className="cursor-pointer hover:border-purple-400" onClick={() => setQuestionMode('create')}><CardContent className="pt-6 text-center"><Plus className="w-10 h-10 mx-auto text-purple-600 mb-2" /><p className="font-semibold">Create New</p><p className="text-sm text-neutral-500">Add new question</p></CardContent></Card></div>)}
                         {questionMode === 'fetch' && (<div className="space-y-3"><div className="flex justify-between items-center bg-neutral-50 p-3 rounded-lg border border-neutral-200"><p className="font-semibold text-lg text-blue-700">Selected: {newContest.selectedQuestions.length}</p><Button variant="outline" size="sm" onClick={() => setQuestionMode(null)} className="hover:bg-neutral-100"><ArrowLeft className="w-4 h-4 mr-2" />Back</Button></div><div className="max-h-[500px] overflow-y-auto border rounded-xl shadow-inner scrollbar-thin scrollbar-thumb-neutral-200">{questionBank.map(q => (<div key={q.id} className={`p-4 border-b last:border-0 cursor-pointer hover:bg-blue-50/30 transition-colors flex justify-between items-center ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''}`} onClick={() => toggleQuestionSelection(q.id)}><div className="flex items-center gap-4"><div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-600 border-blue-600 text-white scale-110 shadow-sm' : 'border-neutral-300'}`}>{newContest.selectedQuestions.includes(q.id) && <CheckCircle2 className="w-4 h-4" />}</div><div><p className="font-semibold text-neutral-800">{q.title}</p><p className="text-sm text-neutral-500 font-medium">{q.topic} • {q.points}pts</p></div></div><Badge className={`${getDifficultyColor(q.difficulty)} px-3 py-1 rounded-full uppercase text-[10px] tracking-wider`}>{q.difficulty}</Badge></div>))}</div></div>)}
                         {questionMode === 'create' && (

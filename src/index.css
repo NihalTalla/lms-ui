@@ -3415,3 +3415,28 @@ textarea,
 select {
   color: #0f172a;
 }
+
+/* Smooth, visible scrollbar for invitation modal content */
+.invitation-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.invitation-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.invitation-scroll::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 999px;
+}
+
+.invitation-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #cbd5e1, #94a3b8);
+  border-radius: 999px;
+  border: 2px solid #f8fafc;
+}
+
+.invitation-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #94a3b8, #64748b);
+}

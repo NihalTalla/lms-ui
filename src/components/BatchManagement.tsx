@@ -423,15 +423,15 @@ export function BatchManagement({ onNavigate, role = 'faculty', initialFilters }
                             </div>
                           </CardContent>
                         </Card>
-                        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setAssessmentDialogOpen(true)}>
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setActiveSubView('leaderboard')}>
                           <CardContent className="pt-6">
                             <div className="flex items-start gap-4">
                               <div className="p-3 bg-emerald-50 rounded-lg">
-                                <ClipboardList className="w-6 h-6 text-emerald-600" />
+                                <Award className="w-6 h-6 text-emerald-600" />
                               </div>
                               <div>
-                                <h4 className="font-bold text-neutral-900">Assessments</h4>
-                                <p className="text-sm text-neutral-600">Create & schedule</p>
+                                <h4 className="font-bold text-neutral-900">Leaderboard</h4>
+                                <p className="text-sm text-neutral-600">View batch rankings</p>
                               </div>
                             </div>
                           </CardContent>

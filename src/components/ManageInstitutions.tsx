@@ -145,11 +145,11 @@ export function ManageInstitutions() {
             <Dialog open={showAddDialog} onOpenChange={(o) => { setShowAddDialog(o); if (!o) resetForm(); }}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader><DialogTitle>Add Institution</DialogTitle><DialogDescription>Step {currentStep} of 3</DialogDescription></DialogHeader>
-                    <div className="flex items-center justify-center mb-6">
+                    <div className="flex items-center justify-center mb-6 gap-2">
                         {[1, 2, 3].map((s, i) => (
                             <React.Fragment key={s}>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= s ? 'bg-blue-600 text-white' : 'bg-neutral-200'}`}>{s}</div>
-                                {i < 2 && <div className={`w-16 h-1 mx-2 ${currentStep > s ? 'bg-blue-600' : 'bg-neutral-200'}`} />}
+                                <div className={`w-10 h-10 rounded-full border font-semibold flex items-center justify-center shadow-sm ${currentStep >= s ? 'bg-blue-600 text-white border-blue-500' : 'bg-white text-neutral-700 border-neutral-300'}`}>{s}</div>
+                                {i < 2 && <div className={`w-16 h-1 mx-1 rounded-full ${currentStep > s ? 'bg-blue-600' : 'bg-neutral-200'}`} />}
                             </React.Fragment>
                         ))}
                     </div>

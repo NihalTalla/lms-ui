@@ -28,6 +28,7 @@ import { AnalyticsPage } from './components/AnalyticsPage';
 import { AttendancePage } from './components/AttendancePage';
 import { StudentSettings } from './components/StudentSettings';
 import { StudentProfile } from './components/StudentProfile';
+import { TrainerProfile } from './components/TrainerProfile';
 import { TestManagement } from './components/TestManagement';
 import { CourseModulesPage } from './components/CourseModulesPage';
 import { TestMonitoring } from './components/TestMonitoring';
@@ -249,7 +250,8 @@ function AppContent() {
                 {currentPage === 'leaderboard' && <Leaderboard />}
                 {currentPage === 'messages' && <Messages />}
                 {currentPage === 'profile' && currentUser.role === 'student' && <StudentProfile onNavigate={handleNavigate} />}
-                {currentPage === 'profile' && currentUser.role !== 'student' && (
+                {currentPage === 'profile' && currentUser.role === 'trainer' && <TrainerProfile />}
+                {currentPage === 'profile' && currentUser.role !== 'student' && currentUser.role !== 'trainer' && (
                     <div className="space-y-6">
                         <div>
                             <h2 className="text-3xl font-bold text-neutral-900">Profile</h2>

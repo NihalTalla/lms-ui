@@ -14,6 +14,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from './ui/dialog';
+import { ScrollArea } from './ui/scroll-area';
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 import {
@@ -133,7 +134,7 @@ export function MyTrainers({ onNavigate }: MyTrainersProps) {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-h-[calc(100vh-120px)] overflow-y-auto pr-1">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
@@ -406,8 +407,8 @@ interface SendInvitationProps {
 
 export function SendInvitation({ onNavigate }: SendInvitationProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [trainerEmail, setTrainerEmail] = useState('');
-    const [trainerName, setTrainerName] = useState('');
+    const [recipientSearch, setRecipientSearch] = useState('');
+    const [selectedRecipients, setSelectedRecipients] = useState<{ name: string; email: string }[]>([]);
     const [selectedBatch, setSelectedBatch] = useState('');
     const [customMessage, setCustomMessage] = useState('');
     const [invitations, setInvitations] = useState<InvitationRecord[]>([
@@ -461,9 +462,39 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
         { id: '5', name: 'David Lee', email: 'david.lee@example.com' },
     ];
 
+    const filteredTrainers = availableTrainers.filter(t =>
+        t.name.toLowerCase().includes(recipientSearch.toLowerCase()) ||
+        t.email.toLowerCase().includes(recipientSearch.toLowerCase())
+    );
+
+    const addRecipient = (trainer: { name: string; email: string }) => {
+        if (selectedRecipients.some(r => r.email === trainer.email)) {
+            toast.info('Recipient already added');
+            return;
+        }
+        setSelectedRecipients([...selectedRecipients, trainer]);
+        setRecipientSearch('');
+    };
+
+    const addCustomRecipient = () => {
+        const email = recipientSearch.trim();
+        if (!email) return;
+        const emailValid = /\S+@\S+\.\S+/.test(email);
+        if (!emailValid) {
+            toast.error('Enter a valid email address');
+            return;
+        }
+        const name = email.split('@')[0].replace('.', ' ');
+        addRecipient({ name: name || 'Invited Trainer', email });
+    };
+
     const handleSendInvitation = () => {
-        if (!trainerEmail || !trainerName || !selectedBatch) {
-            toast.error('Please fill in all required fields');
+        if (!selectedBatch) {
+            toast.error('Please choose a batch');
+            return;
+        }
+        if (selectedRecipients.length === 0) {
+            toast.error('Add at least one recipient');
             return;
         }
 
@@ -473,23 +504,24 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
             return;
         }
 
-        const newInvitation: InvitationRecord = {
-            id: (Math.max(...invitations.map(i => parseInt(i.id)), 0) + 1).toString(),
-            trainerEmail,
-            trainerName,
+        const nextId = Math.max(...invitations.map(i => parseInt(i.id)), 0);
+        const newInvitations: InvitationRecord[] = selectedRecipients.map((recipient, idx) => ({
+            id: (nextId + idx + 1).toString(),
+            trainerEmail: recipient.email,
+            trainerName: recipient.name,
             batchName: batch.name,
             batchId: batch.id,
             sentDate: new Date().toISOString().split('T')[0],
             status: 'pending',
             messagePreview: customMessage || `You have been invited to teach ${batch.name}...`,
-        };
+        }));
 
-        setInvitations([newInvitation, ...invitations]);
-        toast.success(`Invitation sent to ${trainerName}`);
+        setInvitations([...newInvitations, ...invitations]);
+        toast.success(`Invitation sent to ${newInvitations.length} recipient(s)`);
 
         // Reset form
-        setTrainerEmail('');
-        setTrainerName('');
+        setRecipientSearch('');
+        setSelectedRecipients([]);
         setSelectedBatch('');
         setCustomMessage('');
         setIsOpen(false);
@@ -499,11 +531,6 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
         const invitation = invitations.find(i => i.id === id);
         setInvitations(invitations.filter(i => i.id !== id));
         toast.success(`Invitation to ${invitation?.trainerName} has been deleted`);
-    };
-
-    const handleSelectTrainer = (trainer: any) => {
-        setTrainerName(trainer.name);
-        setTrainerEmail(trainer.email);
     };
 
     const getStatusColor = (status: string) => {
@@ -553,39 +580,59 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
                             Send New Invitation
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                        <DialogHeader>
+                    <DialogContent className="max-w-2xl w-[95vw] h-[90vh] max-h-[90vh] p-0 overflow-hidden invitation-scroll !flex !flex-col" style={{ gap: 0 }}
+>
+                        <DialogHeader className="px-6 pt-6 pb-3 border-b border-neutral-200 bg-white">
                             <DialogTitle>Send Trainer Invitation</DialogTitle>
                             <DialogDescription>
                                 Invite a trainer to teach a specific batch
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div className="space-y-4">
+                        <ScrollArea type="always"className="flex-1 h-full min-h-0 overflow-y-auto">
+                            <div className="px-6 py-4 pr-4 space-y-4">
                             {/* Trainer Selection */}
-                            <div>
-                                <label className="text-sm font-semibold text-neutral-700 block mb-2">
-                                    Select Trainer <span className="text-red-500">*</span>
+                            <div className="space-y-3">
+                                <label className="text-sm font-semibold text-neutral-700 block">
+                                    Recipients <span className="text-red-500">*</span>
                                 </label>
-                                <div className="border border-neutral-200 rounded-lg p-3 max-h-48 overflow-y-auto space-y-2 bg-neutral-50">
-                                    {availableTrainers.map(trainer => (
-                                        <button
-                                            key={trainer.id}
-                                            onClick={() => handleSelectTrainer(trainer)}
-                                            className={`w-full text-left p-3 rounded-lg transition-all ${trainerEmail === trainer.email
-                                                ? 'bg-blue-100 border-2 border-blue-500'
-                                                : 'bg-white border border-neutral-200 hover:border-neutral-300'
-                                                }`}
-                                        >
-                                            <div className="font-medium text-sm text-neutral-900">{trainer.name}</div>
-                                            <div className="text-xs text-neutral-600">{trainer.email}</div>
-                                        </button>
-                                    ))}
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="Search by name or email..."
+                                        value={recipientSearch}
+                                        onChange={(e) => setRecipientSearch(e.target.value)}
+                                    />
+                                    <Button variant="outline" onClick={addCustomRecipient}>
+                                        Add Email
+                                    </Button>
                                 </div>
-                                {trainerEmail && (
-                                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                        <p className="text-sm font-medium text-blue-900">Selected: {trainerName}</p>
-                                        <p className="text-xs text-blue-700">{trainerEmail}</p>
+                                <div className="border border-neutral-200 rounded-lg p-3 max-h-40 overflow-y-auto space-y-2 bg-neutral-50">
+                                    {filteredTrainers.length === 0 ? (
+                                        <p className="text-sm text-neutral-500">No matches. Use "Add Email" to invite manually.</p>
+                                    ) : (
+                                        filteredTrainers.map(trainer => (
+                                            <button
+                                                key={trainer.id}
+                                                onClick={() => addRecipient(trainer)}
+                                                className="w-full text-left p-3 rounded-lg bg-white border border-neutral-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                                            >
+                                                <div className="font-medium text-sm text-neutral-900">{trainer.name}</div>
+                                                <div className="text-xs text-neutral-600">{trainer.email}</div>
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+                                {selectedRecipients.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedRecipients.map((rec) => (
+                                            <Badge key={rec.email} variant="outline" className="flex items-center gap-2 border-blue-300 text-blue-700">
+                                                <Mail className="w-3 h-3" />
+                                                {rec.name} ({rec.email})
+                                                <button onClick={() => setSelectedRecipients(selectedRecipients.filter(r => r.email !== rec.email))} className="text-blue-700">
+                                                    &times;
+                                                </button>
+                                            </Badge>
+                                        ))}
                                     </div>
                                 )}
                             </div>
@@ -627,9 +674,16 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
                                 <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
                                     <p className="text-xs font-semibold text-neutral-600 mb-2">INVITATION PREVIEW</p>
                                     <div className="text-sm space-y-2 text-neutral-700">
-                                        <p>
-                                            <strong>To:</strong> {trainerName} ({trainerEmail})
-                                        </p>
+                                        <div>
+                                            <strong>To:</strong>
+                                            <div className="flex flex-wrap gap-2 mt-1">
+                                                {selectedRecipients.map(rec => (
+                                                    <Badge key={rec.email} variant="outline" className="border-neutral-300">
+                                                        {rec.name} ({rec.email})
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
                                         <p>
                                             <strong>Batch:</strong> {batches.find(b => b.id === selectedBatch)?.name}
                                         </p>
@@ -642,20 +696,20 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
                                 </div>
                             )}
 
-                            {/* Actions */}
-                            <div className="flex gap-3 justify-end pt-4">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setIsOpen(false)}
-                                    style={{ color: 'oklch(.205 0 0)' }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleSendInvitation} style={{ color: 'white' }}>
-                                    <Send className="w-4 h-4 mr-2" style={{ color: 'white' }} />
-                                    Send Invitation
-                                </Button>
                             </div>
+                        </ScrollArea>
+                        <div className="border-t border-neutral-200 bg-white px-6 py-3 flex gap-3 justify-end">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsOpen(false)}
+                                style={{ color: 'oklch(.205 0 0)' }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button onClick={handleSendInvitation} style={{ color: 'white' }}>
+                                <Send className="w-4 h-4 mr-2" style={{ color: 'white' }} />
+                                Send Invitation
+                            </Button>
                         </div>
                     </DialogContent>
                 </Dialog>

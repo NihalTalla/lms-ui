@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import React, { useMemo, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Textarea } from './ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { 
-  Users, 
+import {
+  Users,
   UserPlus,
   Search,
   Filter,
-  MoreVertical,
   Mail,
   Shield,
   GraduationCap,
@@ -22,609 +21,393 @@ import {
   Trash2,
   Ban,
   CheckCircle2,
-  MoveRight
+  MoveRight,
+  Send,
 } from 'lucide-react';
-import { users, batches } from '../lib/data';
+import { users, batches, institutions } from '../lib/data';
 import { toast } from 'sonner';
 
 interface UserManagementProps {
   onNavigate: (page: string, data?: any) => void;
 }
 
+type RoleFilter = 'all' | 'admin' | 'faculty' | 'trainer' | 'student';
+
 export function UserManagement({ onNavigate }: UserManagementProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [moveUserDialogOpen, setMoveUserDialogOpen] = useState(false);
-  const [userToMove, setUserToMove] = useState<any>(null);
-  const [targetBatch, setTargetBatch] = useState('');
-  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
-  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
-  const [newUserData, setNewUserData] = useState({ name: '', email: '', role: '', password: '' });
-  const [editUserData, setEditUserData] = useState({ name: '', email: '', role: '' });
+  const [filterRole, setFilterRole] = useState<RoleFilter>('all');
+  const [institutionFilter, setInstitutionFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('all');
 
-  const allUsers = [
-    ...users,
-    // Additional mock users
-    {
-      id: 'admin-2',
-      name: 'Jessica Parker',
-      email: 'jessica.parker@codify.lms',
-      role: 'admin' as const,
-      status: 'active',
-      joinDate: '2024-01-15',
-      lastActive: '2 hours ago',
-    },
-    {
-      id: 'faculty-3',
-      name: 'David Kim',
-      email: 'david.kim@codify.lms',
-      role: 'faculty' as const,
-      status: 'active',
-      joinDate: '2024-02-20',
-      lastActive: '1 day ago',
-      batchesAssigned: 3,
-      studentsManaged: 85,
-    },
-    {
-      id: 'student-4',
-      name: 'Isabella Garcia',
-      email: 'isabella.garcia@student.codify.lms',
-      role: 'student' as const,
-      status: 'active',
-      joinDate: '2024-09-01',
-      lastActive: '5 min ago',
-      coursesEnrolled: 2,
-      progress: 78,
-      points: 1150,
-    },
-    {
-      id: 'student-5',
-      name: 'Ethan Brown',
-      email: 'ethan.brown@student.codify.lms',
-      role: 'student' as const,
-      status: 'inactive',
-      joinDate: '2024-08-15',
-      lastActive: '2 weeks ago',
-      coursesEnrolled: 1,
-      progress: 42,
-      points: 680,
-    },
-  ];
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const [targetBatch, setTargetBatch] = useState('');
+  const [editUserData, setEditUserData] = useState({ name: '', email: '', role: '' });
+  const [emailDraft, setEmailDraft] = useState({ to: '', subject: '', message: '' });
+
+  const allUsers = useMemo(
+    () => [
+      ...users,
+      {
+        id: 'admin-2',
+        name: 'Jessica Parker',
+        email: 'jessica.parker@codify.lms',
+        role: 'admin' as const,
+        status: 'active',
+        joinDate: '2024-01-15',
+        lastActive: '2 hours ago',
+      },
+      {
+        id: 'faculty-3',
+        name: 'David Kim',
+        email: 'david.kim@codify.lms',
+        role: 'faculty' as const,
+        status: 'active',
+        joinDate: '2024-02-20',
+        lastActive: '1 day ago',
+        batchesAssigned: 3,
+        studentsManaged: 85,
+      },
+      {
+        id: 'student-4',
+        name: 'Isabella Garcia',
+        email: 'isabella.garcia@student.codify.lms',
+        role: 'student' as const,
+        status: 'active',
+        joinDate: '2024-09-01',
+        lastActive: '5 min ago',
+        coursesEnrolled: 2,
+        progress: 78,
+        points: 1150,
+      },
+      {
+        id: 'student-5',
+        name: 'Ethan Brown',
+        email: 'ethan.brown@student.codify.lms',
+        role: 'student' as const,
+        status: 'inactive',
+        joinDate: '2024-08-15',
+        lastActive: '2 weeks ago',
+        coursesEnrolled: 1,
+        progress: 42,
+        points: 680,
+      },
+    ],
+    [],
+  );
 
   const stats = {
     totalUsers: allUsers.length,
     admins: allUsers.filter(u => u.role === 'admin').length,
-    faculty: allUsers.filter(u => u.role === 'faculty').length,
+    faculty: allUsers.filter(u => u.role === 'faculty' || u.role === 'trainer').length,
     students: allUsers.filter(u => u.role === 'student').length,
     activeToday: 128,
   };
 
+  const yearOptions = useMemo(() => Array.from(new Set(batches.map(b => b.year))).sort((a, b) => b.localeCompare(a)), []);
+
+  const filteredUsers = useMemo(() => {
+    return allUsers.filter((user: any) => {
+      const search = searchQuery.toLowerCase();
+      const matchesSearch =
+        (user.name || '').toLowerCase().includes(search) ||
+        (user.email || '').toLowerCase().includes(search);
+
+      const matchesRole = filterRole === 'all' || user.role === filterRole;
+
+      const userBatch = user.batchId ? batches.find(b => b.id === user.batchId) : undefined;
+      const matchesInstitution = institutionFilter === 'all' || (!!userBatch && userBatch.institutionId === institutionFilter);
+      const matchesYear = yearFilter === 'all' || (!!userBatch && userBatch.year === yearFilter);
+
+      return matchesSearch && matchesRole && matchesInstitution && matchesYear;
+    });
+  }, [allUsers, searchQuery, filterRole, institutionFilter, yearFilter]);
+
   const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'admin': return <Shield className="w-4 h-4" />;
-      case 'faculty': return <GraduationCap className="w-4 h-4" />;
-      case 'student': return <BookOpen className="w-4 h-4" />;
-      default: return <Users className="w-4 h-4" />;
-    }
+    if (role === 'admin') return <Shield className="w-4 h-4" />;
+    if (role === 'faculty' || role === 'trainer') return <GraduationCap className="w-4 h-4" />;
+    if (role === 'student') return <BookOpen className="w-4 h-4" />;
+    return <Users className="w-4 h-4" />;
   };
 
   const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'var(--color-primary)';
-      case 'faculty': return 'var(--color-secondary)';
-      case 'student': return 'var(--color-accent)';
-      default: return 'var(--color-neutral)';
-    }
+    if (role === 'admin') return 'var(--color-primary)';
+    if (role === 'faculty' || role === 'trainer') return 'var(--color-secondary)';
+    if (role === 'student') return 'var(--color-accent)';
+    return 'var(--color-neutral)';
   };
 
-  const filteredUsers = allUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = filterRole === 'all' || user.role === filterRole;
-    return matchesSearch && matchesRole;
-  });
+  const openEditDialog = (user: any) => {
+    setSelectedUser(user);
+    setEditUserData({ name: user.name || '', email: user.email || '', role: user.role || '' });
+    setEditDialogOpen(true);
+  };
+
+  const openEmailDialog = (user: any) => {
+    setSelectedUser(user);
+    setEmailDraft({ to: user.email || '', subject: '', message: '' });
+    setEmailDialogOpen(true);
+  };
+
+  const openMoveDialog = (user: any) => {
+    setSelectedUser(user);
+    setTargetBatch('');
+    setMoveDialogOpen(true);
+  };
+
+  const handleSendEmail = () => {
+    if (!emailDraft.to || !emailDraft.subject || !emailDraft.message) {
+      toast.error('Please fill recipient, subject, and message');
+      return;
+    }
+    toast.success(`Email sent to ${emailDraft.to}`);
+    setEmailDialogOpen(false);
+    setEmailDraft({ to: '', subject: '', message: '' });
+  };
 
   const handleMoveUser = () => {
+    if (!selectedUser) return;
     if (!targetBatch) {
       toast.error('Please select a target batch');
       return;
     }
-    toast.success(`${userToMove.name} moved to ${batches.find(b => b.id === targetBatch)?.name}`);
-    setMoveUserDialogOpen(false);
-    setUserToMove(null);
+    const batchName = batches.find(b => b.id === targetBatch)?.name || 'selected batch';
+    toast.success(`${selectedUser.name} moved to ${batchName}`);
+    setMoveDialogOpen(false);
+    setSelectedUser(null);
     setTargetBatch('');
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2>User Management</h2>
-          <p className="text-neutral-600 mt-1">
-            Manage users, roles, and permissions across the platform
-          </p>
+          <h2 className="text-3xl font-bold text-neutral-900">User Management</h2>
+          <p className="text-neutral-600 mt-1">Manage users, roles, and permissions across the platform</p>
         </div>
-<Dialog>
-            <DialogTrigger asChild>
-              <Button style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => setAddUserDialogOpen(true)}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add User
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New User</DialogTitle>
-                <DialogDescription>
-                  Create a new user account on the platform
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="John Doe" 
-                    value={newUserData.name}
-                    onChange={(e) => setNewUserData({ ...newUserData, name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="john.doe@example.com" 
-                    value={newUserData.email}
-                    onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={newUserData.role} onValueChange={(v) => setNewUserData({ ...newUserData, role: v })}>
-                    <SelectTrigger id="role">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="faculty">Faculty/Trainer</SelectItem>
-                      <SelectItem value="student">Student</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Temporary Password</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    placeholder="••••••••" 
-                    value={newUserData.password}
-                    onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    className="flex-1" 
-                    style={{ backgroundColor: 'var(--color-primary)' }}
-                    onClick={() => {
-                      if (!newUserData.name || !newUserData.email || !newUserData.role) {
-                        toast.error('Please fill all required fields');
-                        return;
-                      }
-                      toast.success(`User "${newUserData.name}" created successfully`);
-                      setNewUserData({ name: '', email: '', role: '', password: '' });
-                    }}
-                  >
-                    Create User
-                  </Button>
-                  <Button variant="outline" className="flex-1">
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+        <Button style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => toast.info('Use Add User flow from this panel')}>
+          <UserPlus className="w-4 h-4 mr-2" />
+          Add User
+        </Button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-600">Total Users</p>
-                <h3 className="mt-1">{stats.totalUsers}</h3>
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
-                <Users className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-600">Admins</p>
-                <h3 className="mt-1">{stats.admins}</h3>
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}>
-                <Shield className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-600">Faculty</p>
-                <h3 className="mt-1">{stats.faculty}</h3>
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(20, 184, 166, 0.1)' }}>
-                <GraduationCap className="w-5 h-5" style={{ color: 'var(--color-secondary)' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-600">Students</p>
-                <h3 className="mt-1">{stats.students}</h3>
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
-                <BookOpen className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-neutral-600">Active Today</p>
-                <h3 className="mt-1">{stats.activeToday}</h3>
-              </div>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-100">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Total Users</p><h3 className="mt-1">{stats.totalUsers}</h3></div><div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}><Users className="w-5 h-5" style={{ color: 'var(--color-primary)' }} /></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Admins</p><h3 className="mt-1">{stats.admins}</h3></div><div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}><Shield className="w-5 h-5" style={{ color: 'var(--color-primary)' }} /></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Faculty/Trainers</p><h3 className="mt-1">{stats.faculty}</h3></div><div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(20, 184, 166, 0.1)' }}><GraduationCap className="w-5 h-5" style={{ color: 'var(--color-secondary)' }} /></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Students</p><h3 className="mt-1">{stats.students}</h3></div><div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}><BookOpen className="w-5 h-5" style={{ color: 'var(--color-accent)' }} /></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center justify-between"><div><p className="text-sm text-neutral-600">Active Today</p><h3 className="mt-1">{stats.activeToday}</h3></div><div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-100"><CheckCircle2 className="w-5 h-5 text-green-600" /></div></div></CardContent></Card>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
-          <Input
-            placeholder="Search users by name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={filterRole} onValueChange={setFilterRole}>
-          <SelectTrigger className="w-40">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="faculty">Faculty</SelectItem>
-            <SelectItem value="student">Student</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Users ({filteredUsers.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center justify-between p-4 border border-neutral-200 rounded-lg hover:border-neutral-300 hover:shadow-sm transition-all duration-200"
-              >
-                <div className="flex items-center gap-4 flex-1">
-                  <Avatar className="w-12 h-12">
-                    <AvatarFallback style={{ backgroundColor: getRoleColor(user.role), color: 'white' }}>
-                      {user.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{user.name}</p>
-                      <Badge 
-                        variant="outline"
-                        style={{ 
-                          borderColor: getRoleColor(user.role),
-                          color: getRoleColor(user.role)
-                        }}
-                        className="flex items-center gap-1"
-                      >
-                        {getRoleIcon(user.role)}
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                      </Badge>
-                      {(user as any).status === 'inactive' && (
-                        <Badge variant="outline" className="border-neutral-400 text-neutral-600">
-                          Inactive
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-neutral-600">
-                      <div className="flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        {user.email}
-                      </div>
-                      {(user as any).lastActive && (
-                        <span>Last active: {(user as any).lastActive}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  {user.role === 'faculty' && (user as any).batchesAssigned && (
-                    <div className="text-sm text-center">
-                      <p className="text-neutral-600">Batches</p>
-                      <p className="font-medium">{(user as any).batchesAssigned}</p>
-                    </div>
-                  )}
-                  {user.role === 'faculty' && (user as any).studentsManaged && (
-                    <div className="text-sm text-center">
-                      <p className="text-neutral-600">Students</p>
-                      <p className="font-medium">{(user as any).studentsManaged}</p>
-                    </div>
-                  )}
-                  {user.role === 'student' && (user as any).progress !== undefined && (
-                    <div className="text-sm text-center">
-                      <p className="text-neutral-600">Progress</p>
-                      <p className="font-medium">{(user as any).progress}%</p>
-                    </div>
-                  )}
-                  {user.role === 'student' && (user as any).points !== undefined && (
-                    <div className="text-sm text-center">
-                      <p className="text-neutral-600">Points</p>
-                      <p className="font-medium" style={{ color: 'var(--color-primary)' }}>
-                        {(user as any).points}
-                      </p>
-                    </div>
-                  )}
-
-<div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => {
-                        setSelectedUser(user);
-                        setEditUserData({ name: user.name, email: user.email, role: user.role });
-                        setEditUserDialogOpen(true);
-                      }}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    {user.role === 'student' && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setUserToMove(user);
-                          setMoveUserDialogOpen(true);
-                        }}
-                        className="border-blue-300 text-blue-600 hover:bg-blue-50"
-                      >
-                        <MoveRight className="w-4 h-4 mr-1" />
-                        Move
-                      </Button>
-                    )}
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-sm">
-                        <DialogHeader>
-                          <DialogTitle>User Actions</DialogTitle>
-                          <DialogDescription>
-                            Manage user {user.name}
-                          </DialogDescription>
-                        </DialogHeader>
-<div className="space-y-2">
-                            <Button variant="outline" className="w-full justify-start" onClick={() => {
-                              setSelectedUser(user);
-                              setEditUserData({ name: user.name, email: user.email, role: user.role });
-                              setEditUserDialogOpen(true);
-                            }}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit Profile
-                            </Button>
-                            <Button variant="outline" className="w-full justify-start" onClick={() => {
-                              toast.success(`Email sent to ${user.email}`);
-                            }}>
-                              <Mail className="w-4 h-4 mr-2" />
-                              Send Email
-                            </Button>
-                            {user.role === 'student' && (
-                              <Button 
-                                variant="outline" 
-                                className="w-full justify-start"
-                                onClick={() => {
-                                  setUserToMove(user);
-                                  setMoveUserDialogOpen(true);
-                                }}
-                              >
-                                <MoveRight className="w-4 h-4 mr-2" />
-                                Move User to Batch
-                              </Button>
-                            )}
-                            <Button variant="outline" className="w-full justify-start" onClick={() => {
-                              toast.success(`Role change dialog for ${user.name}`);
-                            }}>
-                              <Shield className="w-4 h-4 mr-2" />
-                              Change Role
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              className="w-full justify-start border-yellow-500 text-yellow-600 hover:bg-yellow-50"
-                              onClick={() => toast.warning(`${user.name}'s account has been suspended`)}
-                            >
-                              <Ban className="w-4 h-4 mr-2" />
-                              Suspend Account
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              className="w-full justify-start border-red-500 text-red-600 hover:bg-red-50"
-                              onClick={() => toast.error(`${user.name}'s account has been deleted`)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete User
-                            </Button>
-                          </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Move User Dialog */}
-      <Dialog open={moveUserDialogOpen} onOpenChange={setMoveUserDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Move User to Different Batch</DialogTitle>
-            <DialogDescription>
-              Move {userToMove?.name} to a different batch
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Current Batch</Label>
-              <Input 
-                value={batches.find(b => b.id === userToMove?.batchId)?.name || 'No batch assigned'} 
-                disabled 
-                className="bg-neutral-50"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="target-batch">Target Batch</Label>
-              <Select value={targetBatch} onValueChange={setTargetBatch}>
-                <SelectTrigger id="target-batch">
-                  <SelectValue placeholder="Select target batch" />
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+        <Card className="xl:col-span-3">
+          <CardHeader>
+            <CardTitle className="text-base">Institution and Batch Year</CardTitle>
+            <CardDescription>Filter users by institution and batch year</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Institution</Label>
+              <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All institutions" />
                 </SelectTrigger>
                 <SelectContent>
-                  {batches.map((batch) => (
-                    <SelectItem key={batch.id} value={batch.id}>
-                      {batch.name}
-                    </SelectItem>
+                  <SelectItem value="all">All institutions</SelectItem>
+                  {institutions.map(inst => (
+                    <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2 pt-2">
-              <Button 
-                className="flex-1" 
-                style={{ backgroundColor: 'var(--color-primary)' }}
-                onClick={handleMoveUser}
-              >
-                <MoveRight className="w-4 h-4 mr-2" />
-                Move User
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => {
-                  setMoveUserDialogOpen(false);
-                  setUserToMove(null);
-                  setTargetBatch('');
-                }}
-              >
-                Cancel
-              </Button>
+            <div>
+              <Label>Batch Year</Label>
+              <Select value={yearFilter} onValueChange={setYearFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All years" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All years</SelectItem>
+                  {yearOptions.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" className="w-full" onClick={() => { setInstitutionFilter('all'); setYearFilter('all'); }}>
+              Clear Filters
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="xl:col-span-9 space-y-4 min-w-0">
+          <div className="flex flex-wrap gap-2">
+            <div className="relative flex-1 min-w-[240px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <Input
+                placeholder="Search users by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={filterRole} onValueChange={(v: RoleFilter) => setFilterRole(v)}>
+              <SelectTrigger className="w-[170px]">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="faculty">Faculty</SelectItem>
+                <SelectItem value="trainer">Trainer</SelectItem>
+                <SelectItem value="student">Student</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>All Users ({filteredUsers.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {filteredUsers.map((user: any) => (
+                  <div
+                    key={user.id}
+                    className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 p-4 border border-neutral-200 rounded-lg hover:border-neutral-300 hover:shadow-sm transition-all duration-200"
+                  >
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <Avatar className="w-12 h-12">
+                        <AvatarFallback style={{ backgroundColor: getRoleColor(user.role), color: 'white' }}>
+                          {(user.name || 'U').split(' ').map((n: string) => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium break-words">{user.name}</p>
+                          <Badge variant="outline" style={{ borderColor: getRoleColor(user.role), color: getRoleColor(user.role) }} className="flex items-center gap-1 whitespace-nowrap">
+                            {getRoleIcon(user.role)}
+                            {String(user.role).charAt(0).toUpperCase() + String(user.role).slice(1)}
+                          </Badge>
+                          {user.status === 'inactive' && (
+                            <Badge variant="outline" className="border-neutral-400 text-neutral-600">Inactive</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-sm text-neutral-600 flex-wrap">
+                          <div className="flex items-center gap-1 break-all"><Mail className="w-3 h-3 shrink-0" />{user.email}</div>
+                          {user.lastActive && <span>Last active: {user.lastActive}</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap lg:justify-end">
+                      <Button variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => openEditDialog(user)}><Edit className="w-4 h-4" /></Button>
+                      <Button variant="outline" size="sm" className="h-9 w-9 p-0" onClick={() => openEmailDialog(user)}><Send className="w-4 h-4" /></Button>
+                      {user.role === 'student' && (
+                        <Button variant="outline" size="sm" onClick={() => openMoveDialog(user)} className="border-blue-300 text-blue-600 hover:bg-blue-50 whitespace-nowrap">
+                          <MoveRight className="w-4 h-4 mr-1" /><span className="hidden sm:inline">Move</span>
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" className="h-9 w-9 p-0 border-yellow-500 text-yellow-600 hover:bg-yellow-50" onClick={() => toast.warning(`${user.name}'s account has been suspended`)}>
+                        <Ban className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-9 w-9 p-0 border-red-500 text-red-600 hover:bg-red-50" onClick={() => toast.error(`${user.name}'s account has been deleted`)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+                {filteredUsers.length === 0 && (
+                  <div className="text-center py-10 text-neutral-500 border border-dashed rounded-lg bg-neutral-50">
+                    No users found for the current filters.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Send Email</DialogTitle>
+            <DialogDescription>Compose and send a message.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div><Label>To</Label><Input value={emailDraft.to} onChange={(e) => setEmailDraft({ ...emailDraft, to: e.target.value })} /></div>
+            <div><Label>Subject</Label><Input value={emailDraft.subject} onChange={(e) => setEmailDraft({ ...emailDraft, subject: e.target.value })} /></div>
+            <div><Label>Message</Label><Textarea rows={5} value={emailDraft.message} onChange={(e) => setEmailDraft({ ...emailDraft, message: e.target.value })} /></div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleSendEmail}>Send Email</Button>
             </div>
           </div>
-</DialogContent>
-        </Dialog>
+        </DialogContent>
+      </Dialog>
 
-        {/* Edit User Dialog */}
-        <Dialog open={editUserDialogOpen} onOpenChange={setEditUserDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
-              <DialogDescription>
-                Update user information for {selectedUser?.name}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Full Name</Label>
-                <Input 
-                  id="edit-name" 
-                  value={editUserData.name}
-                  onChange={(e) => setEditUserData({ ...editUserData, name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">Email</Label>
-                <Input 
-                  id="edit-email" 
-                  type="email" 
-                  value={editUserData.email}
-                  onChange={(e) => setEditUserData({ ...editUserData, email: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-role">Role</Label>
-                <Select value={editUserData.role} onValueChange={(v) => setEditUserData({ ...editUserData, role: v })}>
-                  <SelectTrigger id="edit-role">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="faculty">Faculty</SelectItem>
-                    <SelectItem value="trainer">Trainer</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button 
-                  className="flex-1" 
-                  style={{ backgroundColor: 'var(--color-primary)' }}
-                  onClick={() => {
-                    toast.success(`User "${editUserData.name}" updated successfully`);
-                    setEditUserDialogOpen(false);
-                    setSelectedUser(null);
-                  }}
-                >
-                  Save Changes
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => {
-                    setEditUserDialogOpen(false);
-                    setSelectedUser(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
+      <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move User to Different Batch</DialogTitle>
+            <DialogDescription>Move {selectedUser?.name} to a different batch.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Target Batch</Label>
+              <Select value={targetBatch} onValueChange={setTargetBatch}>
+                <SelectTrigger><SelectValue placeholder="Select target batch" /></SelectTrigger>
+                <SelectContent>
+                  {batches.map(batch => (
+                    <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    );
-  }
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={handleMoveUser}><MoveRight className="w-4 h-4 mr-2" />Move User</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setMoveDialogOpen(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>Update information for {selectedUser?.name}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div><Label>Full Name</Label><Input value={editUserData.name} onChange={(e) => setEditUserData({ ...editUserData, name: e.target.value })} /></div>
+            <div><Label>Email</Label><Input value={editUserData.email} onChange={(e) => setEditUserData({ ...editUserData, email: e.target.value })} /></div>
+            <div>
+              <Label>Role</Label>
+              <Select value={editUserData.role || undefined} onValueChange={(v) => setEditUserData({ ...editUserData, role: v })}>
+                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="faculty">Faculty</SelectItem>
+                  <SelectItem value="trainer">Trainer</SelectItem>
+                  <SelectItem value="student">Student</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={() => { toast.success(`User "${editUserData.name}" updated successfully`); setEditDialogOpen(false); }}>
+                Save Changes
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
