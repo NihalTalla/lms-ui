@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Course, Topic } from '../lib/data';
 import { toast } from 'sonner';
+import { EdRealmLogo } from './EdRealmLogo';
 
 interface StudentModuleViewProps {
   course: Course;
@@ -151,10 +152,11 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
 
         <div className="p-8 pb-4 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm border border-neutral-100">
-              <Code2 className="w-6 h-6 text-neutral-900" />
-            </div>
-            {!sidebarMinimized && <span className="font-bold text-2xl tracking-tight text-neutral-900">Codify</span>}
+            {!sidebarMinimized ? (
+              <EdRealmLogo size="small" />
+            ) : (
+              <div className="bg-black text-white px-2 py-1 rounded shadow-sm text-sm font-black">ED</div>
+            )}
           </div>
 
           {!sidebarMinimized && (

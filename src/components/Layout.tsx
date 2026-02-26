@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { toast } from 'sonner';
+import { EdRealmLogo } from './EdRealmLogo';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -87,8 +88,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
               className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => onNavigate('dashboard')}
             >
-              <Code2 className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
-              <span className="font-bold text-xl">Codify LMS</span>
+              <EdRealmLogo size="small" />
               <div
                 className="px-2 py-1 rounded text-xs capitalize"
                 style={{
