@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { useAuth } from '../lib/auth-context';
 import { recordSubmission } from '../lib/submission-store';
+import { EdRealmLogo } from './EdRealmLogo';
 
 interface CodingChallengeUIProps {
   topicTitle: string;
@@ -147,6 +148,7 @@ export function CodingChallengeUI({
           <Button variant="ghost" onClick={onBack} className="p-0 hover:bg-transparent text-neutral-500 hover:text-neutral-900 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Button>
+          <EdRealmLogo size="small" />
 
           <div className="flex flex-col">
             <div className="flex items-center gap-3">

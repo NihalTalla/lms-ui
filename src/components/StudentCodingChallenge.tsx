@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'sonner';
 import { useAuth } from '../lib/auth-context';
 import { recordSubmission } from '../lib/submission-store';
+import { EdRealmLogo } from './EdRealmLogo';
 
 interface StudentCodingChallengeProps {
   challenge: any;
@@ -152,14 +153,17 @@ export function StudentCodingChallenge({
     <div className="fixed inset-0 z-50 h-screen w-screen flex flex-col bg-neutral-50 overflow-hidden">
       {/* Header with Back button and Score */}
       <div className="px-6 py-4 bg-white border-b border-neutral-200 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          className="text-neutral-700 hover:bg-neutral-100"
-          onClick={onBack}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Module
-        </Button>
+        <div className="flex items-center gap-4">
+          <EdRealmLogo size="small" />
+          <Button
+            variant="ghost"
+            className="text-neutral-700 hover:bg-neutral-100"
+            onClick={onBack}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Module
+          </Button>
+        </div>
         {lastScore !== null && (
           <div className="text-sm font-semibold text-neutral-900">
             Score: <span style={{ color: 'var(--color-accent)' }}>{lastScore}/100</span>

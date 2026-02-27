@@ -15,6 +15,7 @@ import {
   Search,
 } from 'lucide-react';
 import { TopicQuestion } from '../lib/data';
+import { EdRealmLogo } from './EdRealmLogo';
 
 interface AssignmentListingPageProps {
   assignment: TopicQuestion;
@@ -96,6 +97,7 @@ export function AssignmentListingPage({
             <span className="font-bold text-neutral-900">{moduleName}</span>
           </div>
         </div>
+        <EdRealmLogo size="small" />
       </header>
 
       <div className="flex-1 overflow-y-auto p-10">

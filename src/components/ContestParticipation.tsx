@@ -20,10 +20,10 @@ import {
   GripHorizontal,
   List,
   Play,
-  Code2,
   Trophy,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { EdRealmLogo } from './EdRealmLogo';
 
 interface Question {
   id: string;
@@ -343,7 +343,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
       {/* HEADER */}
       <header className="h-16 bg-white border-b border-neutral-200 px-6 flex items-center justify-between shrink-0 z-50">
         <div className="flex items-center gap-4">
-          <Code2 className="w-6 h-6 text-neutral-900" />
+          <EdRealmLogo size="small" />
           <h1 className="font-bold text-lg">{contestTitle}</h1>
           <div className="h-6 w-px bg-neutral-200 mx-2" />
           <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 border-none font-medium">Question {currentQuestionIndex + 1} / {questions.length}</Badge>

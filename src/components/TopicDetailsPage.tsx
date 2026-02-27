@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { EdRealmLogo } from './EdRealmLogo';
 
 interface Topic {
   id: string;
@@ -116,6 +117,11 @@ export function TopicDetailsPage({
             >
               <ChevronRight className={`w-4 h-4 transition-transform ${sidebarMinimized ? '' : 'rotate-180'}`} />
             </Button>
+            {!sidebarMinimized && (
+              <div className="bg-white rounded-md px-2 py-1">
+                <EdRealmLogo size="small" />
+              </div>
+            )}
           </div>
           {!sidebarMinimized && (
             <>

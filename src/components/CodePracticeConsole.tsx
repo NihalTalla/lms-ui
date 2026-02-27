@@ -9,6 +9,7 @@ import { Play, RotateCcw, ArrowLeft, Save, Download, FolderOpen, Trash2, Chevron
 import Editor from '@monaco-editor/react';
 import { FileManager, SavedFile } from '../lib/fileManager';
 import { toast } from 'sonner';
+import { EdRealmLogo } from './EdRealmLogo';
 
 export function CodePracticeConsole({ onBack, className = "h-screen" }: { onBack?: () => void; className?: string }) {
   const templates: Record<string, string> = {
@@ -109,6 +110,7 @@ export function CodePracticeConsole({ onBack, className = "h-screen" }: { onBack
         <CardHeader>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-4">
+              <EdRealmLogo size="small" />
               {onBack && (
                 <Button onClick={onBack} variant="ghost" size="sm">
                   <ArrowLeft className="w-4 h-4 mr-2" />

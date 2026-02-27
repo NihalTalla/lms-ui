@@ -33,6 +33,7 @@ import Editor from '@monaco-editor/react';
 import { FileManager, SavedFile } from '../lib/fileManager';
 import { useAuth } from '../lib/auth-context';
 import { recordSubmission } from '../lib/submission-store';
+import { EdRealmLogo } from './EdRealmLogo';
 
 interface CodeEditorProps {
   problem: Problem;
@@ -228,6 +229,8 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
       {/* Top Toolbar */}
       <div className="bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
+          <EdRealmLogo size="small" />
+          <Separator orientation="vertical" className="h-6" />
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back
