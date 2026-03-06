@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -9,8 +9,8 @@ import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { BookOpen, Clock, Users, Award, ArrowRight, Star, Plus, Edit, Trash2, Eye, Lock, Unlock, ChevronDown, ChevronRight, Code, Play, Download, FileText, ArrowLeft, Image as ImageIcon, Search } from 'lucide-react';
-import { courses, institutions, batches, Topic, TopicQuestion } from '../lib/data';
+import { BookOpen, Clock, Users, Award, ArrowRight, Star, Plus, Edit, Trash2, Eye, Lock, Unlock, ChevronDown, ChevronRight, Code, Play, Download, FileText, ArrowLeft, Image as ImageIcon, Search, Calendar, CheckCircle2 } from 'lucide-react';
+import { courses, institutions, batches, users, Topic, TopicQuestion } from '../lib/data';
 import { CodePracticeConsole } from './CodePracticeConsole';
 import { useAuth } from '../lib/auth-context';
 import { toast } from 'sonner';
@@ -19,6 +19,31 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './
 interface CoursesPageProps {
   onNavigate: (page: string, data?: any) => void;
 }
+
+interface AttendanceSession {
+  id: string;
+  courseId: string;
+  courseTitle: string;
+  batchId?: string;
+  createdAt: string;
+  markedStudentIds: string[];
+  totalStudentIds: string[];
+  status: 'open' | 'closed';
+}
+
+const ATTENDANCE_KEY = 'attendance_sessions_store';
+
+const loadAttendanceSessions = (): AttendanceSession[] => {
+  if (typeof window === 'undefined') return [];
+  const raw = localStorage.getItem(ATTENDANCE_KEY);
+  if (!raw) return [];
+  try { return JSON.parse(raw) as AttendanceSession[]; } catch { return []; }
+};
+
+const saveAttendanceSessions = (data: AttendanceSession[]) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(data));
+};
 
 export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const { currentUser } = useAuth();
@@ -68,15 +93,26 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const [viewCourse, setViewCourse] = useState<any>(null);
 
   // Management Templates State
-  const [mgmtStep, setMgmtStep] = useState<'list' | 'topics' | 'details' | 'assessment'>('list');
+  const [mgmtStep, setMgmtStep] = useState<'list' | 'topics' | 'details' | 'assessment' | 'attendance'>('list');
   const [activeMgmtCourse, setActiveMgmtCourse] = useState<any>(null);
   const [activeMgmtTopic, setActiveMgmtTopic] = useState<any>(null);
   const [activeMgmtTopicIndex, setActiveMgmtTopicIndex] = useState<number>(-1);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [topicSearch, setTopicSearch] = useState('');
+  const [attendanceSessions, setAttendanceSessions] = useState<AttendanceSession[]>([]);
+  const [activeAttendance, setActiveAttendance] = useState<AttendanceSession | null>(null);
+
+  const attendanceStudents = useMemo(() => {
+    if (!activeMgmtCourse) return [];
+    return users.filter(u =>
+      u.role === 'student' &&
+      (!activeMgmtCourse.batchId || u.batchId === activeMgmtCourse.batchId)
+    );
+  }, [activeMgmtCourse]);
 
   // Guard against stale selections causing blank screens
   useEffect(() => {
-    if ((mgmtStep === 'topics' || mgmtStep === 'details' || mgmtStep === 'assessment') && activeMgmtCourse) {
+    if ((mgmtStep === 'topics' || mgmtStep === 'details' || mgmtStep === 'assessment' || mgmtStep === 'attendance') && activeMgmtCourse) {
       const exists = courseList.find(c => c.id === activeMgmtCourse.id);
       if (!exists) {
         setMgmtStep('list');
@@ -90,6 +126,27 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       setActiveMgmtTopicIndex(-1);
     }
   }, [courseList, activeMgmtCourse, activeMgmtTopic, mgmtStep]);
+
+  useEffect(() => {
+    setAttendanceSessions(loadAttendanceSessions());
+  }, []);
+
+  useEffect(() => {
+    saveAttendanceSessions(attendanceSessions);
+  }, [attendanceSessions]);
+
+  useEffect(() => {
+    if (mgmtStep !== 'attendance') return;
+    const interval = setInterval(() => {
+      const next = loadAttendanceSessions();
+      setAttendanceSessions(next);
+      if (activeMgmtCourse) {
+        const openSession = next.find(s => s.courseId === activeMgmtCourse.id && s.status === 'open');
+        setActiveAttendance(openSession || null);
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [mgmtStep, activeMgmtCourse]);
 
   const handleTopicToggleLock = (topicIndex: number) => {
     const updatedTopics = newCourse.topics.map((t, i) =>
@@ -384,6 +441,54 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
     setMgmtStep('assessment');
   };
 
+  const handleOpenAttendance = () => {
+    if (!activeMgmtCourse) return;
+    const openSession = attendanceSessions.find(s => s.courseId === activeMgmtCourse.id && s.status === 'open');
+    setActiveAttendance(openSession || null);
+    setMgmtStep('attendance');
+  };
+
+  const handlePostAttendance = () => {
+    if (!activeMgmtCourse) return;
+    const existing = attendanceSessions.find(s => s.courseId === activeMgmtCourse.id && s.status === 'open');
+    if (existing) {
+      setActiveAttendance(existing);
+      toast.info('Attendance already active for this course');
+      return;
+    }
+    const session: AttendanceSession = {
+      id: `att-${Date.now()}`,
+      courseId: activeMgmtCourse.id,
+      courseTitle: activeMgmtCourse.title,
+      batchId: activeMgmtCourse.batchId,
+      createdAt: new Date().toISOString(),
+      markedStudentIds: [],
+      totalStudentIds: attendanceStudents.map(s => s.id),
+      status: 'open',
+    };
+    const next = [session, ...attendanceSessions];
+    setAttendanceSessions(next);
+    setActiveAttendance(session);
+    toast.success('Attendance posted');
+  };
+
+  const handleCloseAttendance = () => {
+    if (!activeAttendance) return;
+    const next = attendanceSessions.map(s =>
+      s.id === activeAttendance.id ? { ...s, status: 'closed' } : s
+    );
+    setAttendanceSessions(next);
+    setActiveAttendance(null);
+    toast.success('Attendance closed');
+  };
+
+  const filteredTopics = useMemo(() => {
+    if (!activeMgmtCourse?.topics) return [];
+    return activeMgmtCourse.topics.filter((t: Topic) =>
+      t.title.toLowerCase().includes(topicSearch.toLowerCase())
+    );
+  }, [activeMgmtCourse, topicSearch]);
+
 
   return (
     <div className="space-y-6">
@@ -501,91 +606,30 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       {
         isAdmin && mgmtStep === 'topics' && activeMgmtCourse && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">
                 <Button variant="outline" size="sm" onClick={handleBackToCourses} className="rounded-full h-9 bg-white shadow-sm border-neutral-200">
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back
                 </Button>
-                <h2 className="text-xl font-bold text-neutral-800">{activeMgmtCourse.title} <span className="text-neutral-400 font-normal">/ Topics</span></h2>
+                <div>
+                  <h2 className="text-xl font-bold text-neutral-800">{activeMgmtCourse.title} <span className="text-neutral-400 font-normal">/ Topics</span></h2>
+                  <p className="text-sm text-neutral-500">Search topics and track question counts like LeetCode.</p>
+                </div>
               </div>
-              <Button size="sm" className="bg-primary text-primary-foreground shadow-md hover:shadow-lg transition-all rounded-full h-9" onClick={() => {
-                const newTopic: Topic = {
-                  id: `topic-${Date.now()}`,
-                  title: 'New Topic',
-                  content: '',
-                  questions: [],
-                  isLocked: false,
-                  durationLocked: false,
-                  images: [],
-                };
-                const updatedTopics = [...(activeMgmtCourse.topics || []), newTopic];
-                const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
-                setActiveMgmtCourse(updatedCourse);
-                setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-                handleOpenTopicDetails(newTopic, updatedTopics.length - 1);
-                toast.success('New topic added');
-              }}>
-                <Plus className="w-4 h-4 mr-2" /> New Topic
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {activeMgmtCourse.topics?.map((topic: Topic, idx: number) => (
-                <Card key={topic.id} className="group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer bg-white" onClick={() => handleOpenTopicDetails(topic, idx)}>
-                  <div className={`absolute top-0 left-0 w-1 h-full ${topic.isLocked ? 'bg-red-400' : 'bg-primary'}`} />
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 font-bold text-[10px] uppercase tracking-wider">Module {idx + 1}</Badge>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full bg-neutral-50 hover:bg-white" onClick={(e) => {
-                          e.stopPropagation();
-                          const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
-                            i === idx ? { ...t, isLocked: !t.isLocked } : t
-                          );
-                          const updatedCourse = { ...activeMgmtCourse, topics: updated };
-                          setActiveMgmtCourse(updatedCourse);
-                          setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-                          toast.success(`Topic ${updated[idx].isLocked ? 'locked' : 'unlocked'}`);
-                        }}>
-                          {topic.isLocked ? <Lock className="w-3.5 h-3.5 text-red-500" /> : <Unlock className="w-3.5 h-3.5 text-green-500" />}
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full bg-neutral-50 hover:bg-red-50" onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm('Are you sure you want to delete this topic? This action cannot be undone.')) {
-                            const updatedTopics = activeMgmtCourse.topics.filter((_: any, i: number) => i !== idx);
-                            const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
-                            setActiveMgmtCourse(updatedCourse);
-                            setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-                            toast.success('Topic deleted successfully');
-                          }
-                        }}>
-                          <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                        </Button>
-                      </div>
-                    </div>
-                    <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors">{topic.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-neutral-500 line-clamp-3 mb-6 min-h-[3rem] leading-relaxed">{topic.content || 'Click to add content...'}</p>
-                    <div className="flex items-center gap-4 py-3 border-t border-neutral-50">
-                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
-                        <FileText className="w-3.5 h-3.5" /> {topic.questions?.length || 0} Questions
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-400">
-                        <Clock className="w-3.5 h-3.5" /> {topic.accessDuration || 'Unlimited'}
-                      </div>
-                    </div>
-                  </CardContent>
-                  <div className="px-6 py-3 bg-neutral-50/50 flex justify-end">
-                    <span className="text-[10px] font-bold uppercase text-primary tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all">
-                      Configure Topic <ChevronRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </Card>
-              ))}
-
-              <Card className="border-2 border-dashed border-neutral-200 bg-neutral-50/30 flex flex-col items-center justify-center p-12 text-neutral-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group"
-                onClick={() => {
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                  <Input
+                    placeholder="Search topics..."
+                    value={topicSearch}
+                    onChange={(e) => setTopicSearch(e.target.value)}
+                    className="pl-9 w-64 bg-white"
+                  />
+                </div>
+                <Button variant="outline" size="sm" className="rounded-full h-9" onClick={handleOpenAttendance}>
+                  <Calendar className="w-4 h-4 mr-2" /> Attendance
+                </Button>
+                <Button size="sm" className="bg-primary text-primary-foreground shadow-md hover:shadow-lg transition-all rounded-full h-9" onClick={() => {
                   const newTopic: Topic = {
                     id: `topic-${Date.now()}`,
                     title: 'New Topic',
@@ -602,15 +646,171 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                   handleOpenTopicDetails(newTopic, updatedTopics.length - 1);
                   toast.success('New topic added');
                 }}>
-                <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Plus className="w-8 h-8" />
+                  <Plus className="w-4 h-4 mr-2" /> New Topic
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-neutral-200 bg-white text-neutral-900 p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-neutral-500" />
+                  <span className="font-semibold">Topics</span>
                 </div>
-                <span className="font-bold text-sm tracking-wide">Add New Module</span>
-              </Card>
+                <span className="text-xs text-neutral-500">{filteredTopics.length} topics</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {filteredTopics.map((topic: Topic) => {
+                  const realIndex = activeMgmtCourse.topics.findIndex((t: Topic) => t.id === topic.id);
+                  return (
+                  <div key={topic.id} className="flex items-center gap-2 bg-neutral-100 border border-neutral-200 rounded-full px-3 py-1.5 hover:bg-neutral-200/60 transition-colors">
+                    <button
+                      className="flex items-center gap-2 text-sm text-neutral-900"
+                      onClick={() => handleOpenTopicDetails(topic, realIndex)}
+                    >
+                      <span>{topic.title}</span>
+                      <span className="text-[11px] bg-white px-2 py-0.5 rounded-full text-neutral-600 border border-neutral-200">
+                        {topic.questions?.length || 0}
+                      </span>
+                    </button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-neutral-500 hover:text-neutral-900"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
+                            i === realIndex ? { ...t, isLocked: !t.isLocked } : t
+                          );
+                          const updatedCourse = { ...activeMgmtCourse, topics: updated };
+                          setActiveMgmtCourse(updatedCourse);
+                          setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                          toast.success(`Topic ${updated[realIndex].isLocked ? 'locked' : 'unlocked'}`);
+                        }}
+                      >
+                        {topic.isLocked ? <Lock className="w-3.5 h-3.5 text-red-400" /> : <Unlock className="w-3.5 h-3.5 text-green-400" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-neutral-500 hover:text-red-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm('Are you sure you want to delete this topic? This action cannot be undone.')) {
+                            const updatedTopics = activeMgmtCourse.topics.filter((_: any, i: number) => i !== realIndex);
+                            const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
+                            setActiveMgmtCourse(updatedCourse);
+                            setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                            toast.success('Topic deleted successfully');
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+                })}
+                {filteredTopics.length === 0 && (
+                  <div className="text-sm text-neutral-400">No topics found. Try another search.</div>
+                )}
+              </div>
             </div>
           </div>
         )
       }
+
+      {isAdmin && mgmtStep === 'attendance' && activeMgmtCourse && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm" onClick={handleBackToTopics} className="rounded-full h-9 bg-white shadow-sm border-neutral-200">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Topics
+              </Button>
+              <div>
+                <h2 className="text-xl font-bold text-neutral-800">Attendance <span className="text-neutral-400 font-normal">/ {activeMgmtCourse.title}</span></h2>
+                <p className="text-sm text-neutral-500">Post attendance and view live student responses.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="rounded-full h-9" onClick={handlePostAttendance}>
+                <CheckCircle2 className="w-4 h-4 mr-2" /> Post Attendance
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-full h-9" onClick={handleCloseAttendance} disabled={!activeAttendance}>
+                Close Attendance
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle className="text-base">Live Report</CardTitle>
+                <CardDescription>Real-time attendance status</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 rounded-lg border bg-neutral-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-neutral-600">Session Status</span>
+                    <Badge className={activeAttendance ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-600'}>
+                      {activeAttendance ? 'Active' : 'Not Started'}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-neutral-500">
+                    {activeAttendance ? new Date(activeAttendance.createdAt).toLocaleString() : 'Post attendance to start'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg border bg-white">
+                    <p className="text-xs text-neutral-500">Total Students</p>
+                    <p className="text-xl font-bold">{activeAttendance?.totalStudentIds.length || attendanceStudents.length}</p>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-white">
+                    <p className="text-xs text-neutral-500">Marked</p>
+                    <p className="text-xl font-bold text-green-600">{activeAttendance?.markedStudentIds.length || 0}</p>
+                  </div>
+                  <div className="p-3 rounded-lg border bg-white col-span-2">
+                    <p className="text-xs text-neutral-500">Pending</p>
+                    <p className="text-lg font-semibold">
+                      {(activeAttendance?.totalStudentIds.length || attendanceStudents.length) - (activeAttendance?.markedStudentIds.length || 0)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-base">Student Attendance</CardTitle>
+                <CardDescription>Live list of students who marked attendance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                  {attendanceStudents.length === 0 && (
+                    <div className="p-6 text-center text-neutral-500">No students found for this batch.</div>
+                  )}
+                  {attendanceStudents.map(student => {
+                    const marked = activeAttendance?.markedStudentIds.includes(student.id);
+                    return (
+                      <div key={student.id} className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 bg-white">
+                        <div>
+                          <p className="text-sm font-medium text-neutral-900">{student.name}</p>
+                          <p className="text-xs text-neutral-500">{student.email}</p>
+                        </div>
+                        <Badge className={marked ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-600'}>
+                          {marked ? 'Present' : 'Not Marked'}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
 
       {
         isAdmin && mgmtStep === 'details' && activeMgmtTopic && (

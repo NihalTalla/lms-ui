@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../lib/auth-context';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { Search, Settings, LogOut, Code2, Home, BookOpen, FileCode, MessageSquare, Award, Users, BarChart3, Calendar, User, AlertCircle, ChevronDown, Trophy, CreditCard, Send, ClipboardList, TrendingUp } from 'lucide-react';
+import { Search, Settings, LogOut, Code2, Home, BookOpen, FileCode, MessageSquare, Award, Users, BarChart3, Calendar, User, AlertCircle, ChevronDown, Trophy, CreditCard, Send, ClipboardList, TrendingUp, FileText } from 'lucide-react';
 import { Input } from './ui/input';
 import {
   DropdownMenu,
@@ -60,6 +60,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
         { id: 'messages', label: 'Q&A', icon: MessageSquare },
         { id: 'leaderboard', label: 'Leaderboard', icon: Award },
         { id: 'tests', label: 'Tests', icon: FileCode },
+        { id: 'materials', label: 'Materials', icon: FileText },
       ];
     } else {
       return [
@@ -71,6 +72,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
         { id: 'billing', label: 'Billing', icon: CreditCard },
         { id: 'coding-contest', label: 'Coding Contest', icon: Trophy },
         { id: 'tests', label: 'Tests', icon: FileCode },
+        { id: 'materials', label: 'Materials', icon: FileText },
       ];
 
     }

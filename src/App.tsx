@@ -39,6 +39,8 @@ import { AssignmentListingPage } from './components/AssignmentListingPage';
 import { TopicDetailsPage } from './components/TopicDetailsPage';
 import { CodingChallengeUI } from './components/CodingChallengeUI';
 import { StudentCourseTests } from './components/StudentCourseTests';
+import { MaterialManagement } from './components/MaterialManagement';
+import { TrainerMaterials } from './components/TrainerMaterials';
 import { Problem } from './lib/data';
 import { Toaster } from './components/ui/sonner';
 
@@ -153,6 +155,11 @@ function AppContent() {
             );
         }
 
+        // Student Course Tests (no layout)
+        if (currentPage === 'course-tests' && pageData && currentUser.role === 'student') {
+            return <StudentCourseTests course={pageData.course} onBack={() => handleNavigate('courses')} />;
+        }
+
         // Student Module View (no layout - has its own sidebar)
         if (currentPage === 'student-module' && pageData) {
             return (
@@ -236,7 +243,7 @@ function AppContent() {
             <Layout
                 currentPage={currentPage}
                 onNavigate={handleNavigate}
-                hideSidebar={['courses', 'course-tests', 'course-modules', 'student-module', 'assignment-listing', 'topic-details', 'student-coding', 'coding-challenge-ui'].includes(currentPage)}
+                hideSidebar={['course-tests', 'course-modules', 'student-module', 'assignment-listing', 'topic-details', 'student-coding', 'coding-challenge-ui'].includes(currentPage)}
             >
                 {currentPage === 'dashboard' && (
                     <>
@@ -263,9 +270,6 @@ function AppContent() {
                     </div>
                 )}
                 {currentPage === 'courses' && <CoursesPage onNavigate={handleNavigate} />}
-                {currentPage === 'course-tests' && pageData && currentUser.role === 'student' && (
-                    <StudentCourseTests course={pageData.course} onBack={() => handleNavigate('courses')} />
-                )}
                 {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} initialFilters={pageData} />}
                 {currentPage === 'manage-institutions' && <ManageInstitutions />}
                 {currentPage === 'batch-years' && <BatchYears onNavigate={handleNavigate} />}
@@ -281,6 +285,8 @@ function AppContent() {
                 {currentPage === 'attendance' && <AttendancePage />}
                 {currentPage === 'settings' && currentUser.role === 'student' && <StudentSettings onNavigate={handleNavigate} />}
                 {currentPage === 'tests' && (currentUser.role === 'admin' || currentUser.role === 'trainer') && <TestManagement onNavigate={handleNavigate} />}
+                {currentPage === 'materials' && currentUser.role === 'admin' && <MaterialManagement />}
+                {currentPage === 'materials' && currentUser.role === 'trainer' && <TrainerMaterials />}
                 {currentPage === 'course-modules' && pageData && currentUser.role === 'student' && (
                     <CourseModulesPage
                         course={pageData}

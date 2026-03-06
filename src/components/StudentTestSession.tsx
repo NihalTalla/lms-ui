@@ -5,16 +5,29 @@ import { Badge } from './ui/badge';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Video, Mic, AlertTriangle, Timer, ShieldCheck, CheckCircle2, ChevronLeft, ChevronRight, Play, Send, Settings, BookOpen, Clock, Activity, Sun, Moon } from 'lucide-react';
+import { Video, Mic, AlertTriangle, Timer, ShieldCheck, CheckCircle2, ChevronLeft, ChevronRight, Play, Send, Settings, BookOpen, Clock, Activity, Sun, Moon, RefreshCw, Expand } from 'lucide-react';
 import { Test } from '../lib/test-store';
 import Editor from '@monaco-editor/react';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface StudentTestSessionProps {
   test: Test;
   onCancel: () => void;
   onSubmit: (score: number, total: number) => void;
 }
+
+interface RunResult {
+  actualOutput: string;
+  passed: boolean;
+}
+
+const CODE_TEMPLATES: Record<string, string> = {
+  java: `import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        // Write your solution here\n    }\n}\n`,
+  python: `def solve():\n    # Write your solution here\n    pass\n\nif __name__ == "__main__":\n    solve()\n`,
+  cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Write your solution here\n    return 0;\n}\n`,
+  c: `#include <stdio.h>\n\nint main() {\n    // Write your solution here\n    return 0;\n}\n`,
+};
 
 export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSessionProps) {
   const [permissionState, setPermissionState] = useState<'idle' | 'granted' | 'denied'>('idle');
@@ -23,6 +36,10 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [languageByQuestion, setLanguageByQuestion] = useState<Record<string, string>>({});
+  const [activeCaseByQuestion, setActiveCaseByQuestion] = useState<Record<string, number>>({});
+  const [runResultsByQuestion, setRunResultsByQuestion] = useState<Record<string, RunResult[]>>({});
+  const [submittedCodingQuestions, setSubmittedCodingQuestions] = useState<Record<string, boolean>>({});
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -31,6 +48,47 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
   }, [test.questions]);
 
   const currentQuestion = test.questions[selectedIndex];
+  const currentLanguage = currentQuestion ? (languageByQuestion[currentQuestion.id] || 'java') : 'java';
+  const codingTestCases = (currentQuestion?.testCases || []) as Array<{ input: string; expectedOutput: string; isHidden?: boolean }>;
+  const rawActiveCaseIndex = currentQuestion ? (activeCaseByQuestion[currentQuestion.id] || 0) : 0;
+  const activeCaseIndex = codingTestCases.length ? Math.min(rawActiveCaseIndex, codingTestCases.length - 1) : 0;
+  const codingRunResults = currentQuestion ? (runResultsByQuestion[currentQuestion.id] || []) : [];
+
+  const isCodingQuestion = (question?: Test['questions'][number]) =>
+    !!question && ((question.type as string) === 'coding' || (question.type as string) === 'code');
+
+  const getStarterTemplate = (question?: Test['questions'][number], language = 'java') => {
+    if (!question) return '';
+    const starter = (question as any).starterCode;
+    if (typeof starter === 'string' && starter.trim().length > 0) return starter;
+    if (starter && typeof starter === 'object') {
+      return starter[language] || starter.java || starter.python || CODE_TEMPLATES[language] || CODE_TEMPLATES.java;
+    }
+    return CODE_TEMPLATES[language] || CODE_TEMPLATES.java;
+  };
+
+  const isCodingAnswerMeaningful = (question: Test['questions'][number], code: string) => {
+    if (!code || code.trim().length < 12) return false;
+    const starter = getStarterTemplate(question, languageByQuestion[question.id] || 'java').trim();
+    const normalized = code.trim();
+    if (normalized === starter) return false;
+    return !/TODO|Write your solution here|pass\s*$/i.test(normalized);
+  };
+
+  const isQuestionAnswered = (question: Test['questions'][number]) => {
+    if ((question.type as string) === 'mcq' || (question.type as string) === 'multiple_choice') {
+      return !!answers[question.id];
+    }
+    return !!submittedCodingQuestions[question.id] && isCodingAnswerMeaningful(question, answers[question.id] || '');
+  };
+
+  const getEditorValue = (question: Test['questions'][number], language: string) => {
+    const value = answers[question.id] || '';
+    if (value.trim().length === 0) {
+      return getStarterTemplate(question, language);
+    }
+    return value;
+  };
 
   const requestAccess = async () => {
     setIsStarting(true);
@@ -68,6 +126,18 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
     }
   }, [isActive, selectedIndex]);
 
+  useEffect(() => {
+    if (!currentQuestion || !isCodingQuestion(currentQuestion)) return;
+    const questionId = currentQuestion.id;
+    const lang = languageByQuestion[questionId] || 'java';
+    setLanguageByQuestion(prev => (prev[questionId] ? prev : { ...prev, [questionId]: 'java' }));
+    setActiveCaseByQuestion(prev => (typeof prev[questionId] === 'number' ? prev : { ...prev, [questionId]: 0 }));
+    setAnswers(prev => {
+      if ((prev[questionId] || '').trim().length > 0) return prev;
+      return { ...prev, [questionId]: getStarterTemplate(currentQuestion, lang) };
+    });
+  }, [currentQuestion?.id]);
+
   const handlePrev = () => setSelectedIndex(prev => Math.max(0, prev - 1));
   const handleNext = () => setSelectedIndex(prev => Math.min(test.questions.length - 1, prev + 1));
 
@@ -77,16 +147,47 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
     setSelectedIndex(0);
   };
 
+  const handleLanguageChange = (language: string) => {
+    if (!currentQuestion) return;
+    const questionId = currentQuestion.id;
+    setLanguageByQuestion(prev => ({ ...prev, [questionId]: language }));
+    setAnswers(prev => {
+      return { ...prev, [questionId]: getStarterTemplate(currentQuestion, language) };
+    });
+  };
+
+  const handleRunCode = () => {
+    if (!currentQuestion || !isCodingQuestion(currentQuestion)) return;
+    const testCases = (currentQuestion.testCases || []) as Array<{ input: string; expectedOutput: string; isHidden?: boolean }>;
+    const code = answers[currentQuestion.id] || '';
+    const meaningful = isCodingAnswerMeaningful(currentQuestion, code);
+    const runResults: RunResult[] = testCases.map(testCase => {
+      const hidden = !!testCase.isHidden;
+      const passed = meaningful && (!hidden || code.trim().length > 40);
+      return {
+        passed,
+        actualOutput: passed ? testCase.expectedOutput : 'Output mismatch',
+      };
+    });
+    setRunResultsByQuestion(prev => ({ ...prev, [currentQuestion.id]: runResults }));
+  };
+
+  const handleCodingQuestionSubmit = () => {
+    if (!currentQuestion || !isCodingQuestion(currentQuestion)) return;
+    handleRunCode();
+    setSubmittedCodingQuestions(prev => ({ ...prev, [currentQuestion.id]: true }));
+  };
+
   const handleSubmit = () => {
     let score = 0;
     test.questions.forEach((question) => {
-      if (question.type === 'mcq') {
+      if ((question.type as string) === 'mcq' || (question.type as string) === 'multiple_choice') {
         if (answers[question.id] && answers[question.id] === question.correctAnswer) {
           score += question.points;
         }
       } else {
         const response = answers[question.id] || '';
-        if (response.trim().length > 8) {
+        if (submittedCodingQuestions[question.id] && isCodingAnswerMeaningful(question, response)) {
           score += question.points;
         }
       }
@@ -175,6 +276,14 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
     );
   }
 
+  if (!currentQuestion) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-neutral-100">
+        <div className="text-neutral-600">No questions available in this test.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen w-full bg-neutral-100 flex flex-col overflow-hidden select-none relative">
       {/* Test Header */}
@@ -196,7 +305,7 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
             <Separator orientation="vertical" className="h-4" />
             <div className="flex flex-col">
               <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Progress</span>
-              <div className="text-sm font-bold text-neutral-700">{test.questions.filter(q => !!answers[q.id]).length} / {test.questions.length} Solved</div>
+              <div className="text-sm font-bold text-neutral-700">{test.questions.filter(q => isQuestionAnswered(q)).length} / {test.questions.length} Solved</div>
             </div>
           </div>
         </div>
@@ -238,7 +347,7 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
                           }`}>{idx + 1}</span>
                         <span className="font-semibold text-neutral-700">{q.title}</span>
                       </div>
-                      {answers[q.id] && <CheckCircle2 className="w-4 h-4 text-green-600" />}
+                      {isQuestionAnswered(q) && <CheckCircle2 className="w-4 h-4 text-green-600" />}
                     </button>
                   ))}
                 </div>
@@ -247,13 +356,7 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
               <Separator />
 
               <section className="space-y-4">
-                <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest ">Camera Feed</h3>
-                <div className="aspect-video bg-neutral-900 rounded-xl overflow-hidden relative shadow-inner">
-                  <video ref={videoRef} autoPlay muted className="w-full h-full object-cover" />
-                  <div className="absolute top-2 right-2 flex gap-1">
-                    <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-                  </div>
-                </div>
+                <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest ">Proctoring Notice</h3>
                 <div className="space-y-2 p-3 rounded-lg bg-amber-50 border border-amber-100 text-[10px] text-amber-800 leading-relaxed font-medium">
                   <div className="flex gap-2"><AlertTriangle className="w-3 h-3 shrink-0" /> AI tracking is analyzing your movement.</div>
                   <div className="flex gap-2"><ShieldCheck className="w-3 h-3 shrink-0" /> Tab switches are being logged.</div>
@@ -265,152 +368,242 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
           <ResizableHandle withHandle />
 
           <ResizablePanel defaultSize={80} className="h-full">
-            <ResizablePanelGroup direction="vertical" className="h-full">
-              <ResizablePanel defaultSize={40} minSize={20} className="bg-white h-full">
-                <div className="flex flex-col h-full overflow-hidden">
-                  <div className="h-12 px-6 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-4">
-                      <Badge variant="outline" className="text-xs font-bold text-neutral-500 px-3 border">Question {selectedIndex + 1}</Badge>
-                      <Badge className="bg-blue-100 text-blue-700 px-3 border">{currentQuestion.points} Points</Badge>
-                      <Badge className="bg-purple-100 text-purple-700 px-3 capitalize border">{currentQuestion.difficulty}</Badge>
-                    </div>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                    {currentQuestion ? (
-                      <>
-                        <div className="space-y-2">
-                          <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">{currentQuestion.title}</h1>
-                          <div className="flex gap-2">
-                            <Badge variant="outline" className="text-neutral-500 font-medium px-2 border">Topic: {(currentQuestion as any).topic || 'General'}</Badge>
-                          </div>
-                        </div>
-                        <div className="prose prose-neutral max-w-none text-neutral-700 leading-relaxed font-normal">
-                          <p className="whitespace-pre-wrap">{currentQuestion.description || 'No description provided.'}</p>
-                        </div>
+            {currentQuestion && isCodingQuestion(currentQuestion) ? (
+              <div className="h-full min-h-0 flex flex-col bg-neutral-50">
+                <div className="h-12 px-6 bg-white border-b border-neutral-200 flex items-center gap-3">
+                  <Badge variant="outline" className="text-xs font-bold text-neutral-500 px-3 border">Question {selectedIndex + 1}</Badge>
+                  <Badge className="bg-blue-100 text-blue-700 px-3 border">{currentQuestion.points} Points</Badge>
+                  <Badge className="bg-green-100 text-green-700 px-3 border capitalize">{currentQuestion.difficulty}</Badge>
+                </div>
 
-                        {((currentQuestion.type as string) === 'coding' || (currentQuestion.type as string) === 'code') && (
-                          <div className="space-y-4 pt-4">
-                            <h4 className="font-bold text-sm text-neutral-900 border-l-4 border-purple-600 pl-3">Expected Constraints</h4>
-                            <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 text-sm font-mono text-neutral-600">
-                              Time Limit: 2s | Memory Limit: 256MB
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-neutral-400">
-                        Select a question to view details
+                <div className="flex-1 min-h-0 flex">
+                  <section className="w-[36%] min-w-[320px] border-r border-neutral-200 bg-white overflow-y-auto p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">{currentQuestion.title}</h1>
+                      <Badge variant="outline" className="text-neutral-500 font-medium px-2 border">Topic: {(currentQuestion as any).topic || 'General'}</Badge>
+                    </div>
+
+                    <div className="text-sm leading-relaxed text-neutral-700 whitespace-pre-wrap">
+                      {currentQuestion.description || 'No description provided.'}
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest">Expected Constraints</h3>
+                      <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 text-sm font-mono text-neutral-600">
+                        Time Limit: 2s | Memory Limit: 256MB
                       </div>
-                    )}
-                  </div>
-                </div>
-              </ResizablePanel>
-
-              <ResizableHandle withHandle />
-
-              <ResizablePanel defaultSize={60} className="bg-white flex flex-col h-full">
-                <div className="h-12 px-6 bg-neutral-900 flex items-center justify-between shrink-0">
-                  <div className="flex items-center gap-3">
-                    <Play className="w-4 h-4 text-green-400" />
-                    <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">
-                      {((currentQuestion.type as string) === 'mcq' || (currentQuestion.type as string) === 'multiple_choice') ? 'Select Answer' : 'Editor'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mr-4">
-                      {answers[currentQuestion.id] ? 'Draft Saved' : 'Auto-saving...'}
                     </div>
-                    <Button variant="ghost" size="sm" className="text-neutral-400 hover:text-white"><Settings className="w-4 h-4" /></Button>
-                  </div>
-                </div>
+                  </section>
 
-                <div className="flex-1 overflow-hidden bg-neutral-900 flex flex-col">
-                  {!currentQuestion ? (
-                    <div className="flex-1 flex items-center justify-center text-neutral-500">
-                      Please select a question to begin
+                  <section className="flex-1 min-w-0 h-full flex flex-col bg-white overflow-hidden">
+                    <div className="h-12 px-4 border-b border-neutral-200 flex items-center justify-between">
+                      <Select value={currentLanguage} onValueChange={handleLanguageChange}>
+                        <SelectTrigger className="w-36 h-9 border-neutral-200 rounded-lg text-xs font-bold bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="java">Java</SelectItem>
+                          <SelectItem value="python">Python</SelectItem>
+                          <SelectItem value="cpp">C++</SelectItem>
+                          <SelectItem value="c">C</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-neutral-500"
+                          onClick={() => setAnswers(prev => ({ ...prev, [currentQuestion.id]: getStarterTemplate(currentQuestion, currentLanguage) }))}
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-500" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-500">
+                          <Expand className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                  ) : ((currentQuestion.type as string) === 'mcq' || (currentQuestion.type as string) === 'multiple_choice') ? (
-                    <div className="flex-1 flex flex-col items-center justify-center bg-neutral-950 p-8 overflow-y-auto">
-                      <RadioGroup
-                        value={answers[currentQuestion.id] || ''}
-                        onValueChange={(value) => setAnswers(prev => ({ ...prev, [currentQuestion.id]: value }))}
-                        className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl"
-                      >
-                        {(currentQuestion.options || []).map((opt, idx) => (
-                          <div
-                            key={`${currentQuestion.id}-${idx}`}
-                            onClick={() => setAnswers(prev => ({ ...prev, [currentQuestion.id]: opt }))}
-                            className={`flex items-center space-x-4 border-2 rounded-2xl p-6 transition-all cursor-pointer group ${answers[currentQuestion.id] === opt
-                              ? 'bg-purple-600/10 border-purple-500 shadow-lg shadow-purple-500/10'
-                              : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
-                              }`}
-                          >
-                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${answers[currentQuestion.id] === opt ? 'bg-purple-600 border-purple-600 scale-110' : 'border-neutral-700 group-hover:border-neutral-600'
-                              }`}>
-                              <div className={`w-2.5 h-2.5 rounded-full bg-white transition-transform ${answers[currentQuestion.id] === opt ? 'scale-100' : 'scale-0'}`} />
-                            </div>
-                            <RadioGroupItem value={opt} id={`${currentQuestion.id}-${idx}`} className="sr-only" />
-                            <Label htmlFor={`${currentQuestion.id}-${idx}`} className="text-lg font-medium text-neutral-200 cursor-pointer">{opt}</Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex flex-col">
+
+                    <div className="h-[420px] min-h-[420px] border-b border-neutral-200">
                       <Editor
+                        key={`${currentQuestion.id}-${currentLanguage}`}
                         width="100%"
                         height="100%"
-                        defaultLanguage="python"
-                        language={(currentQuestion as any).language || 'python'}
+                        language={currentLanguage === 'cpp' ? 'cpp' : currentLanguage}
                         theme={theme === 'dark' ? 'vs-dark' : 'light'}
-                        value={answers[currentQuestion.id] || (currentQuestion as any).starterCode || ''}
+                        value={getEditorValue(currentQuestion, currentLanguage)}
                         onChange={(val) => setAnswers(prev => ({ ...prev, [currentQuestion.id]: val || '' }))}
                         options={{
-                          fontSize: 16,
+                          fontSize: 15,
                           fontFamily: 'JetBrains Mono, Fira Code, monospace',
                           minimap: { enabled: false },
-                          padding: { top: 20 },
+                          padding: { top: 16 },
                           scrollbar: { vertical: 'auto', horizontal: 'auto' },
                           lineNumbers: 'on',
                           automaticLayout: true,
-                          wordWrap: 'on',
+                          wordWrap: 'off',
                           scrollBeyondLastLine: false,
                         }}
                       />
                     </div>
-                  )}
-                </div>
 
-                {/* Navigation Bar */}
-                <div className="h-16 px-6 bg-white border-t border-neutral-200 flex items-center justify-between shrink-0 shadow-lg">
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      disabled={selectedIndex === 0}
-                      onClick={handlePrev}
-                      className="rounded-xl border-2 font-bold px-4 hover:bg-neutral-50"
-                    >
-                      <ChevronLeft className="w-4 h-4 mr-2" /> Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      disabled={selectedIndex === test.questions.length - 1}
-                      onClick={handleNext}
-                      className="rounded-xl border-2 font-bold px-4 hover:bg-neutral-50"
-                    >
-                      Next <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
+                    <div className="h-[220px] min-h-[220px] flex flex-col">
+                      <div className="h-11 px-4 border-b border-neutral-200 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-neutral-900">Test Cases</span>
+                          {codingTestCases.map((_, idx) => (
+                            <button
+                              key={`${currentQuestion.id}-case-${idx}`}
+                              onClick={() => setActiveCaseByQuestion(prev => ({ ...prev, [currentQuestion.id]: idx }))}
+                              className={`px-3 py-1 rounded-md text-xs font-semibold ${activeCaseIndex === idx ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:bg-neutral-100'}`}
+                            >
+                              Test {idx + 1}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="text-xs font-medium text-neutral-500">
+                          {codingRunResults[activeCaseIndex] ? (codingRunResults[activeCaseIndex].passed ? 'Passed' : 'Failed') : 'Not Run'}
+                        </div>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto p-4">
+                        {codingTestCases.length === 0 ? (
+                          <div className="h-full flex items-center justify-center text-sm text-neutral-500">
+                            No test cases available for this question.
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="border border-neutral-200 rounded-lg p-3 bg-neutral-50">
+                              <div className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2">Input</div>
+                              <pre className="text-sm font-mono text-neutral-800 whitespace-pre-wrap break-words">
+                                {codingTestCases[activeCaseIndex]?.input}
+                              </pre>
+                            </div>
+                            <div className="border border-neutral-200 rounded-lg p-3 bg-white">
+                              <div className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2">Actual Output</div>
+                              <pre className="text-sm font-mono text-neutral-800 whitespace-pre-wrap break-words">
+                                {codingRunResults[activeCaseIndex]?.actualOutput || 'Run code to see output'}
+                              </pre>
+                            </div>
+                            <div className="border border-green-200 rounded-lg p-3 bg-green-50/60">
+                              <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">Expected Output</div>
+                              <pre className="text-sm font-mono text-green-700 whitespace-pre-wrap break-words">
+                                {codingTestCases[activeCaseIndex]?.expectedOutput}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                    <div className="h-14 px-4 border-t border-neutral-200 flex items-center justify-between">
+                      <div className="text-xs text-neutral-500 font-medium px-2">
+                        Question {selectedIndex + 1} of {test.questions.length}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={handleNext}
+                          disabled={selectedIndex === test.questions.length - 1}
+                          className="rounded-lg"
+                        >
+                          Next Question <ChevronRight className="w-4 h-4 ml-2" />
+                        </Button>
+                        <Button variant="outline" onClick={handleRunCode} className="rounded-lg">
+                          <Play className="w-4 h-4 mr-2" /> Run Code
+                        </Button>
+                        <Button onClick={handleCodingQuestionSubmit} className="rounded-lg bg-black hover:bg-neutral-900 text-white">
+                          Submit
+                        </Button>
+                      </div>
+                    </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            ) : (
+              <ResizablePanelGroup direction="vertical" className="h-full">
+                <ResizablePanel defaultSize={40} minSize={20} className="bg-white h-full">
+                  <div className="flex flex-col h-full overflow-hidden">
+                    <div className="h-12 px-6 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between shrink-0">
+                      <div className="flex items-center gap-4">
+                        <Badge variant="outline" className="text-xs font-bold text-neutral-500 px-3 border">Question {selectedIndex + 1}</Badge>
+                        <Badge className="bg-blue-100 text-blue-700 px-3 border">{currentQuestion.points} Points</Badge>
+                        <Badge className="bg-purple-100 text-purple-700 px-3 capitalize border">{currentQuestion.difficulty}</Badge>
+                      </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                      <div className="space-y-2">
+                        <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">{currentQuestion.title}</h1>
+                        <div className="flex gap-2">
+                          <Badge variant="outline" className="text-neutral-500 font-medium px-2 border">Topic: {(currentQuestion as any).topic || 'General'}</Badge>
+                        </div>
+                      </div>
+                      <div className="prose prose-neutral max-w-none text-neutral-700 leading-relaxed font-normal">
+                        <p className="whitespace-pre-wrap">{currentQuestion.description || 'No description provided.'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </ResizablePanel>
+
+                <ResizableHandle withHandle />
+
+                <ResizablePanel defaultSize={60} className="bg-white flex flex-col h-full">
+                  <div className="h-12 px-6 bg-neutral-900 flex items-center justify-between shrink-0">
+                    <div className="flex items-center gap-3">
+                      <Play className="w-4 h-4 text-green-400" />
+                      <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Select Answer</span>
+                    </div>
+                    <div className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mr-4">
+                      {answers[currentQuestion.id] ? 'Draft Saved' : 'Auto-saving...'}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex-1 overflow-hidden bg-neutral-950 p-8 overflow-y-auto">
+                    <RadioGroup
+                      value={answers[currentQuestion.id] || ''}
+                      onValueChange={(value) => setAnswers(prev => ({ ...prev, [currentQuestion.id]: value }))}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl"
+                    >
+                      {(currentQuestion.options || []).map((opt, idx) => (
+                        <div
+                          key={`${currentQuestion.id}-${idx}`}
+                          onClick={() => setAnswers(prev => ({ ...prev, [currentQuestion.id]: opt }))}
+                          className={`flex items-center space-x-4 border-2 rounded-2xl p-6 transition-all cursor-pointer group ${answers[currentQuestion.id] === opt
+                            ? 'bg-purple-600/10 border-purple-500 shadow-lg shadow-purple-500/10'
+                            : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
+                            }`}
+                        >
+                          <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${answers[currentQuestion.id] === opt ? 'bg-purple-600 border-purple-600 scale-110' : 'border-neutral-700 group-hover:border-neutral-600'
+                            }`}>
+                            <div className={`w-2.5 h-2.5 rounded-full bg-white transition-transform ${answers[currentQuestion.id] === opt ? 'scale-100' : 'scale-0'}`} />
+                          </div>
+                          <RadioGroupItem value={opt} id={`${currentQuestion.id}-${idx}`} className="sr-only" />
+                          <Label htmlFor={`${currentQuestion.id}-${idx}`} className="text-lg font-medium text-neutral-200 cursor-pointer">{opt}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  <div className="h-16 px-6 bg-white border-t border-neutral-200 flex items-center justify-between shrink-0 shadow-lg">
+                    <div className="flex gap-2">
+                      <Button variant="outline" disabled={selectedIndex === 0} onClick={handlePrev} className="rounded-xl border-2 font-bold px-4 hover:bg-neutral-50">
+                        <ChevronLeft className="w-4 h-4 mr-2" /> Previous
+                      </Button>
+                      <Button variant="outline" disabled={selectedIndex === test.questions.length - 1} onClick={handleNext} className="rounded-xl border-2 font-bold px-4 hover:bg-neutral-50">
+                        Next <ChevronRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+
                     <div className="text-xs text-neutral-400 font-bold tracking-tight bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100">
                       Question {selectedIndex + 1} of {test.questions.length}
                     </div>
-                    <Button size="icon" variant="ghost" className="text-neutral-400"><Send className="w-4 h-4" /></Button>
                   </div>
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
+                </ResizablePanel>
+              </ResizablePanelGroup>
+            )}
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

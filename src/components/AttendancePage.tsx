@@ -1,13 +1,58 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Calendar, CheckCircle2, Clock, X, MapPin } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../lib/auth-context';
+
+interface AttendanceSession {
+  id: string;
+  courseId: string;
+  courseTitle: string;
+  batchId?: string;
+  createdAt: string;
+  markedStudentIds: string[];
+  totalStudentIds: string[];
+  status: 'open' | 'closed';
+}
+
+const ATTENDANCE_KEY = 'attendance_sessions_store';
+
+const loadAttendanceSessions = (): AttendanceSession[] => {
+  if (typeof window === 'undefined') return [];
+  const raw = localStorage.getItem(ATTENDANCE_KEY);
+  if (!raw) return [];
+  try { return JSON.parse(raw) as AttendanceSession[]; } catch { return []; }
+};
+
+const saveAttendanceSessions = (data: AttendanceSession[]) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(data));
+};
 
 export function AttendancePage() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [hasMarkedToday, setHasMarkedToday] = useState(false);
+  const { currentUser } = useAuth();
+  const [sessions, setSessions] = useState<AttendanceSession[]>([]);
+  const [notifiedSessionId, setNotifiedSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSessions(loadAttendanceSessions());
+  }, []);
+
+  const activeSession = sessions.find(s =>
+    s.status === 'open' &&
+    (!currentUser?.batchId || s.batchId === currentUser.batchId)
+  );
+
+  const hasMarkedToday = !!(activeSession && currentUser && activeSession.markedStudentIds.includes(currentUser.id));
+
+  useEffect(() => {
+    if (activeSession && !hasMarkedToday && notifiedSessionId !== activeSession.id) {
+      toast.info('New attendance request posted');
+      setNotifiedSessionId(activeSession.id);
+    }
+  }, [activeSession, hasMarkedToday, notifiedSessionId]);
 
   // Mock attendance data
   const attendanceRecords = [
@@ -31,7 +76,15 @@ export function AttendancePage() {
   };
 
   const handleMarkAttendance = () => {
-    setHasMarkedToday(true);
+    if (!activeSession || !currentUser) return;
+    if (activeSession.markedStudentIds.includes(currentUser.id)) return;
+    const next = sessions.map(s =>
+      s.id === activeSession.id
+        ? { ...s, markedStudentIds: [...s.markedStudentIds, currentUser.id] }
+        : s
+    );
+    setSessions(next);
+    saveAttendanceSessions(next);
     toast.success('Attendance marked successfully!');
   };
 
@@ -160,16 +213,22 @@ export function AttendancePage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
-                  <span className="text-sm font-medium">Today's Session</span>
+                  <span className="text-sm font-medium">{activeSession ? 'Attendance Request' : 'No Active Session'}</span>
                 </div>
-                <Badge style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>Active</Badge>
+                {activeSession ? (
+                  <Badge style={{ backgroundColor: 'var(--color-primary)', color: 'white' }}>Active</Badge>
+                ) : (
+                  <Badge variant="outline">Inactive</Badge>
+                )}
               </div>
-              <p className="text-sm text-neutral-700 mb-1">Data Structures - Trees</p>
+              <p className="text-sm text-neutral-700 mb-1">{activeSession?.courseTitle || 'No attendance has been posted for you yet.'}</p>
               <p className="text-xs text-neutral-600">Monday, {today}</p>
-              <p className="text-xs text-neutral-600">9:00 AM - 11:00 AM</p>
+              {activeSession && (
+                <p className="text-xs text-neutral-600">Posted at {new Date(activeSession.createdAt).toLocaleTimeString()}</p>
+              )}
             </div>
 
-            {!hasMarkedToday ? (
+            {activeSession && !hasMarkedToday ? (
               <div className="space-y-3">
                 <Button
                   className="w-full"
@@ -183,11 +242,15 @@ export function AttendancePage() {
                   Click to mark your attendance for today's session
                 </p>
               </div>
-            ) : (
+            ) : activeSession && hasMarkedToday ? (
               <div className="p-4 bg-green-50 rounded-lg border border-green-200 text-center">
                 <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-600" />
                 <p className="text-sm font-medium text-green-700">Attendance Marked</p>
                 <p className="text-xs text-green-600 mt-1">You're all set for today!</p>
+              </div>
+            ) : (
+              <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200 text-center">
+                <p className="text-sm text-neutral-600">No active attendance request.</p>
               </div>
             )}
           </CardContent>

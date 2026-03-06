@@ -564,7 +564,7 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-h-[calc(100vh-120px)] overflow-y-auto pr-1">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
