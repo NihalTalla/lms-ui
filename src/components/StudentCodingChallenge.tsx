@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { ArrowLeft, Play, Copy, Maximize2, RotateCcw, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, Play, Copy, Maximize2, RotateCcw, Sun, Moon, ChevronRight, Trophy, Clock, Lock } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/auth-context';
@@ -60,43 +60,59 @@ export function StudentCodingChallenge({
   const [testResults, setTestResults] = useState<any[]>([]);
   const [lastScore, setLastScore] = useState<number | null>(null);
 
+  const [leftPanelWidth, setLeftPanelWidth] = useState(33);
+  const [bottomPanelHeight, setBottomPanelHeight] = useState(250);
+  const [isResizingLeft, setIsResizingLeft] = useState(false);
+  const [isResizingBottom, setIsResizingBottom] = useState(false);
+
   const examples = (challenge && challenge.examples) || [];
 
   useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isResizingLeft) {
+        const newWidth = (e.clientX / window.innerWidth) * 100;
+        if (newWidth > 20 && newWidth < 80) setLeftPanelWidth(newWidth);
+      }
+      if (isResizingBottom) {
+        const newHeight = window.innerHeight - e.clientY;
+        if (newHeight > 100 && newHeight < 600) setBottomPanelHeight(newHeight);
+      }
+    };
+    const handleMouseUp = () => {
+      setIsResizingLeft(false);
+      setIsResizingBottom(false);
+    };
+    if (isResizingLeft || isResizingBottom) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingLeft, isResizingBottom]);
+
+  useEffect(() => {
     if (challenge) {
-      // initialize starter code and language
       const starter = challenge.starterCode || challenge.starter || null;
       if (starter && typeof starter === 'object') {
-        // pick a preferred language if present
         const preferred = starter.java ? 'java' : Object.keys(starter)[0];
         const safePreferred = allowedLanguages.includes(preferred) ? preferred : 'java';
         setLanguage(safePreferred);
-        setCode(
-          starter[safePreferred] ||
-          starter[Object.keys(starter)[0]] ||
-          templates[safePreferred] ||
-          '// Write your solution here'
-        );
+        setCode(starter[safePreferred] || starter[Object.keys(starter)[0]] || templates[safePreferred] || '// Write your solution here');
       } else if (typeof starter === 'string') {
         setCode(starter);
       } else {
-        // fallback default
         setCode(templates[language] || '// Write your solution here');
       }
-
-      // initialize test cases
       const cases = (challenge.testCases || []).map((tc: any, i: number) => ({
         id: tc.id || `tc-${i}`,
         input: tc.input || tc.inputExample || '',
         expectedOutput: tc.expectedOutput || tc.expected || '',
         hidden: !!tc.hidden,
       }));
-      if (cases.length === 0) {
-        // fallback small set
-        setTestCases([
-          { id: 't1', input: '45 23 67', expectedOutput: '67', hidden: false },
-        ]);
-      } else setTestCases(cases);
+      if (cases.length === 0) setTestCases([{ id: 't1', input: '45 23 67', expectedOutput: '67', hidden: false }]);
+      else setTestCases(cases);
       setTestResults([]);
       setLastScore(null);
     }
@@ -105,7 +121,6 @@ export function StudentCodingChallenge({
   const simulateRun = (includeHidden = false) => {
     const cases = testCases.filter((tc) => (includeHidden ? true : !tc.hidden));
     const results = cases.map((tc) => {
-      // simple heuristic: pass if user's code contains expected output or input
       const passed = (tc.expectedOutput && code.includes(tc.expectedOutput)) || (tc.input && code.includes(tc.input));
       return { ...tc, passed };
     });
@@ -125,183 +140,164 @@ export function StudentCodingChallenge({
     const total = results.length || 1;
     const score = Math.round((passed / total) * 100);
     setLastScore(score);
-    if (passed === total) {
-      toast.success('All tests passed. Full score awarded!');
-    } else {
-      toast('Submission received. Some tests failed. Partial score awarded.');
-    }
-
-    if (currentUser) {
-      recordSubmission({
-        userId: currentUser.id,
-        type: 'course_challenge',
-        meta: { challengeId: challenge?.id || 'challenge' },
-      });
-    }
-  };
-
-  const getDifficultyColor = () => {
-    const difficulty = 'easy';
-    return difficulty === 'easy'
-      ? 'bg-green-100 text-green-700'
-      : difficulty === 'medium'
-        ? 'bg-yellow-100 text-yellow-700'
-        : 'bg-red-100 text-red-700';
+    if (passed === total) toast.success('All tests passed. Full score awarded!');
+    else toast('Submission received. Some tests failed. Partial score awarded.');
+    if (currentUser) recordSubmission({ userId: currentUser.id, type: 'course_challenge', meta: { challengeId: challenge?.id || 'challenge' } });
   };
 
   return (
-    <div className="fixed inset-0 z-50 h-screen w-screen flex flex-col bg-neutral-50 overflow-hidden">
-      {/* Header with Back button and Score */}
-      <div className="px-6 py-4 bg-white border-b border-neutral-200 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="fixed inset-0 z-[60] h-screen w-screen flex flex-col bg-white overflow-hidden font-sans uppercase-none">
+      <header className="h-16 bg-white border-b border-neutral-100 flex items-center px-8 justify-between shrink-0 shadow-sm z-10 transition-all">
+        <div className="flex items-center gap-6">
           <EdRealmLogo size="small" />
-          <Button
-            variant="ghost"
-            className="text-neutral-700 hover:bg-neutral-100"
-            onClick={onBack}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Module
+          <div className="h-8 w-px bg-neutral-200" />
+          <Button variant="ghost" className="text-neutral-500 hover:text-neutral-900 px-3 py-2 h-auto rounded-xl hover:bg-neutral-50 flex items-center transition-all bg-white" onClick={onBack}>
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            <span className="font-bold">Back to Module</span>
           </Button>
-        </div>
-        {lastScore !== null && (
-          <div className="text-sm font-semibold text-neutral-900">
-            Score: <span style={{ color: 'var(--color-accent)' }}>{lastScore}/100</span>
+          <div className="h-8 w-px bg-neutral-200" />
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-neutral-400 font-medium uppercase tracking-widest text-[10px]">{course?.name || 'Java Specialization'}</span>
+            <ChevronRight className="w-3 h-3 text-neutral-300" />
+            <span className="font-black text-neutral-900 uppercase tracking-widest text-[10px]">{challenge?.title || 'Assignment'}</span>
           </div>
-        )}
-      </div>
+        </div>
+        <div className="flex items-center gap-6">
+          {lastScore !== null && (
+            <div className="flex items-center gap-3 bg-neutral-900 text-white px-6 py-2 rounded-2xl shadow-xl animate-in zoom-in duration-500">
+              <Trophy className="w-4 h-4 text-amber-400" />
+              <span className="text-sm font-black tracking-widest uppercase">Score: {lastScore}/100</span>
+            </div>
+          )}
+          <div className="w-10 h-10 rounded-2xl bg-neutral-100 flex items-center justify-center border border-neutral-200">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          </div>
+        </div>
+      </header>
 
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-hidden flex gap-0">
-        {/* LEFT COLUMN - Problem Description (fixed width, scrollable) */}
-        <div className="w-1/3 min-w-[350px] bg-white border-r border-neutral-200 overflow-y-auto">
-          <div className="p-6 space-y-6">
-            {/* Title and Difficulty */}
-            <div>
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-neutral-900">
-                  {challenge?.question || challenge?.title || 'Assignment'}
-                </h1>
-                <Badge className={`${getDifficultyColor()} rounded-full px-3 py-1 whitespace-nowrap`}>
-                  {challenge?.difficulty || 'Assignment'}
-                </Badge>
+      <div className="flex-1 flex overflow-hidden">
+        {/* LEFT: Problem */}
+        <div style={{ width: `${leftPanelWidth}%` }} className="bg-white border-r border-neutral-200 overflow-y-auto flex flex-col min-w-[300px] relative shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.02)]">
+          <div onMouseDown={() => setIsResizingLeft(true)} className="absolute right-0 top-0 bottom-0 w-1.5 bg-transparent hover:bg-neutral-900/10 cursor-col-resize z-20 group">
+            <div className="w-0.5 h-full bg-neutral-100 group-hover:bg-neutral-400 transition-colors mx-auto" />
+          </div>
+
+          <div className="flex-1 p-10 space-y-10">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Badge className="bg-neutral-900 text-white px-3 py-1 font-black text-[10px] uppercase tracking-wider">{challenge?.difficulty || 'Medium'}</Badge>
+                <div className="flex items-center gap-2 px-2.5 py-0.5 bg-neutral-100 rounded-full border border-neutral-200">
+                  <Clock className="w-3 h-3 text-neutral-500" />
+                  <span className="text-neutral-600 text-[10px] font-black uppercase tracking-widest">15 Mins</span>
+                </div>
+              </div>
+              <h2 className="text-4xl font-black text-neutral-900 leading-tight tracking-tight">{challenge?.title || 'Coding Challenge'}</h2>
+            </div>
+
+            <div className="prose prose-neutral max-w-none">
+              <div className="bg-neutral-50/50 rounded-3xl p-8 border border-neutral-100 leading-relaxed text-neutral-600 font-medium text-lg whitespace-pre-wrap">
+                {challenge?.description || challenge?.question || 'Implement the solution according to the requirements.'}
               </div>
             </div>
 
-            {/* Problem Statement */}
-            <div>
-              <h3 className="font-semibold text-neutral-900 mb-3">Problem Statement</h3>
-              <p className="text-neutral-700 leading-relaxed text-sm whitespace-pre-wrap">
-                {challenge?.question || challenge?.description || 'No problem statement provided.'}
-              </p>
-            </div>
-
-            {/* Examples / Sample Tests */}
-            {testCases.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="font-semibold text-neutral-900">Sample Input & Output</h3>
-                {testCases.filter((tc) => !tc.hidden).map((tc, idx) => (
-                  <div key={tc.id || idx} className="border border-neutral-200 rounded-lg p-4 bg-neutral-50">
-                    <h4 className="font-semibold text-neutral-900 mb-2 text-sm">Example {idx + 1}</h4>
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-neutral-600">Input:</span>
-                        <div className="font-mono text-neutral-900 mt-1">{tc.input}</div>
-                      </div>
-                      <div className="border-t border-neutral-200 pt-2">
-                        <span className="text-neutral-600">Output:</span>
-                        <div className="font-mono text-green-700 font-semibold mt-1">{tc.expectedOutput}</div>
-                      </div>
+            <div className="space-y-6">
+              <h3 className="text-xs font-black text-neutral-400 uppercase tracking-[0.3em] pl-1">Example Cases</h3>
+              {testCases.filter(tc => !tc.hidden).slice(0, 2).map((tc, idx) => (
+                <div key={idx} className="bg-white rounded-3xl p-6 border border-neutral-200 shadow-sm space-y-4 group hover:border-neutral-900 transition-all duration-500">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-neutral-900 text-white flex items-center justify-center text-[10px] font-black">{idx + 1}</div>
+                    <p className="font-black text-neutral-900 text-[11px] uppercase tracking-widest">Sample Instance</p>
+                  </div>
+                  <div className="space-y-2 font-mono text-sm">
+                    <div className="bg-neutral-50 p-4 rounded-2xl border border-neutral-100 group-hover:border-neutral-200 transition-colors">
+                      <span className="text-neutral-400 mr-4 uppercase text-[10px] font-black block mb-2">Input</span>
+                      <span className="text-neutral-900 font-bold">{tc.input}</span>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN - Editor and Test Cases (flex column) */}
-        <div className="flex-1 flex flex-col bg-neutral-50 overflow-hidden">
-          {/* Code Editor */}
-          <div className="flex-1 flex flex-col bg-white m-4 rounded-lg border border-neutral-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="w-32 h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="java">Java</SelectItem>
-                  <SelectItem value="python">Python</SelectItem>
-                  <SelectItem value="cpp">C++</SelectItem>
-                  <SelectItem value="c">C</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="ghost" className="text-neutral-600 hover:bg-neutral-100">
-                  <RotateCcw className="w-4 h-4" />
-                </Button>
-                <Button size="sm" variant="ghost" className="text-neutral-600 hover:bg-neutral-100">
-                  <Sun className="w-4 h-4" />
-                </Button>
-                <Button size="sm" variant="ghost" className="text-neutral-600 hover:bg-neutral-100">
-                  <Maximize2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex-1 flex overflow-hidden relative">
-              <div className="bg-neutral-100 text-neutral-500 text-xs font-mono py-4 px-2 select-none overflow-hidden">
-                {code.split('\n').map((_, i) => (
-                  <div key={i} className="h-6 leading-6">
-                    {i + 1}
-                  </div>
-                ))}
-              </div>
-              <textarea
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="flex-1 font-mono text-sm bg-neutral-950 text-green-400 resize-none focus:outline-none focus:ring-0 border-0 p-4"
-                spellCheck="false"
-              />
-            </div>
-          </div>
-
-          {/* Test Cases Section */}
-          <div className="h-48 bg-white m-4 mt-0 rounded-lg border border-neutral-200 overflow-hidden flex flex-col">
-            <div className="px-4 py-3 border-b border-neutral-200">
-              <h3 className="font-semibold text-neutral-900 text-sm">Test Cases</h3>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {testCases.map((tc, idx) => (
-                <div key={tc.id || idx} className="flex items-center justify-between p-3 rounded border border-neutral-200 bg-neutral-50 text-sm">
-                  <div className="flex-1">
-                    <div className="font-medium">Test {idx + 1} {tc.hidden ? '🔒' : ''}</div>
-                    <div className="text-xs text-neutral-600">Input: {tc.input}</div>
-                  </div>
-                  <div className={`font-semibold ${testResults[idx]?.passed ? 'text-green-600' : testResults[idx] ? 'text-red-600' : 'text-neutral-500'}`}>
-                    {testResults[idx] ? (testResults[idx].passed ? '✓ Pass' : '✗ Fail') : '—'}
+                    <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 group-hover:border-green-200 transition-colors">
+                      <span className="text-green-600 mr-4 uppercase text-[10px] font-black block mb-2">Output</span>
+                      <span className="text-green-800 font-bold">{tc.expectedOutput}</span>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="px-4 py-3 bg-white border-t border-neutral-200 flex justify-end gap-2">
-            <Button
-              className="rounded-lg gap-2 px-6"
-              style={{ backgroundColor: 'var(--color-warning)' }}
-              onClick={handleRun}
-            >
-              <Play className="w-4 h-4" />
-              Run Code
-            </Button>
-            <Button
-              className="rounded-lg gap-2 px-6"
-              style={{ backgroundColor: 'var(--color-primary)' }}
-              onClick={handleSubmit}
-            >
-              Submit
-            </Button>
+        {/* RIGHT: Editor Area */}
+        <div className="flex-1 flex flex-col bg-[#0A0A0A] min-w-0">
+          <div className="h-12 bg-[#1A1A1A] flex items-center px-6 justify-between border-b border-white/5 shrink-0">
+            <div className="flex items-center gap-6">
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger className="w-32 h-8 bg-[#252526] border-none text-neutral-300 text-[11px] font-black uppercase tracking-widest rounded-lg focus:ring-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1A1A1A] border-white/5 text-neutral-300">
+                  {allowedLanguages.map(l => (
+                    <SelectItem key={l} value={l} className="uppercase text-[10px] font-black tracking-widest">{l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="h-4 w-px bg-white/10" />
+              <div className="flex items-center gap-3 text-neutral-400">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Solution.{language}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button size="icon" variant="ghost" className="w-8 h-8 text-neutral-500 hover:text-white hover:bg-white/5 rounded-lg"><RotateCcw className="w-4 h-4" /></Button>
+              <Button size="icon" variant="ghost" className="w-8 h-8 text-neutral-500 hover:text-white hover:bg-white/5 rounded-lg"><Maximize2 className="w-4 h-4" /></Button>
+            </div>
+          </div>
+
+          <div className="flex-1 relative min-h-0 bg-[#0A0A0A]">
+            <textarea
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="w-full h-full bg-transparent text-neutral-300 font-mono text-[15px] p-10 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar selection:bg-blue-500/30"
+              spellCheck={false}
+              placeholder="// Write your elite solution here..."
+            />
+          </div>
+
+          <div onMouseDown={() => setIsResizingBottom(true)} className="h-1 bg-[#252526] hover:bg-neutral-500 cursor-row-resize shrink-0 transition-colors flex items-center justify-center group">
+            <div className="w-12 h-0.5 bg-white/10 group-hover:bg-white/40 rounded-full" />
+          </div>
+
+          <div style={{ height: bottomPanelHeight }} className="bg-[#141414] flex flex-col shrink-0">
+            <div className="h-12 bg-[#1A1A1A] flex items-center px-8 justify-between border-b border-white/5 shrink-0">
+              <div className="flex items-center gap-10">
+                <button className="text-[10px] font-black text-white uppercase tracking-[0.2em] border-b-2 border-white pb-4 mt-4 transition-all">Test Cases</button>
+                <button className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em] pb-4 mt-4 transition-all hover:text-white">Console</button>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={handleRun} className="h-8 bg-white/5 border-white/10 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all">
+                  <Play className="w-3 h-3 mr-2" /> Run Test
+                </Button>
+                <Button onClick={handleSubmit} className="h-8 px-6 bg-white text-black hover:bg-neutral-200 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-xl active:scale-95">
+                  Submit
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 p-10 overflow-y-auto custom-scrollbar-dark grid grid-cols-1 md:grid-cols-2 gap-6">
+              {testCases.map((tc, idx) => (
+                <div key={tc.id || idx} className="bg-[#1A1A1A] rounded-2xl p-6 border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Test {idx + 1}</span>
+                      {tc.hidden && <Lock className="w-3 h-3 text-neutral-700" />}
+                    </div>
+                    <div className="text-xs font-mono text-neutral-400">Input: <span className="text-neutral-200">{tc.input}</span></div>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${testResults[idx]?.passed ? 'bg-green-500/10 text-green-500' : testResults[idx] ? 'bg-red-500/10 text-red-500' : 'bg-white/5 text-neutral-600'}`}>
+                      {testResults[idx] ? (testResults[idx].passed ? 'Passed' : 'Failed') : 'Untested'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

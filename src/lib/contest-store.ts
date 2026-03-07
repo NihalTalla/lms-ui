@@ -4,13 +4,14 @@ export type QuestionType = 'coding' | 'mcq';
 export interface Question {
     id: string;
     title: string;
-    description?: string;
+    description: string;
     difficulty: 'easy' | 'medium' | 'hard';
     topic: string;
     points: number;
     type: QuestionType;
     options?: string[];
     correctAnswer?: string;
+    testCases?: { input: string; output: string; hidden?: boolean }[];
 }
 
 export interface Contest {

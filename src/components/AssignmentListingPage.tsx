@@ -83,20 +83,20 @@ export function AssignmentListingPage({
   };
 
   return (
-    <div className="fixed inset-0 z-50 w-screen h-screen bg-neutral-50 overflow-hidden text-neutral-900 font-sans">
-      <header className="h-16 bg-white border-b border-neutral-200 flex items-center px-8 flex-shrink-0">
-        <div className="flex items-center gap-4">
+    <div className="fixed inset-0 z-50 w-screen h-screen bg-neutral-50 overflow-hidden text-neutral-900 font-sans flex flex-col">
+      <header className="h-20 bg-white border-b border-neutral-100 flex items-center px-12 shrink-0 shadow-sm z-10 transition-all">
+        <div className="flex items-center gap-6">
           <EdRealmLogo size="small" />
-          <div className="h-6 w-px bg-neutral-200" />
-          <Button variant="ghost" className="text-neutral-500 hover:text-neutral-900 p-0 h-auto" onClick={onBack}>
-            <ArrowLeft className="w-5 h-5 mr-1" />
-            Back
+          <div className="h-8 w-px bg-neutral-200" />
+          <Button variant="ghost" className="text-neutral-500 hover:text-neutral-900 px-3 py-2 h-auto rounded-xl hover:bg-neutral-50 flex items-center transition-all active:scale-95" onClick={onBack}>
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            <span className="font-bold">Back</span>
           </Button>
-          <div className="h-6 w-px bg-neutral-200" />
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-neutral-500">{courseName}</span>
-            <ChevronRight className="w-4 h-4 text-neutral-300" />
-            <span className="font-bold text-neutral-900">{moduleName}</span>
+          <div className="h-8 w-px bg-neutral-200" />
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-neutral-400 font-medium uppercase tracking-widest text-[10px]">{courseName}</span>
+            <ChevronRight className="w-3 h-3 text-neutral-300" />
+            <span className="font-black text-neutral-900 uppercase tracking-widest text-[10px]">{moduleName}</span>
           </div>
         </div>
       </header>

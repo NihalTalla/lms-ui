@@ -10,18 +10,22 @@ import { Trophy, Plus, Clock, Users, Code, Trash2, Eye, ArrowRight, ArrowLeft, S
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { useContestNotification } from './ContestNotification';
 import { loadContests, saveContests, Contest as StoreContest, Question as StoreQuestion } from '../lib/contest-store';
 
 interface Question {
     id: string;
     title: string;
+    description: string;
     difficulty: 'easy' | 'medium' | 'hard';
     topic: string;
     points: number;
     type: 'coding' | 'mcq';
     options?: string[];
     correctAnswer?: string;
+    testCases?: { input: string; output: string; hidden?: boolean }[];
+    tags?: string[];
 }
 interface Contest { id: string; name: string; description: string; totalQuestions: number; startTime: string; endTime: string; status: 'draft' | 'scheduled' | 'active' | 'completed'; participants: number; questions: Question[]; createdAt?: string; duration?: string; }
 
@@ -37,27 +41,41 @@ export function CodingContest() {
     const [currentStep, setCurrentStep] = useState(1);
     const [questionMode, setQuestionMode] = useState<'fetch' | 'create' | null>(null);
     const [newContest, setNewContest] = useState({ name: '', description: '', startTime: '', endTime: '', selectedQuestions: [] as string[] });
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    const [questionSearch, setQuestionSearch] = useState('');
     const [newQuestion, setNewQuestion] = useState({
         title: '',
-        difficulty: 'medium' as 'easy' | 'medium' | 'hard',
+        description: '',
+        difficulty: 'easy' as 'easy' | 'medium' | 'hard',
         topic: '',
         points: 100,
         type: 'coding' as 'coding' | 'mcq',
         options: ['', '', '', ''],
         correctAnswer: '',
+        testCases: [] as { input: string; output: string; hidden?: boolean }[],
+        tags: [] as string[],
     });
 
     const [questionBank, setQuestionBank] = useState<Question[]>([
-        { id: '1', title: 'Two Sum', difficulty: 'easy', topic: 'Arrays', points: 50, type: 'coding' },
-        { id: '2', title: 'Valid Parentheses', difficulty: 'easy', topic: 'Stacks', points: 50, type: 'coding' },
-        { id: '3', title: 'Binary Search', difficulty: 'easy', topic: 'Searching', points: 50, type: 'coding' },
-        { id: '4', title: 'Merge Intervals', difficulty: 'medium', topic: 'Arrays', points: 100, type: 'coding' },
-        { id: '5', title: 'LRU Cache', difficulty: 'medium', topic: 'Design', points: 100, type: 'coding' },
-        { id: '6', title: 'Longest Substring', difficulty: 'medium', topic: 'Strings', points: 100, type: 'coding' },
-        { id: '7', title: 'Median of Arrays', difficulty: 'hard', topic: 'Arrays', points: 150, type: 'coding' },
-        { id: '8', title: 'Word Ladder', difficulty: 'hard', topic: 'Graphs', points: 150, type: 'coding' },
-        { id: 'mcq-1', title: 'Time Complexity of Binary Search', difficulty: 'easy', topic: 'Complexity', points: 30, type: 'mcq', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'], correctAnswer: 'O(log n)' },
+        { id: '1', title: 'Two Sum', description: 'Given an array of integers, return indices of the two numbers such that they add up to a specific target.', difficulty: 'easy', topic: 'Arrays', points: 50, type: 'coding', testCases: [{ input: '[2,7,11,15]\n9', output: '[0,1]', hidden: false }] },
+        { id: '2', title: 'Valid Parentheses', description: 'Given a string containing just the characters, determine if the input string is valid.', difficulty: 'easy', topic: 'Stacks', points: 50, type: 'coding', testCases: [{ input: '()[]{}', output: 'true', hidden: false }] },
+        { id: '3', title: 'Binary Search', description: 'Implement binary search algorithm.', difficulty: 'easy', topic: 'Searching', points: 50, type: 'coding', testCases: [{ input: '[-1,0,3,5,9,12]\n9', output: '4', hidden: false }] },
+        { id: '4', title: 'Merge Intervals', description: 'Merge overlapping intervals.', difficulty: 'medium', topic: 'Arrays', points: 100, type: 'coding' },
+        { id: '5', title: 'LRU Cache', description: 'Design an LRU cache.', difficulty: 'medium', topic: 'Design', points: 100, type: 'coding' },
+        { id: '6', title: 'Longest Substring', description: 'Find longest substring without repeating characters.', difficulty: 'medium', topic: 'Strings', points: 100, type: 'coding' },
+        { id: '7', title: 'Median of Arrays', description: 'Find median of two sorted arrays.', difficulty: 'hard', topic: 'Arrays', points: 150, type: 'coding' },
+        { id: '8', title: 'Word Ladder', description: 'Find shortest transformation sequence.', difficulty: 'hard', topic: 'Graphs', points: 150, type: 'coding' },
+        { id: 'mcq-1', title: 'Time Complexity of Binary Search', description: 'What is the time complexity of binary search?', difficulty: 'easy', topic: 'Complexity', points: 30, type: 'mcq', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'], correctAnswer: 'O(log n)' },
     ]);
+
+    const topicStats = React.useMemo(() => {
+        const stats = new Map<string, number>();
+        questionBank.forEach(q => {
+            const t = q.topic || 'General';
+            stats.set(t, (stats.get(t) || 0) + 1);
+        });
+        return Array.from(stats.entries()).map(([name, total]) => ({ name, total }));
+    }, [questionBank]);
 
     const defaultContests: Contest[] = [
         { id: '1', name: 'Weekly Challenge #1', description: 'Weekly coding challenge', totalQuestions: 5, startTime: '2026-01-25 09:00', endTime: '2026-01-25 12:00', status: 'scheduled', participants: 45, questions: questionBank.slice(0, 5) },
@@ -78,9 +96,11 @@ export function CodingContest() {
 
     const resetForm = () => {
         setNewContest({ name: '', description: '', startTime: '', endTime: '', selectedQuestions: [] });
-        setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' });
+        setNewQuestion({ title: '', description: '', difficulty: 'easy', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '', testCases: [], tags: [] });
         setCurrentStep(1);
         setQuestionMode(null);
+        setSelectedTopic(null);
+        setQuestionSearch('');
     };
 
     const handleNextStep = () => { if (!newContest.name || !newContest.startTime || !newContest.endTime) { toast.error('Fill required fields'); return; } if (new Date(newContest.startTime) >= new Date(newContest.endTime)) { toast.error('End time must be after start'); return; } setCurrentStep(2); };
@@ -101,12 +121,14 @@ export function CodingContest() {
                 const mapped: Question[] = questionsArr.map((q: any, idx: number) => ({
                     id: q.id || `upload-${Date.now()}-${idx}`,
                     title: q.title || `Imported Question ${idx + 1}`,
+                    description: q.description || '',
                     difficulty: (q.difficulty || 'medium') as 'easy' | 'medium' | 'hard',
                     topic: q.topic || 'General',
                     points: q.points || 100,
                     type: q.type === 'mcq' ? 'mcq' : 'coding',
                     options: q.options || ['', '', '', ''],
                     correctAnswer: q.correctAnswer || '',
+                    testCases: q.testCases || [],
                 }));
 
                 setQuestionBank(prev => {
@@ -195,32 +217,37 @@ export function CodingContest() {
             const q: Question = {
                 id: `new-${Date.now()}`,
                 title: newQuestion.title,
+                description: newQuestion.description,
                 difficulty: newQuestion.difficulty,
                 topic: newQuestion.topic,
                 points: newQuestion.points,
                 type: 'mcq',
                 options,
                 correctAnswer: newQuestion.correctAnswer,
+                tags: newQuestion.tags,
             };
             setQuestionBank(prev => [q, ...prev]);
             setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] }));
             toast.success('Question added');
-            setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' });
+            setNewQuestion({ title: '', description: '', difficulty: 'easy', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '', testCases: [], tags: [] });
             setShowNextQuestionPrompt(true);
             return;
         }
         const q: Question = {
             id: `new-${Date.now()}`,
             title: newQuestion.title,
+            description: newQuestion.description,
             difficulty: newQuestion.difficulty,
             topic: newQuestion.topic,
             points: newQuestion.points,
             type: 'coding',
+            testCases: newQuestion.testCases,
+            tags: newQuestion.tags,
         };
         setQuestionBank(prev => [q, ...prev]);
         setNewContest(prev => ({ ...prev, selectedQuestions: [...prev.selectedQuestions, q.id] }));
         toast.success('Question added');
-        setNewQuestion({ title: '', difficulty: 'medium', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '' });
+        setNewQuestion({ title: '', description: '', difficulty: 'easy', topic: '', points: 100, type: 'coding', options: ['', '', '', ''], correctAnswer: '', testCases: [], tags: [] });
         setShowNextQuestionPrompt(true);
     };
 
@@ -329,108 +356,354 @@ export function CodingContest() {
                             <Input type="file" accept=".json,.txt" onChange={handleQuestionFileUpload} />
                         </div>
                         {!questionMode && (<div className="grid grid-cols-2 gap-4"><Card className="cursor-pointer hover:border-blue-400" onClick={() => setQuestionMode('fetch')}><CardContent className="pt-6 text-center"><Search className="w-10 h-10 mx-auto text-blue-600 mb-2" /><p className="font-semibold">Fetch Existing</p><p className="text-sm text-neutral-500">From question bank</p></CardContent></Card><Card className="cursor-pointer hover:border-purple-400" onClick={() => setQuestionMode('create')}><CardContent className="pt-6 text-center"><Plus className="w-10 h-10 mx-auto text-purple-600 mb-2" /><p className="font-semibold">Create New</p><p className="text-sm text-neutral-500">Add new question</p></CardContent></Card></div>)}
-                        {questionMode === 'fetch' && (<div className="space-y-3"><div className="flex justify-between items-center bg-neutral-50 p-3 rounded-lg border border-neutral-200"><p className="font-semibold text-lg text-blue-700">Selected: {newContest.selectedQuestions.length}</p><Button variant="outline" size="sm" onClick={() => setQuestionMode(null)} className="hover:bg-neutral-100"><ArrowLeft className="w-4 h-4 mr-2" />Back</Button></div><div className="max-h-[500px] overflow-y-auto border rounded-xl shadow-inner scrollbar-thin scrollbar-thumb-neutral-200">{questionBank.map(q => (<div key={q.id} className={`p-4 border-b last:border-0 cursor-pointer hover:bg-blue-50/30 transition-colors flex justify-between items-center ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''}`} onClick={() => toggleQuestionSelection(q.id)}><div className="flex items-center gap-4"><div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-600 border-blue-600 text-white scale-110 shadow-sm' : 'border-neutral-300'}`}>{newContest.selectedQuestions.includes(q.id) && <CheckCircle2 className="w-4 h-4" />}</div><div><p className="font-semibold text-neutral-800">{q.title}</p><p className="text-sm text-neutral-500 font-medium">{q.topic} • {q.points}pts</p></div></div><Badge className={`${getDifficultyColor(q.difficulty)} px-3 py-1 rounded-full uppercase text-[10px] tracking-wider`}>{q.difficulty}</Badge></div>))}</div></div>)}
+                        {questionMode === 'fetch' && (
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-neutral-200 shadow-sm">
+                                    <div className="flex items-center gap-4 flex-1 mr-4">
+                                        <div className="relative flex-1">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                                            <Input
+                                                placeholder="Search in question bank..."
+                                                value={questionSearch}
+                                                onChange={(e) => setQuestionSearch(e.target.value)}
+                                                className="pl-10 h-10 rounded-lg"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Badge className="bg-blue-600 text-white px-3 py-1 font-bold">Selected: {newContest.selectedQuestions.length}</Badge>
+                                        <Button variant="outline" size="sm" onClick={() => setQuestionMode(null)} className="rounded-lg">
+                                            <ArrowLeft className="w-4 h-4 mr-2" />Back
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Topics horizontal list - inspired by ProblemsPage.tsx */}
+                                <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-sm">
+                                    <div className="flex items-center justify-between mb-3 px-1">
+                                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Topic Categories</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button
+                                            onClick={() => setSelectedTopic(null)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${!selectedTopic ? 'bg-neutral-900 border-neutral-900 text-white' : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300'}`}
+                                        >
+                                            All Topics
+                                        </button>
+                                        {topicStats.map(topic => (
+                                            <button
+                                                key={topic.name}
+                                                onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${selectedTopic === topic.name ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300'}`}
+                                            >
+                                                {topic.name}
+                                                <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${selectedTopic === topic.name ? 'bg-blue-500/50' : 'bg-neutral-100 text-neutral-400'}`}>{topic.total}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="max-h-[450px] overflow-y-auto border border-neutral-200 rounded-xl shadow-inner scrollbar-thin bg-neutral-50/30">
+                                    <div className="divide-y divide-neutral-100">
+                                        {questionBank
+                                            .filter(q => {
+                                                const matchesSearch = q.title.toLowerCase().includes(questionSearch.toLowerCase()) || q.topic.toLowerCase().includes(questionSearch.toLowerCase());
+                                                const matchesTopic = !selectedTopic || q.topic === selectedTopic;
+                                                return matchesSearch && matchesTopic;
+                                            })
+                                            .map(q => (
+                                                <div
+                                                    key={q.id}
+                                                    className={`p-4 cursor-pointer transition-all flex justify-between items-center group ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-50/80 border-l-4 border-l-blue-600' : 'bg-white hover:bg-neutral-50 border-l-4 border-l-transparent'}`}
+                                                    onClick={() => toggleQuestionSelection(q.id)}
+                                                >
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${newContest.selectedQuestions.includes(q.id) ? 'bg-blue-600 border-blue-600 text-white scale-110 shadow-md' : 'border-neutral-200 bg-white group-hover:border-blue-300'}`}>
+                                                            {newContest.selectedQuestions.includes(q.id) && <CheckCircle2 className="w-4 h-4" />}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="font-bold text-neutral-800">{q.title}</p>
+                                                                <Badge variant="outline" className="text-[9px] h-4 font-bold border-neutral-100 text-neutral-400 uppercase">{q.topic}</Badge>
+                                                            </div>
+                                                            <div className="flex items-center gap-3 mt-0.5">
+                                                                <span className="text-xs text-neutral-500 font-bold">{q.points} Points</span>
+                                                                <div className="w-1 h-1 rounded-full bg-neutral-300" />
+                                                                <span className="text-xs text-neutral-500 capitalize">{q.type}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <Badge className={`${getDifficultyColor(q.difficulty)} px-3 py-1 rounded-full uppercase text-[10px] font-black tracking-widest`}>{q.difficulty}</Badge>
+                                                </div>
+                                            ))
+                                        }
+                                        {questionBank.filter(q => {
+                                            const matchesSearch = q.title.toLowerCase().includes(questionSearch.toLowerCase()) || q.topic.toLowerCase().includes(questionSearch.toLowerCase());
+                                            const matchesTopic = !selectedTopic || q.topic === selectedTopic;
+                                            return matchesSearch && matchesTopic;
+                                        }).length === 0 && (
+                                                <div className="py-12 text-center text-neutral-400 italic text-sm">No questions found matching your criteria</div>
+                                            )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {questionMode === 'create' && (
-                            <div className="space-y-3">
-                                <div className="flex justify-between">
-                                    <p className="text-sm font-medium">New Question</p>
-                                    <Button variant="outline" size="sm" onClick={() => setQuestionMode('fetch')}>Back</Button>
+                            <div className="bg-white border border-neutral-200 rounded-2xl p-8 shadow-sm space-y-8 animate-in fade-in duration-300">
+                                <div className="flex justify-between items-center border-b pb-4 border-neutral-100">
+                                    <h3 className="text-xl font-bold text-neutral-900">Create New Question</h3>
+                                    <Button variant="ghost" size="sm" onClick={() => setQuestionMode(null)} className="h-8 w-8 p-0 hover:bg-neutral-100 rounded-full">
+                                        <ArrowLeft className="w-4 h-4" />
+                                    </Button>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium block mb-1">Title *</label>
-                                        <Input placeholder="Title" value={newQuestion.title} onChange={(e) => setNewQuestion(p => ({ ...p, title: e.target.value }))} />
+                                        <label className="text-xs font-black text-neutral-400 uppercase tracking-widest pl-1">Question Title</label>
+                                        <Input
+                                            placeholder="e.g., Bubble Sort Implementation"
+                                            value={newQuestion.title}
+                                            onChange={(e) => setNewQuestion(p => ({ ...p, title: e.target.value }))}
+                                            className="h-12 border-neutral-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all shadow-sm font-medium"
+                                        />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium block mb-1">Topic *</label>
-                                        <Input placeholder="e.g., Arrays" value={newQuestion.topic} onChange={(e) => setNewQuestion(p => ({ ...p, topic: e.target.value }))} />
+                                        <label className="text-xs font-black text-neutral-400 uppercase tracking-widest pl-1">Question Type</label>
+                                        <Select value={newQuestion.type} onValueChange={(v: 'coding' | 'mcq') => setNewQuestion(p => ({ ...p, type: v, options: v === 'mcq' ? ['', '', '', ''] : [] }))}>
+                                            <SelectTrigger className="h-12 border-neutral-200 rounded-xl bg-white shadow-sm font-medium">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl shadow-xl border-neutral-100">
+                                                <SelectItem value="coding">Coding</SelectItem>
+                                                <SelectItem value="mcq">MCQ</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div>
-                                        <label className="text-sm font-medium block mb-1">Difficulty</label>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-neutral-400 uppercase tracking-widest pl-1">Difficulty</label>
                                         <Select value={newQuestion.difficulty} onValueChange={(v: 'easy' | 'medium' | 'hard') => setNewQuestion(p => ({ ...p, difficulty: v }))}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
-                                            <SelectContent>
+                                            <SelectTrigger className="h-12 border-neutral-200 rounded-xl bg-white shadow-sm font-medium">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl shadow-xl border-neutral-100">
                                                 <SelectItem value="easy">Easy</SelectItem>
                                                 <SelectItem value="medium">Medium</SelectItem>
                                                 <SelectItem value="hard">Hard</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <div>
-                                        <label className="text-sm font-medium block mb-1">Points</label>
-                                        <Input type="number" value={newQuestion.points} onChange={(e) => setNewQuestion(p => ({ ...p, points: parseInt(e.target.value) || 0 }))} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center pl-1">
+                                        <label className="text-xs font-black text-neutral-400 uppercase tracking-widest">Description</label>
+                                        <Badge variant="outline" className="text-[9px] border-neutral-100 text-neutral-400 font-bold uppercase transition-all">Support Markdown</Badge>
                                     </div>
-                                    <div>
-                                        <label className="text-sm font-medium block mb-1">Type</label>
-                                        <Select value={newQuestion.type} onValueChange={(v: 'coding' | 'mcq') => setNewQuestion(p => ({ ...p, type: v }))}>
-                                            <SelectTrigger><SelectValue /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="coding">Coding</SelectItem>
-                                                <SelectItem value="mcq">MCQ</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                    <Textarea
+                                        placeholder="Detailed problem description..."
+                                        rows={5}
+                                        value={newQuestion.description}
+                                        onChange={(e) => setNewQuestion(p => ({ ...p, description: e.target.value }))}
+                                        className="border-neutral-200 rounded-2xl bg-neutral-50/30 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all shadow-sm leading-relaxed p-6"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Topic / Category</label>
+                                        <Input
+                                            placeholder="e.g., Arrays, Strings..."
+                                            value={newQuestion.topic}
+                                            onChange={(e) => setNewQuestion(p => ({ ...p, topic: e.target.value }))}
+                                            className="h-11 border-neutral-200 rounded-xl font-medium"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Category Tags</label>
+                                        <Input
+                                            placeholder="e.g., dynamic, greedy"
+                                            value={newQuestion.tags?.join(', ') || ''}
+                                            onChange={(e) => setNewQuestion(p => ({ ...p, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) }))}
+                                            className="h-11 border-neutral-200 rounded-xl font-medium"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Points</label>
+                                        <Input
+                                            type="number"
+                                            value={newQuestion.points}
+                                            onChange={(e) => setNewQuestion(p => ({ ...p, points: parseInt(e.target.value) || 0 }))}
+                                            className="h-11 border-neutral-200 rounded-xl font-medium"
+                                        />
                                     </div>
                                 </div>
+
                                 {newQuestion.type === 'mcq' && (
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium block mb-1">Options</label>
-                                        {(newQuestion.options || []).map((opt, idx) => (
-                                            <div key={idx} className="flex gap-2">
-                                                <Input
-                                                    value={opt}
-                                                    onChange={(e) => {
-                                                        const options = [...(newQuestion.options || [])];
-                                                        options[idx] = e.target.value;
-                                                        const cleaned = options.map(o => o.trim()).filter(o => o);
-                                                        const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
-                                                        setNewQuestion(p => ({ ...p, options, correctAnswer: nextCorrect }));
-                                                    }}
-                                                    placeholder={`Option ${idx + 1}`}
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        const options = (newQuestion.options || []).filter((_, i) => i !== idx);
-                                                        const cleaned = options.map(o => o.trim()).filter(o => o);
-                                                        const nextCorrect = cleaned.includes(newQuestion.correctAnswer || '') ? newQuestion.correctAnswer : '';
-                                                        setNewQuestion(p => ({ ...p, options, correctAnswer: nextCorrect }));
-                                                    }}
-                                                    className="px-2"
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </Button>
-                                            </div>
-                                        ))}
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setNewQuestion(p => ({ ...p, options: [...(p.options || []), ''] }))}
-                                            className="w-fit"
-                                        >
-                                            <Plus className="w-4 h-4 mr-2" />Add Option
-                                        </Button>
-                                        <div>
-                                            <label className="text-sm font-medium block mb-1">Correct Answer</label>
+                                    <div className="space-y-6 pt-4 border-t border-neutral-50">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-black text-neutral-800 uppercase tracking-wide">MCQ Options</label>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setNewQuestion(p => ({ ...p, options: [...(p.options || []), ''] }))}
+                                                className="rounded-full h-8 px-4 font-bold text-xs"
+                                            >
+                                                <Plus className="w-3.5 h-3.5 mr-2" />Add Option
+                                            </Button>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {(newQuestion.options || []).map((opt, idx) => (
+                                                <div key={idx} className="flex gap-2 items-center">
+                                                    <div className="w-6 h-6 rounded-full bg-neutral-100 flex items-center justify-center text-[10px] font-bold text-neutral-400 shrink-0">{String.fromCharCode(65 + idx)}</div>
+                                                    <Input
+                                                        value={opt}
+                                                        onChange={(e) => {
+                                                            const options = [...(newQuestion.options || [])];
+                                                            options[idx] = e.target.value;
+                                                            setNewQuestion(p => ({ ...p, options }));
+                                                        }}
+                                                        placeholder={`Option ${String.fromCharCode(65 + idx)}`}
+                                                        className="border-neutral-200 rounded-lg h-10 shadow-sm"
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            const options = (newQuestion.options || []).filter((_, i) => i !== idx);
+                                                            setNewQuestion(p => ({ ...p, options }));
+                                                        }}
+                                                        className="h-8 w-8 p-0 text-red-400 hover:text-red-500 hover:bg-red-50"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="space-y-3 p-4 bg-green-50/50 rounded-xl border border-green-100/50">
+                                            <label className="text-xs font-black text-green-700 uppercase tracking-widest pl-1">Select Correct Answer</label>
                                             <Select value={newQuestion.correctAnswer} onValueChange={(v) => setNewQuestion(p => ({ ...p, correctAnswer: v }))}>
-                                                <SelectTrigger><SelectValue placeholder="Select answer" /></SelectTrigger>
-                                                <SelectContent>
+                                                <SelectTrigger className="border-green-200 rounded-lg bg-white shadow-sm font-bold text-green-700">
+                                                    <SelectValue placeholder="Which one is correct?" />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-lg shadow-xl border-neutral-100">
                                                     {(newQuestion.options || [])
                                                         .map(o => o.trim())
                                                         .filter(o => o)
                                                         .map((opt, idx) => (
-                                                            <SelectItem key={`${opt}-${idx}`} value={opt}>{opt}</SelectItem>
+                                                            <SelectItem key={`${opt}-${idx}`} value={opt} className="font-medium">{opt}</SelectItem>
                                                         ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
                                     </div>
                                 )}
-                                <Button onClick={handleAddNewQuestion} className="w-full" style={{ color: 'white' }}><Plus className="w-4 h-4 mr-2" style={{ color: 'white' }} />Add Question</Button>
+
+                                {newQuestion.type === 'coding' && (
+                                    <div className="space-y-6 pt-6 border-t border-neutral-100">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-black text-neutral-800 uppercase tracking-wide">Test Cases</label>
+                                            <Button
+                                                type="button"
+                                                onClick={() => setNewQuestion(p => ({ ...p, testCases: [...p.testCases, { input: '', output: '', hidden: false }] }))}
+                                                className="bg-neutral-50 border border-neutral-200 text-neutral-700 hover:bg-white shadow-sm rounded-full h-9 px-5 font-bold text-xs flex items-center gap-2"
+                                            >
+                                                <Plus className="w-4 h-4" /> Add Case
+                                            </Button>
+                                        </div>
+
+                                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+                                            {newQuestion.testCases.map((tc, idx) => (
+                                                <div key={idx} className="p-6 bg-neutral-50/50 rounded-2xl border border-neutral-100 shadow-sm space-y-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <Badge variant="outline" className="text-[10px] font-black tracking-widest uppercase border-neutral-200 text-neutral-400 px-3">Case #{idx + 1}</Badge>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    id={`hidden-${idx}`}
+                                                                    checked={tc.hidden}
+                                                                    onChange={(e) => {
+                                                                        const cases = [...(newQuestion.testCases || [])];
+                                                                        cases[idx].hidden = e.target.checked;
+                                                                        setNewQuestion(p => ({ ...p, testCases: cases }));
+                                                                    }}
+                                                                    className="w-4 h-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+                                                                />
+                                                                <label htmlFor={`hidden-${idx}`} className="text-xs font-bold text-neutral-500 cursor-pointer">Hidden Case</label>
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    const cases = (newQuestion.testCases || []).filter((_, i) => i !== idx);
+                                                                    setNewQuestion(p => ({ ...p, testCases: cases }));
+                                                                }}
+                                                                className="h-8 w-8 p-0 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="space-y-2">
+                                                            <label className="text-[10px] font-black uppercase text-neutral-400 tracking-wider pl-1">Input Data</label>
+                                                            <Textarea
+                                                                rows={2}
+                                                                value={tc.input}
+                                                                onChange={(e) => {
+                                                                    const cases = [...(newQuestion.testCases || [])];
+                                                                    cases[idx].input = e.target.value;
+                                                                    setNewQuestion(p => ({ ...p, testCases: cases }));
+                                                                }}
+                                                                placeholder="Standard input"
+                                                                className="border-neutral-200 rounded-xl bg-white font-mono text-xs"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-[10px] font-black uppercase text-neutral-400 tracking-wider pl-1">Expected Output</label>
+                                                            <Textarea
+                                                                rows={2}
+                                                                value={tc.output}
+                                                                onChange={(e) => {
+                                                                    const cases = [...(newQuestion.testCases || [])];
+                                                                    cases[idx].output = e.target.value;
+                                                                    setNewQuestion(p => ({ ...p, testCases: cases }));
+                                                                }}
+                                                                placeholder="Standard output"
+                                                                className="border-neutral-200 rounded-xl bg-white font-mono text-xs"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {newQuestion.testCases.length === 0 && (
+                                                <div className="py-12 border-2 border-dashed border-neutral-100 rounded-2xl flex flex-col items-center justify-center bg-neutral-50/20 text-neutral-300">
+                                                    <Code className="w-10 h-10 mb-2 opacity-10" />
+                                                    <p className="text-xs font-bold uppercase tracking-widest opacity-40">No test cases added yet</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-3 pt-8 border-t border-neutral-100 mt-4">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setQuestionMode(null)}
+                                        className="rounded-xl h-12 px-8 font-bold text-neutral-600 border-neutral-200 hover:bg-neutral-50 shadow-sm"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleAddNewQuestion}
+                                        className="bg-neutral-900 hover:bg-neutral-800 text-white shadow-xl rounded-xl h-12 px-10 font-black tracking-tight"
+                                        style={{ color: 'white' }}
+                                    >
+                                        Add to Test
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </div>)}

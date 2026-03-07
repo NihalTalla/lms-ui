@@ -397,44 +397,80 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
         <main className="flex-1 flex flex-col min-w-0 bg-[#F8F9FA] relative">
           {/* MCQ LAYOUT */}
           {!isCoding && (
-            <div className="flex-1 overflow-y-auto p-12 flex justify-center">
-              <div className="w-full max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Badge className="bg-neutral-900 text-white hover:bg-neutral-800">{currentQuestion.difficulty}</Badge>
-                    <span className="text-neutral-400 text-sm font-bold uppercase tracking-widest">{currentQuestion.points} Points</span>
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto p-12">
+                <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4">
+                      <Badge className="bg-neutral-900 text-white px-4 py-1 font-bold text-xs uppercase tracking-wider">{currentQuestion.difficulty}</Badge>
+                      <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-full border border-amber-100">
+                        <Trophy className="w-3.5 h-3.5 text-amber-600" />
+                        <span className="text-amber-800 text-xs font-black uppercase tracking-widest">{currentQuestion.points} Points</span>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h2 className="text-4xl font-black text-neutral-900 leading-tight tracking-tight">{currentQuestion.title}</h2>
+                      <div className="p-1 px-4 border-l-4 border-neutral-200 bg-neutral-50/50">
+                        <p className="text-xl text-neutral-600 leading-relaxed font-medium">{currentQuestion.description}</p>
+                      </div>
+                    </div>
                   </div>
-                  <h2 className="text-3xl font-bold text-neutral-900 leading-tight">{currentQuestion.title}</h2>
-                  <p className="text-lg text-neutral-600 leading-relaxed">{currentQuestion.description}</p>
-                </div>
-                <Card className="border-neutral-200 shadow-sm">
-                  <CardContent className="p-8">
+
+                  <div className="grid grid-cols-1 gap-4">
                     <RadioGroup
                       value={answers[currentQuestion.id] || ''}
                       onValueChange={(val) => setAnswers({ ...answers, [currentQuestion.id]: val })}
                       className="space-y-4"
                     >
-                      {currentQuestion.options?.map((opt, idx) => (
-                        <div key={idx} className={`flex items-center space-x-2 border rounded-xl p-4 transition-all cursor-pointer ${answers[currentQuestion.id] === opt ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900' : 'border-neutral-200 hover:border-neutral-300'}`}>
-                          <RadioGroupItem value={opt} id={`opt-${idx}`} className="text-neutral-900 border-neutral-400" />
-                          <Label htmlFor={`opt-${idx}`} className="flex-1 cursor-pointer font-medium text-lg ml-3 text-neutral-800">{opt}</Label>
-                        </div>
-                      ))}
+                      {currentQuestion.options?.map((opt, idx) => {
+                        const isSelected = answers[currentQuestion.id] === opt;
+                        return (
+                          <div
+                            key={idx}
+                            onClick={() => setAnswers({ ...answers, [currentQuestion.id]: opt })}
+                            className={`flex items-center space-x-2 border-2 rounded-[2rem] p-6 transition-all cursor-pointer group hover:shadow-lg ${isSelected ? 'border-neutral-900 bg-neutral-900 text-white ring-4 ring-neutral-100' : 'border-neutral-100 bg-white hover:border-neutral-200'}`}
+                          >
+                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isSelected ? 'border-white bg-white text-neutral-900' : 'border-neutral-200 group-hover:border-neutral-400'}`}>
+                              <span className="text-xs font-black">{String.fromCharCode(65 + idx)}</span>
+                            </div>
+                            <Label htmlFor={`opt-${idx}`} className={`flex-1 cursor-pointer font-bold text-xl ml-4 pointer-events-none ${isSelected ? 'text-white' : 'text-neutral-700'}`}>{opt}</Label>
+                            {isSelected && <CheckCircle2 className="w-6 h-6 text-white ml-2 animate-in zoom-in duration-300" />}
+                          </div>
+                        );
+                      })}
                     </RadioGroup>
-                  </CardContent>
-                </Card>
-                <div className="flex items-center gap-4 pt-4">
-                  <Button onClick={handleQuestionSubmit} disabled={submittedQuestions.has(currentQuestion.id)} className="bg-black text-white hover:bg-neutral-800 h-12 px-8 rounded-xl font-bold text-base shadow-lg">{submittedQuestions.has(currentQuestion.id) ? 'Submitted' : 'Submit Answer'}</Button>
-                  <Button
-                    onClick={handleNext}
-                    className="h-12 px-8 rounded-xl font-bold text-base flex items-center gap-2 shadow-lg border-none"
-                    style={{ backgroundColor: '#000', color: '#fff' }}
-                  >
-                    {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Finish'}
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
+                  </div>
                 </div>
               </div>
+
+              {/* Fixed Footer for MCQ */}
+              <footer className="h-24 border-t border-neutral-100 bg-white px-12 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-4">
+                  <span className="text-xs font-black text-neutral-400 uppercase tracking-widest">Question {currentQuestionIndex + 1} of {questions.length}</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Button
+                    onClick={handleQuestionSubmit}
+                    disabled={submittedQuestions.has(currentQuestion.id) || !answers[currentQuestion.id]}
+                    className={`h-14 px-10 rounded-2xl font-black text-base shadow-xl transition-all active:scale-95 ${submittedQuestions.has(currentQuestion.id) ? 'bg-green-100 text-green-700' : 'bg-neutral-900 text-white hover:bg-neutral-800'}`}
+                  >
+                    {submittedQuestions.has(currentQuestion.id) ? (
+                      <span className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5" /> Submitted</span>
+                    ) : 'Submit Answer'}
+                  </Button>
+                  <Button
+                    onClick={handleNext}
+                    disabled={!submittedQuestions.has(currentQuestion.id) && currentQuestionIndex === questions.length - 1}
+                    className="h-14 px-10 rounded-2xl font-black text-base flex items-center gap-3 shadow-xl transition-all active:scale-95 bg-white border-2 border-neutral-900 text-neutral-900 hover:bg-neutral-50"
+                  >
+                    {currentQuestionIndex < questions.length - 1 ? (
+                      <>Next Question <ChevronRight className="w-5 h-5" /></>
+                    ) : (
+                      <>Finish Contest <Trophy className="w-5 h-5" /></>
+                    )}
+                  </Button>
+                </div>
+              </footer>
             </div>
           )}
 
@@ -442,94 +478,130 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
           {isCoding && (
             <div className="flex-1 flex overflow-hidden">
               {/* LEFT: Problem (Resizable) */}
-              <div style={{ width: `${leftPanelWidth}%` }} className="bg-white border-r border-neutral-200 overflow-y-auto p-6 space-y-6 relative shrink-0">
+              <div style={{ width: `${leftPanelWidth}%` }} className="bg-white border-r border-neutral-200 overflow-y-auto flex flex-col min-w-[300px] relative shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.02)]">
                 {/* Drag Handle */}
                 <div
                   onMouseDown={() => setIsResizingLeft(true)}
-                  className="absolute right-0 top-0 bottom-0 w-1 bg-transparent hover:bg-blue-400 cursor-col-resize z-20 group"
+                  className="absolute right-0 top-0 bottom-0 w-1.5 bg-transparent hover:bg-blue-500 cursor-col-resize z-20 group"
                 >
-                  <div className="w-px h-full bg-neutral-200 group-hover:bg-blue-400 transition-colors mx-auto" />
+                  <div className="w-0.5 h-full bg-neutral-100 group-hover:bg-blue-500 transition-colors mx-auto" />
                 </div>
 
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-bold text-neutral-900">{currentQuestion.title}</h2>
-                  <div className="flex gap-2">
-                    <Badge variant="outline" className="uppercase text-[10px] font-bold">{currentQuestion.difficulty}</Badge>
-                    <Badge variant="outline" className="uppercase text-[10px] font-bold bg-neutral-50">{currentQuestion.points} pts</Badge>
+                <div className="flex-1 p-8 space-y-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-neutral-900 text-white px-3 py-1 font-bold text-[10px] uppercase tracking-wider">{currentQuestion.difficulty}</Badge>
+                      <div className="flex items-center gap-2 px-2.5 py-0.5 bg-neutral-100 rounded-full border border-neutral-200">
+                        <Trophy className="w-3 h-3 text-amber-600" />
+                        <span className="text-neutral-600 text-[10px] font-black uppercase tracking-widest">{currentQuestion.points} Points</span>
+                      </div>
+                    </div>
+                    <h2 className="text-3xl font-black text-neutral-900 leading-tight tracking-tight">{currentQuestion.title}</h2>
+                  </div>
+
+                  <div className="prose prose-neutral max-w-none">
+                    <div className="bg-neutral-50/50 rounded-2xl p-6 border border-neutral-100 leading-relaxed text-neutral-600 font-medium whitespace-pre-wrap">
+                      {currentQuestion.description}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Examples</h3>
+                    {currentQuestion.examples?.map((ex, i) => (
+                      <div key={i} className="bg-white rounded-2xl p-5 border border-neutral-200 shadow-sm space-y-3 group hover:border-neutral-300 transition-all">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded bg-neutral-900 text-white flex items-center justify-center text-[10px] font-bold">{i + 1}</div>
+                          <p className="font-bold text-neutral-900 text-xs uppercase tracking-wider">Example Instance</p>
+                        </div>
+                        <div className="space-y-2 font-mono text-sm">
+                          <div className="bg-neutral-50 p-2 rounded-lg border border-neutral-100"><span className="text-neutral-400 mr-2 uppercase text-[10px] font-bold">Input</span> <span className="text-neutral-800 font-bold">{ex.input}</span></div>
+                          <div className="bg-green-50/50 p-2 rounded-lg border border-green-100/50"><span className="text-green-600 mr-2 uppercase text-[10px] font-bold">Output</span> <span className="text-green-800 font-bold">{ex.output}</span></div>
+                        </div>
+                        {ex.explanation && <p className="text-xs text-neutral-500 italic mt-2">{ex.explanation}</p>}
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="prose prose-neutral prose-sm max-w-none text-neutral-600">
-                  <p className="whitespace-pre-wrap">{currentQuestion.description}</p>
-                </div>
-                {currentQuestion.examples?.map((ex, i) => (
-                  <div key={i} className="bg-neutral-50 rounded-lg p-3 border border-neutral-100 text-sm space-y-1">
-                    <p className="font-bold text-neutral-900 text-xs uppercase">Example {i + 1}</p>
-                    <div><span className="text-neutral-500">Input:</span> <code className="text-neutral-900 font-bold">{ex.input}</code></div>
-                    <div><span className="text-neutral-500">Output:</span> <code className="text-neutral-900 font-bold">{ex.output}</code></div>
-                  </div>
-                ))}
               </div>
 
               {/* RIGHT: Code + Tests */}
-              <div className="flex-1 flex flex-col bg-[#1e1e1e] border-l border-neutral-800 min-w-0">
-                {/* Top: Editor */}
-                <div className="flex-1 flex flex-col min-h-0 relative">
-                  <div className="h-10 bg-[#252526] flex items-center px-4 justify-between border-b border-[#333] shrink-0">
-                    <span className="text-neutral-400 text-xs font-mono">Solution.java</span>
-                    <Badge variant="outline" className="border-green-800 text-green-500 bg-green-900/10 text-[10px]">Auto-Saved</Badge>
+              <div className="flex-1 flex flex-col bg-[#0F0F0F] min-w-0">
+                {/* Top: Editor Header */}
+                <div className="h-12 bg-[#1A1A1A] flex items-center px-6 justify-between border-b border-white/5 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                    <span className="text-neutral-300 text-xs font-black tracking-widest uppercase">Solution.java</span>
                   </div>
-                  <div className="flex-1 relative">
-                    <Textarea
-                      value={answers[currentQuestion.id] || ''}
-                      onChange={(e) => setAnswers({ ...answers, [currentQuestion.id]: e.target.value })}
-                      className="w-full h-full bg-[#1e1e1e] text-neutral-300 font-mono text-sm p-4 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar"
-                      placeholder="// Write your solution here..."
-                      spellCheck={false}
-                    />
+                  <div className="flex items-center gap-4">
+                    <Badge variant="outline" className="border-white/10 text-neutral-500 bg-white/5 text-[9px] font-bold uppercase tracking-widest py-0.5">Auto-Saved</Badge>
                   </div>
+                </div>
+
+                {/* Editor Content */}
+                <div className="flex-1 relative min-h-0 bg-[#0F0F0F]">
+                  <Textarea
+                    value={answers[currentQuestion.id] || ''}
+                    onChange={(e) => setAnswers({ ...answers, [currentQuestion.id]: e.target.value })}
+                    className="w-full h-full bg-transparent text-neutral-300 font-mono text-[15px] p-8 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar selection:bg-blue-500/30"
+                    placeholder="// Implement your solution here..."
+                    spellCheck={false}
+                  />
                 </div>
 
                 {/* Resize Handle (Vertical) */}
                 <div
                   onMouseDown={() => setIsResizingBottom(true)}
-                  className="h-1 bg-[#333] hover:bg-blue-500 cursor-row-resize shrink-0 z-20"
-                />
+                  className="h-1.5 bg-[#1A1A1A] hover:bg-blue-500 cursor-row-resize shrink-0 z-20 transition-colors group flex items-center justify-center"
+                >
+                  <div className="w-12 h-0.5 bg-white/10 rounded-full group-hover:bg-white/40" />
+                </div>
 
-                {/* Bottom: Test Cases */}
-                <div style={{ height: bottomPanelHeight }} className="bg-[#1e1e1e] border-t border-[#333] flex flex-col shrink-0">
-                  <div className="h-10 bg-[#252526] flex items-center px-4 justify-between border-b border-[#333] shrink-0">
-                    <div className="flex items-center gap-4">
-                      <span className="text-neutral-400 text-xs font-bold uppercase tracking-wider">Test Cases</span>
-                      <span className="text-neutral-500 text-xs">|</span>
-                      <span className="text-neutral-400 text-xs font-bold uppercase tracking-wider">Console</span>
+                {/* Bottom Panel: Tests & Console */}
+                <div style={{ height: bottomPanelHeight }} className="bg-[#141414] border-t border-white/5 flex flex-col shrink-0">
+                  <div className="h-12 bg-[#1A1A1A] flex items-center px-6 justify-between border-b border-white/5 shrink-0">
+                    <div className="flex items-center gap-8">
+                      <button className="text-[10px] font-black text-white uppercase tracking-widest border-b-2 border-blue-500 h-12 flex items-center transition-all hover:text-white">Test Cases</button>
+                      <button className="text-[10px] font-black text-neutral-500 uppercase tracking-widest h-12 flex items-center transition-all hover:text-white">Console</button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-white hover:bg-[#333]"><Play className="w-3 h-3 mr-1" /> Run</Button>
+                    <div className="flex items-center gap-3">
+                      <Button variant="outline" size="sm" className="h-8 bg-transparent border-white/10 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg text-xs font-bold transition-all">
+                        <Play className="w-3.5 h-3.5 mr-2" /> Run Code
+                      </Button>
                       <Button
                         onClick={handleNext}
-                        className="h-7 px-4 rounded-md font-bold text-xs flex items-center gap-1 border-none"
-                        style={{ backgroundColor: '#000', color: '#fff' }}
+                        className="h-8 px-6 rounded-lg font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 bg-white text-black hover:bg-neutral-200"
                       >
                         {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Finish'}
-                        <ChevronRight className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
-                  <div className="flex-1 p-4 overflow-y-auto">
-                    <div className="text-neutral-500 text-sm font-mono italic">
-                      Run your code to see test case results...
-                      <br />
-                      <br />
-                      {'>'} No output yet.
+
+                  <div className="flex-1 p-8 overflow-y-auto custom-scrollbar-dark">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 text-neutral-500">
+                        <div className="w-1.5 h-1.5 rounded-full bg-neutral-700" />
+                        <span className="text-xs font-mono italic">Predictions and outputs will appear here after execution...</span>
+                      </div>
+                      <div className="font-mono text-sm text-neutral-400 opacity-60">
+                        {'>'} Waiting for run...
+                      </div>
                     </div>
                   </div>
-                  {/* Footer Actions */}
-                  <div className="p-4 border-t border-[#333] flex justify-between bg-[#252526]">
-                    <div className="text-neutral-500 text-xs flex items-center">
-                      Test Cases: 0/2 Passed
+
+                  {/* Submit Footer */}
+                  <div className="p-6 border-t border-white/5 flex justify-between items-center bg-[#1A1A1A]">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-neutral-700" />
+                        <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Test Progress: 0/2 Passed</span>
+                      </div>
                     </div>
-                    <Button onClick={handleQuestionSubmit} disabled={submittedQuestions.has(currentQuestion.id)} className="bg-white text-black hover:bg-neutral-200 font-bold px-8 h-9 text-xs uppercase tracking-wide">
-                      {submittedQuestions.has(currentQuestion.id) ? 'Submitted' : 'Submit'}
+                    <Button
+                      onClick={handleQuestionSubmit}
+                      disabled={submittedQuestions.has(currentQuestion.id) || !answers[currentQuestion.id]}
+                      className={`font-black uppercase tracking-widest h-12 px-10 rounded-2xl transition-all active:scale-95 shadow-2xl ${submittedQuestions.has(currentQuestion.id) ? 'bg-green-500 text-white cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                    >
+                      {submittedQuestions.has(currentQuestion.id) ? 'Submitted' : 'Final Submit'}
                     </Button>
                   </div>
                 </div>

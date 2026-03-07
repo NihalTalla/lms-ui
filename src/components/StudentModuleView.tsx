@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   Menu,
   Play,
+  Trophy,
 } from 'lucide-react';
 import { Course, Topic } from '../lib/data';
 import { toast } from 'sonner';
@@ -362,108 +363,98 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
 
               {/* Assignment Type */}
               {activeItem.type === 'assignment' && activeItem.assignment && (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8">
-                  <div className="flex items-center gap-4">
-                    {(() => {
-                      const topics = activeItem.assignment!.topics;
-                      const allSubmitted = topics.every(t => t.status === 'Submitted');
-                      const anyInProgress = topics.some(t => t.status === 'In Progress');
-                      const submittedCount = topics.filter(t => t.status === 'Submitted').length;
-                      return allSubmitted ? (
-                        <><Badge className="bg-green-100/50 text-green-700 hover:bg-green-100 border-green-200 uppercase text-[10px] px-3 py-1 font-black tracking-wider">All Submitted</Badge>
-                          <span className="text-neutral-400 text-sm font-medium">Score: 100/100</span></>
-                      ) : anyInProgress ? (
-                        <><Badge className="bg-amber-100/50 text-amber-700 hover:bg-amber-100 border-amber-200 uppercase text-[10px] px-3 py-1 font-black tracking-wider">In Progress</Badge>
-                          <span className="text-neutral-400 text-sm font-medium">{submittedCount}/{topics.length} topics completed</span></>
-                      ) : (
-                        <><Badge className="bg-blue-100/50 text-blue-700 hover:bg-blue-100 border-blue-200 uppercase text-[10px] px-3 py-1 font-black tracking-wider">Not Started</Badge>
-                          <span className="text-neutral-400 text-sm font-medium">{topics.length} topics to complete</span></>
-                      );
-                    })()}
+                <div className="animate-in fade-in slide-in-from-bottom-6 duration-1000 space-y-10">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h2 className="text-3xl font-black text-neutral-900 tracking-tight">{activeItem.title}</h2>
+                      <p className="text-neutral-500 font-medium">Complete all topics to master this module.</p>
+                    </div>
+                    <div className="flex items-center gap-6 bg-white p-4 rounded-3xl border border-neutral-100 shadow-sm">
+                      {(() => {
+                        const topics = activeItem.assignment!.topics;
+                        const allSubmitted = topics.every(t => t.status === 'Submitted');
+                        const anyInProgress = topics.some(t => t.status === 'In Progress');
+                        const submittedCount = topics.filter(t => t.status === 'Submitted').length;
+                        return (
+                          <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-end">
+                              <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Progress</span>
+                              <span className="text-sm font-bold text-neutral-900">{submittedCount}/{topics.length} Done</span>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-neutral-50 flex items-center justify-center relative">
+                              <span className={`absolute inset-0 rounded-2xl border-2 transition-all ${allSubmitted ? 'border-green-500' : 'border-blue-500'}`} style={{ clipPath: `inset(${100 - (submittedCount / topics.length) * 100}% 0 0 0)` }} />
+                              {allSubmitted ? <Trophy className="w-6 h-6 text-green-500" /> : <Play className="w-6 h-6 text-blue-500" />}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
 
-                  <div className="border border-neutral-100 rounded-[24px] overflow-hidden bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-                    <Table>
-                      <TableHeader className="bg-neutral-50/80">
-                        <TableRow className="border-b border-neutral-100 hover:bg-transparent">
-                          <TableHead className="w-[45%] pl-8 py-5 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Topic</TableHead>
-                          <TableHead className="text-center py-5 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Questions</TableHead>
-                          <TableHead className="text-center py-5 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Status</TableHead>
-                          <TableHead className="text-right pr-8 py-5 text-[10px] font-black text-neutral-400 uppercase tracking-widest">Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {activeItem.assignment.topics.map((t, i) => {
-                          const navigateToChallenge = () => onNavigate('student-coding', {
-                            challenge: {
-                              title: t.title,
-                              question: t.title,
-                              difficulty: t.difficulty,
-                              description: 'Find the length of the longest substring without repeating characters in a given string. Series: 2, 4, 8, 14, 22, ..., n',
-                              examples: [
-                                { id: 'ex-1', input: 'n = 100', output: '2,4,8,14,22,32,44,58,74,92' },
-                                { id: 'ex-2', input: 'n = 200', output: '2,4,8,14,22,32,44,58,74,92,112,134,158,184' },
-                              ],
-                              testCases: [
-                                { id: 'tc-1', input: '100', expectedOutput: '2,4,8,14,22,32,44,58,74,92', hidden: false },
-                                { id: 'tc-2', input: '200', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184', hidden: false },
-                                { id: 'tc-3', input: '500', expectedOutput: '2,4,8,14,22,32,44,58,74,92,112,134,158,184,212,242,274,308,344,382,422,464', hidden: true },
-                              ]
-                            },
-                            module: selectedModule,
-                            course: course,
-                            previousData: { course, module: selectedModule }
-                          });
-                          return (
-                            <TableRow
-                              key={i}
-                              className="cursor-pointer hover:bg-neutral-50/50 transition-colors border-b border-neutral-50 last:border-0"
-                              onClick={navigateToChallenge}
-                            >
-                              <TableCell className="pl-8 py-6">
-                                <span className="font-bold text-lg text-neutral-800 group-hover:text-orange-600 transition-colors">
-                                  {t.title}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-center py-6">
-                                <span className="bg-neutral-100 text-neutral-600 text-xs font-bold px-4 py-1.5 rounded-lg inline-block">
-                                  {t.questions}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-center py-6">
-                                <span className={`text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full inline-block ${t.status === 'Submitted' ? 'text-green-600 bg-green-50' :
-                                  t.status === 'In Progress' ? 'text-amber-600 bg-amber-50' :
-                                    'text-blue-600 bg-blue-50'
-                                  }`}>
-                                  {t.status}
-                                </span>
-                              </TableCell>
-                              <TableCell className="pr-8 py-6 text-right">
-                                <div className="flex items-center justify-end gap-3">
-                                  {t.status === 'Not Started' ? (
-                                    <Button variant="outline" className="h-8 w-[80px] rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 hover:border-green-200 hover:text-green-600 hover:bg-white bg-transparent shadow-none transition-all"
-                                      onClick={(e) => { e.stopPropagation(); navigateToChallenge(); }}>
-                                      Start
-                                    </Button>
-                                  ) : t.status === 'In Progress' ? (
-                                    <Button variant="outline" className="h-8 w-[80px] rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 hover:border-amber-200 hover:text-amber-600 hover:bg-white bg-transparent shadow-none transition-all"
-                                      onClick={(e) => { e.stopPropagation(); navigateToChallenge(); }}>
-                                      Resume
-                                    </Button>
-                                  ) : (
-                                    <Button variant="outline" className="h-8 w-[80px] rounded-lg text-xs font-bold border-neutral-200 text-neutral-600 hover:border-orange-200 hover:text-orange-600 hover:bg-white bg-transparent shadow-none transition-all"
-                                      onClick={(e) => { e.stopPropagation(); navigateToChallenge(); }}>
-                                      Retake
-                                    </Button>
-                                  )}
-                                  <ChevronRight className="w-5 h-5 text-neutral-300" />
+                  <div className="grid grid-cols-1 gap-4">
+                    {activeItem.assignment.topics.map((t, i) => {
+                      const navigateToChallenge = () => onNavigate('student-coding', {
+                        challenge: {
+                          id: `challenge-${i}`,
+                          title: t.title,
+                          question: t.title,
+                          difficulty: t.difficulty,
+                          description: 'Solve the following algorithmic problem to demonstrate your understanding of the concepts discussed in this module. Ensure your solution handles Edge cases and passes all test scenarios.',
+                          examples: [
+                            { id: 'ex-1', input: 'Sample Input 1', output: 'Expected Output 1' },
+                          ],
+                          testCases: [
+                            { id: 'tc-1', input: 'Input 1', expectedOutput: 'Output 1', hidden: false },
+                            { id: 'tc-2', input: 'Input 2', expectedOutput: 'Output 2', hidden: true },
+                          ]
+                        },
+                        module: selectedModule,
+                        course: course
+                      });
+
+                      const isSubmitted = t.status === 'Submitted';
+                      const isInProgress = t.status === 'In Progress';
+
+                      return (
+                        <div
+                          key={i}
+                          onClick={navigateToChallenge}
+                          className="group relative bg-white border border-neutral-100 p-6 rounded-[2rem] hover:shadow-2xl hover:border-neutral-200 transition-all duration-500 cursor-pointer overflow-hidden"
+                        >
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-neutral-50 rounded-full -mr-16 -mt-16 transition-all group-hover:scale-150 duration-700 opacity-50" />
+
+                          <div className="flex items-center justify-between relative z-10">
+                            <div className="flex items-center gap-6">
+                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-sm transition-all group-hover:scale-110 ${isSubmitted ? 'bg-green-50 text-green-600' : isInProgress ? 'bg-amber-50 text-amber-600' : 'bg-neutral-50 text-neutral-400'}`}>
+                                {i + 1}
+                              </div>
+                              <div className="space-y-1">
+                                <h4 className="text-xl font-bold text-neutral-800 group-hover:text-neutral-900 transition-colors">{t.title}</h4>
+                                <div className="flex items-center gap-3">
+                                  <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest px-2 py-0 border-none ${t.difficulty === 'Easy' ? 'text-green-500 bg-green-50' : t.difficulty === 'Medium' ? 'text-amber-500 bg-amber-50' : 'text-red-500 bg-red-50'}`}>
+                                    {t.difficulty}
+                                  </Badge>
+                                  <span className="text-neutral-300">•</span>
+                                  <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{t.questions} Questions</span>
                                 </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-8">
+                              <div className="hidden md:flex flex-col items-center">
+                                <span className="text-[9px] font-black text-neutral-300 uppercase tracking-[0.2em] mb-1">Status</span>
+                                <Badge className={`text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-full shadow-sm ${isSubmitted ? 'bg-green-500 text-white hover:bg-green-600' : isInProgress ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-neutral-100 text-neutral-400 hover:bg-neutral-200'}`}>
+                                  {t.status}
+                                </Badge>
+                              </div>
+                              <Button variant="ghost" className="w-12 h-12 rounded-2xl bg-neutral-50 group-hover:bg-neutral-900 group-hover:text-white transition-all">
+                                <ChevronRight className="w-6 h-6" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

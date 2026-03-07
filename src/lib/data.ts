@@ -30,7 +30,11 @@ export interface Topic {
 
 export interface TopicQuestion {
   id: string;
-  question: string;
+  question: string; // The content/title
+  title?: string;
+  description?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  points?: number;
   options?: string[];
   correctAnswer?: string;
   type?: 'multiple_choice' | 'coding';
@@ -38,6 +42,7 @@ export interface TopicQuestion {
   expectedOutput?: string;
   testCases?: { input: string; expectedOutput: string; hidden?: boolean }[];
   tags?: string[];
+  topic?: string;
 }
 
 export interface Course {

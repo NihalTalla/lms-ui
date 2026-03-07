@@ -71,7 +71,11 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   });
 
   const [currentQuestion, setCurrentQuestion] = useState({
+    title: '',
     question: '',
+    description: '',
+    difficulty: 'easy' as 'easy' | 'medium' | 'hard',
+    points: 10,
     options: ['', '', '', ''],
     correctAnswer: '',
     type: 'mcq' as 'mcq' | 'coding',
@@ -85,7 +89,28 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const [isSelectQuestionOpen, setIsSelectQuestionOpen] = useState(false);
   const [allQuestions, setAllQuestions] = useState<TopicQuestion[]>([]);
   const [questionSearch, setQuestionSearch] = useState('');
-  const [activeTopicIndex, setActiveTopicIndex] = useState<number>(-1); // Index of topic to add question to
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [activeTopicIndex, setActiveTopicIndex] = useState<number>(-1);
+
+  const tagStats = useMemo(() => {
+    const stats = new Map<string, number>();
+    allQuestions.forEach(q => {
+      q.tags?.forEach(tag => {
+        stats.set(tag, (stats.get(tag) || 0) + 1);
+      });
+    });
+    return Array.from(stats.entries()).map(([name, total]) => ({ name, total }));
+  }, [allQuestions]);
+
+  const topicStats = useMemo(() => {
+    const stats = new Map<string, number>();
+    allQuestions.forEach(q => {
+      const t = q.topic || 'General';
+      stats.set(t, (stats.get(t) || 0) + 1);
+    });
+    return Array.from(stats.entries()).map(([name, total]) => ({ name, total }));
+  }, [allQuestions]);
 
   const [showCodeEditor, setShowCodeEditor] = useState(false);
   const [codeTemplate, setCodeTemplate] = useState('');
@@ -194,22 +219,26 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
 
     let question: TopicQuestion;
     if (currentQuestion.type === 'mcq') {
+      if (!currentQuestion.title && !currentQuestion.question) {
+        toast.error('Please fill in title or question');
+        return;
+      }
       if (!currentQuestion.correctAnswer) {
         toast.error('Please fill in correct answer');
         return;
       }
       question = {
         id: `q-${Date.now()}`,
-        question: currentQuestion.question,
+        title: currentQuestion.title,
+        question: currentQuestion.question || currentQuestion.title,
+        description: currentQuestion.description,
+        difficulty: currentQuestion.difficulty,
+        points: currentQuestion.points,
         options: currentQuestion.options.filter(o => o.trim() !== ''),
         correctAnswer: currentQuestion.correctAnswer,
         type: 'multiple_choice',
         tags: currentQuestion.tags
       };
-      // Note: Interface says 'multiple_choice', state says 'mcq'. 
-      // Let's force type to match interface or update interface. 
-      // The interface in data.ts says 'multiple_choice' | 'coding'.
-      // So I should map 'mcq' to 'multiple_choice'.
       question.type = 'multiple_choice';
     } else {
       if (!currentQuestion.starterCode) {
@@ -218,7 +247,11 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       }
       question = {
         id: `q-${Date.now()}`,
-        question: currentQuestion.question,
+        title: currentQuestion.title,
+        question: currentQuestion.question || currentQuestion.title,
+        description: currentQuestion.description,
+        difficulty: currentQuestion.difficulty,
+        points: currentQuestion.points,
         starterCode: currentQuestion.starterCode,
         expectedOutput: currentQuestion.expectedOutput,
         testCases: currentQuestion.testCases,
@@ -232,7 +265,11 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
     );
     setNewCourse(prev => ({ ...prev, topics: updatedTopics }));
     setCurrentQuestion({
+      title: '',
       question: '',
+      description: '',
+      difficulty: 'easy',
+      points: 10,
       options: ['', '', '', ''],
       correctAnswer: '',
       type: 'mcq',
@@ -257,9 +294,9 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
     courseList.forEach(c => {
       c.topics?.forEach(t => {
         t.questions?.forEach(q => {
-          // Simple duplicate check by unique combination of question text + type or id
+          // Simple duplicate check by unique combination of question text + id
           if (!questions.find(existing => existing.id === q.id)) {
-            questions.push(q);
+            questions.push({ ...q, topic: t.title });
           }
         });
       });
@@ -1219,7 +1256,11 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                 <Button size="sm" onClick={() => {
                   // Scroll to create section or open dialog
                   setCurrentQuestion({
+                    title: '',
                     question: '',
+                    description: '',
+                    difficulty: 'easy',
+                    points: 10,
                     options: ['', '', '', ''],
                     correctAnswer: '',
                     type: 'mcq',
@@ -1251,7 +1292,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                                 <Badge variant="outline" className="capitalize">{q.type?.replace('_', ' ')}</Badge>
                                 <span className="text-xs text-neutral-500 italic">Question {i + 1}</span>
                               </div>
-                              <p className="font-medium text-neutral-800">{q.question}</p>
+                              <p className="font-medium text-neutral-800">{q.title || q.question}</p>
 
                               {q.type === 'multiple_choice' && q.options && (
                                 <div className="mt-3 grid grid-cols-2 gap-2">
@@ -1279,7 +1320,11 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                               <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => {
                                 setEditingQuestionId(q.id);
                                 setCurrentQuestion({
+                                  title: q.title || '',
                                   question: q.question,
+                                  description: q.description || '',
+                                  difficulty: q.difficulty || 'easy',
+                                  points: q.points || 10,
                                   options: q.options || ['', '', '', ''],
                                   correctAnswer: q.correctAnswer || '',
                                   type: q.type === 'multiple_choice' ? 'mcq' : 'coding',
@@ -1289,7 +1334,8 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                                     input: tc.input || '',
                                     expectedOutput: tc.expectedOutput || '',
                                     hidden: !!tc.hidden
-                                  }))
+                                  })),
+                                  tags: q.tags || [],
                                 });
                               }}>
                                 <Edit className="w-4 h-4" />
@@ -1315,145 +1361,243 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
               </div>
 
               <div className="space-y-4">
-                <Card className="sticky top-6">
-                  <CardHeader>
-                    <CardTitle>Create Question</CardTitle>
+                <Card className="sticky top-6 border border-neutral-200 shadow-xl rounded-3xl overflow-hidden">
+                  <CardHeader className="bg-neutral-900 text-white p-6">
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      <Plus className="w-5 h-5 text-blue-400" />
+                      {editingQuestionId ? 'Update Question' : 'Create Question'}
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label className="text-xs">Question Type</Label>
-                      <Select
-                        value={currentQuestion.type}
-                        onValueChange={(val: any) => setCurrentQuestion({ ...currentQuestion, type: val === 'mcq' ? 'mcq' : 'coding' })}
-                      >
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="mcq">MCQ</SelectItem>
-                          <SelectItem value="coding">Coding</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <CardContent className="p-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-thin">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-neutral-400">Type</Label>
+                        <Select
+                          value={currentQuestion.type}
+                          onValueChange={(val: any) => setCurrentQuestion({ ...currentQuestion, type: val === 'mcq' ? 'mcq' : 'coding' })}
+                        >
+                          <SelectTrigger className="h-11 rounded-xl border-neutral-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl shadow-2xl">
+                            <SelectItem value="mcq">MCQ</SelectItem>
+                            <SelectItem value="coding">Coding</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-neutral-400">Difficulty</Label>
+                        <Select
+                          value={currentQuestion.difficulty}
+                          onValueChange={(val: any) => setCurrentQuestion({ ...currentQuestion, difficulty: val })}
+                        >
+                          <SelectTrigger className="h-11 rounded-xl border-neutral-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl shadow-2xl">
+                            <SelectItem value="easy">Easy</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="hard">Hard</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs">Question Text</Label>
-                      <Textarea
-                        className="text-xs min-h-[80px]"
-                        value={currentQuestion.question}
-                        onChange={(e) => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
-                        placeholder="Write your question here..."
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs">Category Tags (comma-separated)</Label>
+                      <Label className="text-[10px] font-black uppercase text-neutral-400">Question Title</Label>
                       <Input
-                        className="h-8 text-xs"
-                        value={currentQuestion.tags?.join(', ') || ''}
-                        onChange={(e) => setCurrentQuestion({ ...currentQuestion, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
-                        placeholder="e.g., arrays, strings, dynamic programming"
+                        className="h-11 rounded-xl border-neutral-200 focus:ring-2 focus:ring-primary/20"
+                        value={currentQuestion.title}
+                        onChange={(e) => setCurrentQuestion({ ...currentQuestion, title: e.target.value })}
+                        placeholder="e.g., Variable Scope in Java"
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-[10px] font-black uppercase text-neutral-400">Description</Label>
+                        <Badge variant="outline" className="text-[8px] border-neutral-100 uppercase text-neutral-400">Markdown enabled</Badge>
+                      </div>
+                      <Textarea
+                        className="min-h-[120px] rounded-2xl border-neutral-200 bg-neutral-50/30 focus:bg-white transition-all leading-relaxed p-4"
+                        value={currentQuestion.description}
+                        onChange={(e) => setCurrentQuestion({ ...currentQuestion, description: e.target.value })}
+                        placeholder="Explain the problem or question context..."
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-neutral-400">Category Tags</Label>
+                        <Input
+                          className="h-11 rounded-xl border-neutral-200"
+                          value={currentQuestion.tags?.join(', ') || ''}
+                          onChange={(e) => setCurrentQuestion({ ...currentQuestion, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
+                          placeholder="e.g., arrays, java"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-neutral-400">Points</Label>
+                        <Input
+                          type="number"
+                          className="h-11 rounded-xl border-neutral-200"
+                          value={currentQuestion.points}
+                          onChange={(e) => setCurrentQuestion({ ...currentQuestion, points: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
                     </div>
 
                     {currentQuestion.type === 'mcq' ? (
-                      <div className="space-y-3">
-                        <Label className="text-xs">Options</Label>
+                      <div className="space-y-4 pt-4 border-t border-neutral-100">
+                        <Label className="text-[10px] font-black uppercase text-neutral-400 flex items-center justify-between">
+                          Options
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[9px] rounded-full px-3 font-black"
+                            onClick={() => setCurrentQuestion({ ...currentQuestion, options: [...currentQuestion.options, ''] })}
+                          >
+                            <Plus className="w-2.5 h-2.5 mr-1" /> Add
+                          </Button>
+                        </Label>
                         {currentQuestion.options.map((opt, i) => (
-                          <div key={i} className="flex gap-2">
+                          <div key={i} className="flex gap-2 group">
+                            <div className="w-11 h-11 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0 text-sm font-black text-neutral-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                              {String.fromCharCode(65 + i)}
+                            </div>
                             <Input
                               value={opt}
-                              placeholder={`Option ${i + 1}`}
-                              className="h-8 text-xs"
+                              placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                              className="h-11 rounded-xl border-neutral-200 bg-neutral-50/10 focus:bg-white"
                               onChange={(e) => {
                                 const updated = [...currentQuestion.options];
                                 updated[i] = e.target.value;
                                 setCurrentQuestion({ ...currentQuestion, options: updated });
                               }}
                             />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-11 w-11 p-0 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50"
+                              onClick={() => {
+                                const updated = currentQuestion.options.filter((_, idx) => idx !== i);
+                                setCurrentQuestion({ ...currentQuestion, options: updated });
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         ))}
-                        <div className="pt-2">
-                          <Label className="text-xs">Correct Answer</Label>
+                        <div className="pt-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                          <Label className="text-[10px] font-black uppercase text-blue-900 mb-3 block tracking-widest pl-1">Correct Answer</Label>
                           <Select
                             value={currentQuestion.correctAnswer}
                             onValueChange={(val) => setCurrentQuestion({ ...currentQuestion, correctAnswer: val })}
                           >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Select correct option" />
+                            <SelectTrigger className="h-10 rounded-xl border-blue-200 bg-white shadow-sm font-bold text-blue-900">
+                              <SelectValue placeholder="Mark the right one" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="rounded-xl shadow-2xl">
                               {currentQuestion.options.filter(o => o.trim()).map((opt, i) => (
-                                <SelectItem key={i} value={opt}>{opt}</SelectItem>
+                                <SelectItem key={i} value={opt} className="font-medium">
+                                  Option {String.fromCharCode(65 + i)}: {opt}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-6 pt-4 border-t border-neutral-100">
                         <div className="space-y-2">
-                          <Label className="text-xs">Starter Code</Label>
-                          <Textarea
-                            className="font-mono text-[10px] min-h-[120px] bg-neutral-900 text-white"
-                            value={currentQuestion.starterCode}
-                            onChange={(e) => setCurrentQuestion({ ...currentQuestion, starterCode: e.target.value })}
-                            placeholder="public class Test { ... }"
-                          />
+                          <Label className="text-[10px] font-black uppercase text-neutral-400">Starter Code (Template)</Label>
+                          <div className="rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-900 shadow-xl ring-4 ring-neutral-50">
+                            <Textarea
+                              className="font-mono text-[11px] min-h-[160px] bg-neutral-900 text-green-400 border-none focus:ring-0 p-6 leading-relaxed selection:bg-green-500/20"
+                              value={currentQuestion.starterCode}
+                              onChange={(e) => setCurrentQuestion({ ...currentQuestion, starterCode: e.target.value })}
+                              placeholder="// Start coding here..."
+                            />
+                          </div>
                         </div>
 
-                        <div className="space-y-2 border-t pt-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <Label className="text-xs font-bold">Test Cases</Label>
-                            <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={handleAddTestCase}>
-                              <Plus className="w-3 h-3 mr-1" /> Add
+                        <div className="space-y-4 pt-6 border-t border-neutral-100">
+                          <div className="flex items-center justify-between mb-4">
+                            <Label className="text-sm font-black text-neutral-900 uppercase tracking-wide">Test Cases</Label>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-white border-neutral-200 rounded-full h-8 px-4 font-bold text-[10px] hover:bg-neutral-50 shadow-sm"
+                              onClick={handleAddTestCase}
+                            >
+                              <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Case
                             </Button>
                           </div>
-                          <div className="max-h-[250px] overflow-y-auto space-y-3 pr-2 scrollbar-thin">
+                          <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin">
                             {currentQuestion.testCases.map((tc, i) => (
-                              <div key={i} className="p-2 border rounded bg-neutral-50 space-y-2">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-tight">Case {i + 1}</span>
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-1">
+                              <div key={i} className="p-5 border border-neutral-200 rounded-2xl bg-white space-y-4 shadow-sm hover:shadow-md transition-all">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Case #{i + 1}</span>
+                                  <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                      <div className={`w-8 h-4 rounded-full transition-all relative ${tc.hidden ? 'bg-amber-400' : 'bg-neutral-200'}`}>
+                                        <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${tc.hidden ? 'right-0.5' : 'left-0.5'}`} />
+                                      </div>
                                       <input
                                         type="checkbox"
+                                        className="hidden"
                                         checked={tc.hidden}
                                         onChange={(e) => handleTestCaseChange(i, 'hidden', e.target.checked)}
-                                        className="h-3 w-3"
                                       />
-                                      <span className="text-[10px]">Hidden</span>
-                                    </div>
-                                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-red-500" onClick={() => handleRemoveTestCase(i)}>
-                                      <Trash2 className="w-3 h-3" />
+                                      <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Hidden</span>
+                                    </label>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-xl text-red-500 hover:bg-red-50" onClick={() => handleRemoveTestCase(i)}>
+                                      <Trash2 className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </div>
-                                <Input
-                                  placeholder="Input"
-                                  className="h-7 text-[10px]"
-                                  value={tc.input}
-                                  onChange={(e) => handleTestCaseChange(i, 'input', e.target.value)}
-                                />
-                                <Input
-                                  placeholder="Expected Output"
-                                  className="h-7 text-[10px]"
-                                  value={tc.expectedOutput}
-                                  onChange={(e) => handleTestCaseChange(i, 'expectedOutput', e.target.value)}
-                                />
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest pl-2">Input</Label>
+                                    <Input
+                                      placeholder="e.g. 5 10"
+                                      className="h-10 rounded-xl text-xs font-mono bg-neutral-50/50"
+                                      value={tc.input}
+                                      onChange={(e) => handleTestCaseChange(i, 'input', e.target.value)}
+                                    />
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest pl-2">Output</Label>
+                                    <Input
+                                      placeholder="e.g. 15"
+                                      className="h-10 rounded-xl text-xs font-mono bg-neutral-50/50"
+                                      value={tc.expectedOutput}
+                                      onChange={(e) => handleTestCaseChange(i, 'expectedOutput', e.target.value)}
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             ))}
+                            {currentQuestion.testCases.length === 0 && (
+                              <div className="py-12 border-2 border-dashed border-neutral-100 rounded-2xl flex flex-col items-center justify-center text-neutral-300 bg-neutral-50/10 italic text-xs">
+                                No test cases specified.
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
                     )}
 
-                    <Button className="w-full mt-4" onClick={() => {
-                      if (!currentQuestion.question) return toast.error("Please enter a question");
+                    <Button className="w-full h-14 bg-neutral-900 hover:bg-neutral-800 text-white shadow-2xl rounded-2xl font-black uppercase tracking-widest text-xs mt-6 transition-all active:scale-[0.98]" onClick={() => {
+                      if (!currentQuestion.title && !currentQuestion.question) return toast.error("Please enter a question or title");
 
                       let finalQ: TopicQuestion = {
                         id: editingQuestionId || `q-${Date.now()}`,
-                        question: currentQuestion.question,
+                        title: currentQuestion.title,
+                        question: currentQuestion.question || currentQuestion.title,
+                        description: currentQuestion.description,
+                        difficulty: currentQuestion.difficulty,
+                        points: currentQuestion.points,
                         type: currentQuestion.type === 'mcq' ? 'multiple_choice' : 'coding',
                         tags: currentQuestion.tags
                       };
@@ -1481,7 +1625,11 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
 
                       // Reset current question
                       setCurrentQuestion({
+                        title: '',
                         question: '',
+                        description: '',
+                        difficulty: 'easy',
+                        points: 10,
                         options: ['', '', '', ''],
                         correctAnswer: '',
                         type: 'mcq',
@@ -2409,60 +2557,172 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
         </DialogContent>
       </Dialog>
       <Dialog open={isSelectQuestionOpen} onOpenChange={setIsSelectQuestionOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto w-full">
-          <DialogHeader>
-            <DialogTitle>Select Existing Question</DialogTitle>
-            <DialogDescription>
-              Choose a question from the library to add to your topic.
-            </DialogDescription>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl rounded-[2rem]">
+          <DialogHeader className="p-8 bg-neutral-900 text-white shrink-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center border border-blue-500/10">
+                    <Search className="w-5 h-5 text-blue-400" />
+                  </div>
+                  Question Library
+                </DialogTitle>
+                <DialogDescription className="text-neutral-400 mt-1 font-medium">
+                  Fetch from our curated collection of coding problems and MCQs.
+                </DialogDescription>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => setIsSelectQuestionOpen(false)} className="text-neutral-400 hover:text-white hover:bg-white/10 rounded-full">
+                Close
+              </Button>
+            </div>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-neutral-500" />
-              <Input
-                placeholder="Search questions..."
-                value={questionSearch}
-                onChange={(e) => setQuestionSearch(e.target.value)}
-                className="flex-1"
-              />
+          <div className="flex flex-1 overflow-hidden">
+            {/* Sidebar Filters */}
+            <div className="w-72 border-r border-neutral-100 bg-neutral-50/50 p-6 flex flex-col shrink-0">
+              <div className="space-y-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] pl-1">Filters</label>
+                  <div className="relative group">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-primary transition-colors" />
+                    <Input
+                      placeholder="Search title..."
+                      value={questionSearch}
+                      onChange={(e) => setQuestionSearch(e.target.value)}
+                      className="pl-10 h-11 border-neutral-200 rounded-2xl bg-white shadow-sm focus:bg-white transition-all text-sm font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] pl-1">Popular Tags</label>
+                    {selectedTag && (
+                      <button onClick={() => setSelectedTag(null)} className="text-[9px] font-bold text-blue-500 hover:underline">Clear all</button>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5 max-h-[40vh] overflow-y-auto pr-2 scrollbar-thin">
+                    <button
+                      onClick={() => setSelectedTag(null)}
+                      className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${!selectedTag ? 'bg-neutral-900 text-white shadow-lg' : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-100'}`}
+                    >
+                      All Questions
+                    </button>
+                    {tagStats.map(tag => (
+                      <button
+                        key={tag.name}
+                        onClick={() => setSelectedTag(selectedTag === tag.name ? null : tag.name)}
+                        className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${selectedTag === tag.name ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-100'}`}
+                      >
+                        <span className="truncate flex-1">{tag.name}</span>
+                        <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] ${selectedTag === tag.name ? 'bg-blue-500/50' : 'bg-neutral-100 text-neutral-400'}`}>{tag.total}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-auto pt-6 border-t border-neutral-200/50">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl shadow-blue-200/50 relative overflow-hidden">
+                  <div className="relative z-10">
+                    <p className="text-[10px] font-black uppercase opacity-70 tracking-widest mb-1">Library Strength</p>
+                    <p className="text-2xl font-black">{allQuestions.length}</p>
+                    <p className="text-[10px] font-medium opacity-80 mt-1">Verified Questions</p>
+                  </div>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 transition-all duration-500 blur-2xl" />
+                </div>
+              </div>
             </div>
 
-            <div className="border rounded-md divide-y max-h-[60vh] overflow-y-auto">
-              {allQuestions
-                .filter(q =>
-                  q.question.toLowerCase().includes(questionSearch.toLowerCase()) ||
-                  (q.tags && q.tags.some(t => t.toLowerCase().includes(questionSearch.toLowerCase())))
-                )
-                .map((q) => (
-                  <div key={q.id} className="p-3 flex items-start justify-between hover:bg-neutral-50 transition-colors">
-                    <div className="space-y-1 flex-1 mr-4">
-                      <p className="text-sm font-medium line-clamp-2">{q.question}</p>
-                      <div className="flex gap-2 items-center">
-                        <Badge variant="outline" className="text-[10px] h-5">{q.type === 'coding' ? 'Coding' : 'MCQ'}</Badge>
-                        {/* @ts-ignore */}
-                        {q.type === 'mcq' && <span className="text-xs text-neutral-500 truncate max-w-[200px]">Ans: {q.correctAnswer}</span>}
-                        {/* @ts-ignore */}
-                        {q.type === 'coding' && <span className="text-xs text-neutral-500 font-mono">Input/Output</span>}
-                      </div>
-                      {q.tags && q.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {q.tags.map((tag, tIdx) => (
-                            <Badge key={tIdx} variant="secondary" className="text-[9px] h-4 py-0 px-1 bg-neutral-100 text-neutral-600">{tag}</Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <Button size="sm" variant="secondary" onClick={() => handleSelectExistingQuestion(q)}>
-                      Select
-                    </Button>
-                  </div>
-                ))}
-              {allQuestions.length === 0 && (
-                <div className="p-8 text-center text-neutral-500 text-sm">
-                  No questions found in library.
+            {/* Questions List and Topic Filter Above it */}
+            <div className="flex-1 overflow-hidden flex flex-col p-8 bg-white">
+              {/* Topic Filter Horizontal Bar */}
+              <div className="mb-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Filter by Topic</label>
+                  {selectedTopic && (
+                    <button onClick={() => setSelectedTopic(null)} className="text-[9px] font-bold text-blue-500 hover:underline">Show All</button>
+                  )}
                 </div>
-              )}
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none scroll-smooth">
+                  <button
+                    onClick={() => setSelectedTopic(null)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border shrink-0 ${!selectedTopic ? 'bg-neutral-900 border-neutral-900 text-white' : 'bg-white border-neutral-100 text-neutral-500 hover:bg-neutral-50'}`}
+                  >
+                    All Topics
+                  </button>
+                  {topicStats.map(topic => (
+                    <button
+                      key={topic.name}
+                      onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2 ${selectedTopic === topic.name ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white border-neutral-100 text-neutral-500 hover:bg-neutral-50'}`}
+                    >
+                      {topic.name}
+                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${selectedTopic === topic.name ? 'bg-blue-500/50' : 'bg-neutral-100 text-neutral-400'}`}>{topic.total}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin">
+                <div className="grid grid-cols-1 gap-4">
+                  {allQuestions
+                    .filter(q => {
+                      const matchesSearch = q.question.toLowerCase().includes(questionSearch.toLowerCase()) ||
+                        q.title?.toLowerCase().includes(questionSearch.toLowerCase());
+                      const matchesTag = !selectedTag || q.tags?.includes(selectedTag);
+                      const matchesTopic = !selectedTopic || q.topic === selectedTopic;
+                      return matchesSearch && matchesTag && matchesTopic;
+                    })
+                    .map((q) => (
+                      <div key={q.id} className="group p-6 border border-neutral-100 rounded-[2rem] bg-neutral-50/30 hover:bg-white hover:border-blue-200 hover:shadow-2xl hover:shadow-blue-200/20 transition-all duration-500 relative overflow-hidden">
+                        <div className="flex items-start justify-between relative z-10">
+                          <div className="flex-1 mr-6">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Badge className={`${q.type === 'coding' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'} border-none rounded-lg text-[9px] font-black uppercase px-2 h-5 tracking-wide`}>
+                                {q.type === 'coding' ? 'Coding' : 'MCQ'}
+                              </Badge>
+                              <div className="flex gap-1.5">
+                                {q.tags?.slice(0, 3).map((tag, i) => (
+                                  <span key={i} className="text-[9px] font-bold text-neutral-400 bg-white border border-neutral-100 px-2 py-0.5 rounded-full">#{tag}</span>
+                                ))}
+                                {(q.tags?.length || 0) > 3 && <span className="text-[9px] font-bold text-neutral-300">+{q.tags!.length - 3} more</span>}
+                              </div>
+                            </div>
+                            <h4 className="text-base font-black text-neutral-800 group-hover:text-blue-600 transition-colors leading-tight mb-2">
+                              {q.title || q.question}
+                            </h4>
+                            <p className="text-xs text-neutral-500 line-clamp-2 leading-relaxed">
+                              {q.description || (q.type === 'multiple_choice' ? 'Multiple choice assessment question.' : 'Technical coding challenge.')}
+                            </p>
+                            <div className="flex items-center gap-4 mt-4">
+                              <div className="flex items-center gap-1.5">
+                                <div className={`w-1.5 h-1.5 rounded-full ${q.difficulty === 'hard' ? 'bg-red-500' : q.difficulty === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                                <span className="text-[10px] font-black uppercase text-neutral-500 tracking-wider font-mono">{q.difficulty || 'medium'}</span>
+                              </div>
+                              <span className="text-[10px] font-black uppercase text-neutral-300 tracking-wider font-mono">{q.points || 10} Points</span>
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() => handleSelectExistingQuestion(q)}
+                            className="bg-neutral-900 hover:bg-neutral-800 text-white shadow-xl shadow-neutral-200 rounded-2xl h-11 px-6 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shrink-0"
+                          >
+                            Select
+                          </Button>
+                        </div>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/0 group-hover:bg-blue-50/50 rounded-full -mr-16 -mt-16 transition-all duration-700 blur-3xl z-0" />
+                      </div>
+                    ))}
+                  {allQuestions.length === 0 && (
+                    <div className="p-20 flex flex-col items-center justify-center text-center">
+                      <div className="w-20 h-20 bg-neutral-50 rounded-[2.5rem] flex items-center justify-center mb-6">
+                        <Search className="w-8 h-8 text-neutral-200" />
+                      </div>
+                      <p className="text-lg font-black text-neutral-800">No questions found</p>
+                      <p className="text-sm text-neutral-400 mt-1 max-w-xs">We couldn't find any questions matching your search criteria.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </DialogContent>

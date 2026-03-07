@@ -11,6 +11,8 @@ export interface TestQuestion {
   title: string;
   description: string;
   difficulty: 'easy' | 'medium' | 'hard';
+  topic?: string;
+  tags?: string[];
   points: number;
   type: TestQuestionType;
   testCases?: TestCase[];
