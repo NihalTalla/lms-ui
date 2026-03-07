@@ -732,7 +732,7 @@ export function CodingContest() {
                         <AlertDialogCancel onClick={() => { setShowNextQuestionPrompt(false); setQuestionMode('fetch'); }} className="border-neutral-200">
                             No, View All
                         </AlertDialogCancel>
-                        <AlertDialogAction onClick={() => { setShowNextQuestionPrompt(false); setQuestionMode('create'); }} className="bg-blue-600 hover:bg-blue-700">
+                        <AlertDialogAction onClick={() => { setShowNextQuestionPrompt(false); setQuestionMode('create'); }} className="bg-blue-600 hover:bg-blue-700 text-white" style={{ color: 'white' }}>
                             Yes, Add Another
                         </AlertDialogAction>
                     </div>

@@ -381,8 +381,8 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
         {isAdmin && (
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button style={{ backgroundColor: 'var(--color-primary)' }}>
-                <Plus className="w-4 h-4 mr-2" />
+              <Button className="bg-neutral-900 hover:bg-neutral-800 text-white shadow-xl rounded-xl" style={{ color: 'white', backgroundColor: 'var(--color-primary)' }}>
+                <Plus className="w-4 h-4 mr-2" style={{ color: 'white' }} />
                 Create Test
               </Button>
             </DialogTrigger>
@@ -532,6 +532,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                                         size="sm"
                                         onClick={() => handleAddExistingQuestion(q)}
                                         className="bg-neutral-900 hover:bg-neutral-800 text-white shadow-lg rounded-xl h-9 px-5 transition-transform active:scale-95"
+                                        style={{ color: 'white' }}
                                       >
                                         Select
                                       </Button>
@@ -816,7 +817,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                     )}
                     <div className="flex justify-end gap-3 pt-6 border-t border-neutral-100">
                       <Button variant="outline" onClick={() => setIsAddingQuestion(false)} className="rounded-xl px-8 h-12 font-bold text-neutral-600">Cancel</Button>
-                      <Button onClick={handleAddNewQuestion} className="bg-neutral-900 hover:bg-neutral-800 text-white shadow-xl rounded-xl px-10 h-12 font-bold">Add to Test</Button>
+                      <Button onClick={handleAddNewQuestion} className="bg-neutral-900 hover:bg-neutral-800 text-white shadow-xl rounded-xl px-10 h-12 font-bold" style={{ color: 'white' }}>Add to Test</Button>
                     </div>
                   </div>
                 )}
@@ -825,7 +826,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateTest} style={{ backgroundColor: 'var(--color-primary)' }}>
+                  <Button onClick={handleCreateTest} style={{ backgroundColor: 'var(--color-primary)', color: 'white' }} className="text-white">
                     Create Test
                   </Button>
                 </div>
@@ -988,7 +989,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
             <Button variant="outline" onClick={() => { setShowNextQuestionPrompt(false); setIsAddingQuestion(false); }}>
               Done for Now
             </Button>
-            <Button onClick={() => setShowNextQuestionPrompt(false)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setShowNextQuestionPrompt(false)} className="bg-blue-600 hover:bg-blue-700 text-white" style={{ color: 'white' }}>
               Add Another
             </Button>
           </div>
