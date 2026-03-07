@@ -28,43 +28,23 @@ export const exportToCSV = (filename: string, headers: string[], rows: Row[]) =>
   URL.revokeObjectURL(link.href);
 };
 
-const renderHeader = (doc: jsPDF, headers: string[], startX: number, startY: number, colWidth: number) => {
-  doc.setFont(undefined, 'bold');
-  headers.forEach((header, index) => {
-    doc.text(String(header), startX + index * colWidth, startY, { maxWidth: colWidth - 6 });
-  });
-  doc.setFont(undefined, 'normal');
-};
+import autoTable from 'jspdf-autotable';
+
+
 
 export const exportToPDF = (filename: string, title: string, headers: string[], rows: Row[]) => {
-  const doc = new jsPDF({ unit: 'pt' });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 36;
-  const colWidth = (pageWidth - margin * 2) / Math.max(headers.length, 1);
-
-  let y = margin + 12;
+  const doc = new jsPDF();
 
   doc.setFontSize(16);
-  doc.text(title, margin, y);
-  y += 20;
+  doc.text(title, 14, 20);
 
-  doc.setFontSize(10);
-  renderHeader(doc, headers, margin, y, colWidth);
-  y += 14;
-
-  rows.forEach((row) => {
-    if (y > pageHeight - margin) {
-      doc.addPage();
-      y = margin + 12;
-      renderHeader(doc, headers, margin, y, colWidth);
-      y += 14;
-    }
-
-    row.forEach((cell, index) => {
-      doc.text(sanitize(cell), margin + index * colWidth, y, { maxWidth: colWidth - 6 });
-    });
-    y += 14;
+  autoTable(doc, {
+    startY: 30,
+    head: [headers],
+    body: rows.map(row => row.map(cell => sanitize(cell))),
+    theme: 'grid',
+    headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+    styles: { fontSize: 8 },
   });
 
   const safeName = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;

@@ -6,6 +6,8 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { FileText, Send, Eye } from 'lucide-react';
+import { toast } from 'sonner';
+import { jsPDF } from 'jspdf';
 import { useAuth } from '../lib/auth-context';
 
 interface Material {
@@ -60,7 +62,6 @@ export function TrainerMaterials() {
   const [requests, setRequests] = useState<MaterialRequest[]>([]);
   const [reqTitle, setReqTitle] = useState('');
   const [reqMsg, setReqMsg] = useState('');
-  const [viewMat, setViewMat] = useState<Material | null>(null);
 
   useEffect(() => {
     const mats = loadMaterials();
@@ -110,6 +111,31 @@ export function TrainerMaterials() {
     setReqMsg('');
   };
 
+  const openNativePDF = (mat: Material) => {
+    try {
+      const doc = new jsPDF();
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.text(mat.title, 20, 20);
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100);
+      doc.text(mat.description || '', 20, 30);
+
+      doc.setTextColor(0);
+      const splitText = doc.splitTextToSize(mat.content || 'No content provided.', 170);
+      doc.text(splitText, 20, 45);
+
+      const pdfBlob = doc.output('blob');
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, '_blank');
+    } catch (error) {
+      toast.error('Failed to generate PDF document');
+      console.error(error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -136,7 +162,7 @@ export function TrainerMaterials() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="capitalize">{mat.format}</Badge>
-                    <Button size="sm" variant="outline" onClick={() => setViewMat(mat)}>
+                    <Button size="sm" variant="outline" onClick={() => openNativePDF(mat)}>
                       <Eye className="w-4 h-4 mr-1" /> View
                     </Button>
                   </div>
@@ -158,37 +184,6 @@ export function TrainerMaterials() {
           </div>
         </CardContent>
       </Card>
-
-      <Dialog open={!!viewMat} onOpenChange={() => setViewMat(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{viewMat?.title}</DialogTitle>
-            <DialogDescription className="flex items-center gap-2">
-              <Badge variant="outline" className="capitalize">{viewMat?.format}</Badge>
-              {viewMat?.fileName && <span className="text-xs text-neutral-500">Attached: {viewMat.fileName}</span>}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-neutral-700 whitespace-pre-wrap">{viewMat?.description}</p>
-            <div className="bg-neutral-100 border border-neutral-200 rounded-lg p-4">
-              <div className="bg-white border border-neutral-200 rounded-md shadow-sm p-6 max-h-[55vh] overflow-y-auto">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-200 mb-4">
-                  <div>
-                    <h4 className="font-semibold text-neutral-900">{viewMat?.fileName || viewMat?.title}</h4>
-                    <p className="text-xs text-neutral-500 uppercase tracking-wider">
-                      {viewMat?.format === 'pdf' ? 'PDF Document' : 'Word Document'}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="capitalize">{viewMat?.format}</Badge>
-                </div>
-                <div className="space-y-3 text-sm text-neutral-800 leading-relaxed whitespace-pre-wrap">
-                  {viewMat?.content || 'No document text available. Attach a file or paste content to preview it here.'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

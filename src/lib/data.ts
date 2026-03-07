@@ -37,6 +37,7 @@ export interface TopicQuestion {
   starterCode?: string;
   expectedOutput?: string;
   testCases?: { input: string; expectedOutput: string; hidden?: boolean }[];
+  tags?: string[];
 }
 
 export interface Course {
@@ -197,6 +198,7 @@ export interface AssessmentQuestion {
   correctAnswer: string;
   marks: number;
   explanation?: string;
+  tags?: string[];
 }
 
 // Sample Users

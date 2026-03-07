@@ -84,8 +84,10 @@ export function AssignmentListingPage({
 
   return (
     <div className="fixed inset-0 z-50 w-screen h-screen bg-neutral-50 overflow-hidden text-neutral-900 font-sans">
-      <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-8 flex-shrink-0">
+      <header className="h-16 bg-white border-b border-neutral-200 flex items-center px-8 flex-shrink-0">
         <div className="flex items-center gap-4">
+          <EdRealmLogo size="small" />
+          <div className="h-6 w-px bg-neutral-200" />
           <Button variant="ghost" className="text-neutral-500 hover:text-neutral-900 p-0 h-auto" onClick={onBack}>
             <ArrowLeft className="w-5 h-5 mr-1" />
             Back
@@ -97,7 +99,6 @@ export function AssignmentListingPage({
             <span className="font-bold text-neutral-900">{moduleName}</span>
           </div>
         </div>
-        <EdRealmLogo size="small" />
       </header>
 
       <div className="flex-1 overflow-y-auto p-10">

@@ -8,10 +8,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+} from './ui/dialog';
+import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 import { EdRealmLogo } from './EdRealmLogo';
 
@@ -29,6 +33,50 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
 
   const [isInstitutionsOpen, setIsInstitutionsOpen] = React.useState(false);
   const [isAssessmentsOpen, setIsAssessmentsOpen] = React.useState(false);
+
+  const [isIssueDialogOpen, setIsIssueDialogOpen] = React.useState(false);
+  const [issueTitle, setIssueTitle] = React.useState('');
+  const [issueCategory, setIssueCategory] = React.useState('');
+  const [issuePriority, setIssuePriority] = React.useState('Medium');
+  const [issueDescription, setIssueDescription] = React.useState('');
+
+  const [submittedIssues, setSubmittedIssues] = React.useState([
+    {
+      id: 1,
+      title: 'Unable to load assignment history',
+      date: '2026-03-05',
+      category: 'Academic',
+      priority: 'Medium',
+      status: 'In-progress',
+      description: 'Assignment history panel stays blank for some users. Support team will update this issue status as progress is made.'
+    }
+  ]);
+
+  const handleIssueSubmit = () => {
+    if (!issueTitle.trim() || !issueDescription.trim() || !issueCategory.trim()) {
+      toast.error('Please provide a title, category, and description for the issue.');
+      return;
+    }
+
+    setSubmittedIssues([
+      {
+        id: Date.now(),
+        title: issueTitle,
+        date: new Date().toISOString().split('T')[0],
+        category: issueCategory,
+        priority: issuePriority,
+        status: 'Open',
+        description: 'Support team will review this issue shortly.'
+      },
+      ...submittedIssues
+    ]);
+
+    toast.success('Your issue has been submitted successfully.');
+    setIssueTitle('');
+    setIssueCategory('');
+    setIssuePriority('Medium');
+    setIssueDescription('');
+  };
 
 
   const getNavItems = () => {
@@ -135,9 +183,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
               <DropdownMenuContent align="end" className="w-56 p-0 rounded-lg shadow-lg border border-neutral-200">
                 <div className="p-1">
                   <DropdownMenuItem
-                    onClick={() => {
-                      toast.info('Issue reporting feature coming soon');
-                    }}
+                    onClick={() => setIsIssueDialogOpen(true)}
                     className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50"
                   >
                     <AlertCircle className="w-4 h-4 text-red-500" />
@@ -333,6 +379,135 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
           {children}
         </div>
       </main>
+      <Dialog open={isIssueDialogOpen} onOpenChange={setIsIssueDialogOpen}>
+        <DialogContent className="sm:max-w-[1000px] w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden bg-white selection:bg-blue-100 selection:text-blue-900">
+          <div className="flex-1 overflow-y-auto p-8 bg-neutral-50/50 block">
+            <div className="mb-8 relative">
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Raise an Issue</h2>
+              <p className="text-black">Report bugs, platform issues, or support requests.</p>
+
+              <button
+                onClick={() => setIsIssueDialogOpen(false)}
+                className="absolute -top-2 right-0 p-2 text-neutral-400 hover:text-neutral-900 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Column: Form */}
+              <div className="bg-white rounded-xl shadow-xs border border-neutral-200 p-6 flex flex-col gap-6">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">Submit New Issue</h3>
+                  <p className="text-sm text-neutral-500">Share details so support can resolve it faster.</p>
+                </div>
+
+                <div className="space-y-5">
+                  <div className="space-y-2">
+                    <label htmlFor="issue-title" className="text-sm font-semibold text-slate-700">Issue Title</label>
+                    <Input
+                      id="issue-title"
+                      placeholder="Example: Profile image upload fails"
+                      className="bg-neutral-50 border-neutral-200"
+                      value={issueTitle}
+                      onChange={(e) => setIssueTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="issue-category" className="text-sm font-semibold text-slate-700">Category</label>
+                    <select
+                      id="issue-category"
+                      className="flex h-10 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={issueCategory}
+                      onChange={(e) => setIssueCategory(e.target.value)}
+                    >
+                      <option value="" disabled>Choose category</option>
+                      <option value="Academic">Academic</option>
+                      <option value="Technical">Technical / Platform Bug</option>
+                      <option value="Billing">Billing or Payment</option>
+                      <option value="Other">Other Query</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="issue-priority" className="text-sm font-semibold text-slate-700">Priority</label>
+                    <select
+                      id="issue-priority"
+                      className="flex h-10 w-full rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={issuePriority}
+                      onChange={(e) => setIssuePriority(e.target.value)}
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Critical">Critical</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="issue-desc" className="text-sm font-semibold text-slate-700">Description</label>
+                    <Textarea
+                      id="issue-desc"
+                      placeholder="Describe what happened, expected behavior, and steps to reproduce."
+                      className="h-28 bg-neutral-50 border-neutral-200 resize-none"
+                      value={issueDescription}
+                      onChange={(e) => setIssueDescription(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleIssueSubmit}
+                  className="w-full mt-2 font-semibold h-11"
+                  style={{ backgroundColor: '#111827', color: 'white' }}
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Submit Issue
+                </Button>
+              </div>
+
+              {/* Right Column: History */}
+              <div className="bg-white rounded-xl shadow-xs border border-neutral-200 p-6">
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">My Issue History</h3>
+                  <p className="text-sm text-neutral-500">Track your reported issues and statuses.</p>
+                </div>
+
+                <div className="space-y-4">
+                  {submittedIssues.map((issue) => (
+                    <div key={issue.id} className="p-4 border border-neutral-100 rounded-lg hover:border-neutral-200 transition-colors bg-white shadow-xs">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-semibold text-slate-800 flex-1 pr-4">{issue.title}</h4>
+                        <div className="flex gap-2">
+                          <span className="px-2.5 py-1 rounded bg-blue-50 text-blue-600 text-xs font-semibold uppercase tracking-wider">
+                            {issue.priority}
+                          </span>
+                          <span className={`px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider ${issue.status.toLowerCase() === 'open' ? 'bg-orange-50 text-orange-600' :
+                            issue.status.toLowerCase() === 'in-progress' ? 'bg-yellow-50 text-yellow-600' :
+                              'bg-green-50 text-green-600'
+                            }`}>
+                            {issue.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-neutral-500 mb-3 font-medium">
+                        {issue.date} • {issue.category}
+                      </div>
+
+                      <div className="bg-neutral-50 rounded p-3 flex gap-3 text-sm text-neutral-600">
+                        <Settings className="w-4 h-4 mt-0.5 text-neutral-400 shrink-0" />
+                        <p>{issue.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

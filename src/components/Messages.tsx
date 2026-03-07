@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -18,6 +18,20 @@ export function Messages() {
   const [messageInput, setMessageInput] = useState('');
   const [newQuestionDialogOpen, setNewQuestionDialogOpen] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ title: '', content: '' });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachment, setAttachment] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAttachment(e.target.files[0]);
+      toast.success(`Attached ${e.target.files[0].name}`);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
 
   // Simulated conversations data - organized by student for faculty view
   const conversations = [
@@ -83,11 +97,15 @@ export function Messages() {
   const currentConversation = conversations[selectedThread];
 
   const handleSendMessage = () => {
-    if (messageInput.trim()) {
+    if (messageInput.trim() || attachment) {
       toast.success('Message sent successfully');
       setMessageInput('');
+      setAttachment(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } else {
-      toast.error('Please enter a message');
+      toast.error('Please enter a message or attach a file');
     }
   };
 
@@ -124,9 +142,8 @@ export function Messages() {
                   <div
                     key={conv.id}
                     onClick={() => setSelectedThread(index)}
-                    className={`p-4 cursor-pointer transition-colors hover:bg-neutral-50 ${
-                      selectedThread === index ? 'bg-purple-50' : ''
-                    }`}
+                    className={`p-4 cursor-pointer transition-colors hover:bg-neutral-50 ${selectedThread === index ? 'bg-purple-50' : ''
+                      }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="relative">
@@ -200,11 +217,10 @@ export function Messages() {
                     className={`flex ${message.isMe ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                        message.isMe
-                          ? 'bg-purple-600 text-white rounded-br-none'
-                          : 'bg-white border border-neutral-200 text-neutral-900 rounded-bl-none'
-                      }`}
+                      className={`max-w-[70%] rounded-lg px-4 py-2 ${message.isMe
+                        ? 'bg-purple-600 text-white rounded-br-none'
+                        : 'bg-white border border-neutral-200 text-neutral-900 rounded-bl-none'
+                        }`}
                     >
                       {!message.isMe && (
                         <p className="text-xs font-medium mb-1" style={{ color: 'var(--color-primary)' }}>
@@ -212,13 +228,12 @@ export function Messages() {
                         </p>
                       )}
                       <p className="text-sm leading-relaxed">{message.content}</p>
-                      <div className={`flex items-center justify-end gap-1 mt-1 ${
-                        message.isMe ? 'text-purple-200' : 'text-neutral-500'
-                      }`}>
+                      <div className={`flex items-center justify-end gap-1 mt-1 ${message.isMe ? 'text-purple-200' : 'text-neutral-500'
+                        }`}>
                         <span className="text-xs">{message.timestamp}</span>
                         {message.isMe && (
-                          message.read ? 
-                            <CheckCheck className="w-3 h-3" /> : 
+                          message.read ?
+                            <CheckCheck className="w-3 h-3" /> :
                             <Check className="w-3 h-3" />
                         )}
                       </div>
@@ -230,10 +245,18 @@ export function Messages() {
 
             {/* Message Input */}
             <div className="p-4 bg-neutral-50 border-t border-neutral-200">
+              {attachment && (
+                <div className="mb-2 flex items-center gap-2 text-sm text-neutral-600 border border-neutral-200 bg-white shadow-xs p-2 rounded-md w-fit">
+                  <Paperclip className="w-4 h-4 text-purple-600" />
+                  <span className="font-medium">{attachment.name}</span>
+                  <button onClick={() => setAttachment(null)} className="text-neutral-400 hover:text-red-500 transition-colors ml-2 font-bold px-1">✕</button>
+                </div>
+              )}
               <div className="flex gap-2">
-<Button variant="outline" size="icon" className="flex-shrink-0" onClick={() => toast.info('Attach file feature coming soon')}>
-                    <Paperclip className="w-4 h-4" />
-                  </Button>
+                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+                <Button variant="outline" size="icon" className="flex-shrink-0" onClick={triggerFileInput}>
+                  <Paperclip className="w-4 h-4" />
+                </Button>
                 <Input
                   placeholder="Type a message..."
                   value={messageInput}
@@ -302,10 +325,7 @@ export function Messages() {
             Ask questions and get help from instructors
           </p>
         </div>
-<Button style={{ backgroundColor: 'var(--color-primary)' }} onClick={() => setNewQuestionDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Question
-          </Button>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
@@ -323,11 +343,10 @@ export function Messages() {
                 <div
                   key={thread.id}
                   onClick={() => setSelectedThread(index)}
-                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                    selectedThread === index
-                      ? 'bg-purple-50 border-purple-200'
-                      : 'border-neutral-200 hover:bg-neutral-50'
-                  }`}
+                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedThread === index
+                    ? 'bg-purple-50 border-purple-200'
+                    : 'border-neutral-200 hover:bg-neutral-50'
+                    }`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="text-sm line-clamp-1">{thread.title}</h4>
@@ -389,7 +408,7 @@ export function Messages() {
                   className={`flex gap-3 ${message.isMe ? 'flex-row-reverse' : ''}`}
                 >
                   <Avatar className="flex-shrink-0">
-                    <AvatarFallback style={{ 
+                    <AvatarFallback style={{
                       backgroundColor: message.isMe ? 'var(--color-primary)' : 'var(--color-neutral-300)',
                       color: message.isMe ? 'white' : 'var(--color-neutral-700)'
                     }}>
@@ -402,11 +421,10 @@ export function Messages() {
                       <span className="text-xs text-neutral-500">{message.timestamp}</span>
                     </div>
                     <div
-                      className={`p-3 rounded-lg max-w-[80%] ${
-                        message.isMe
-                          ? 'bg-purple-100 text-purple-900'
-                          : 'bg-neutral-100 text-neutral-900'
-                      }`}
+                      className={`p-3 rounded-lg max-w-[80%] ${message.isMe
+                        ? 'bg-purple-100 text-purple-900'
+                        : 'bg-neutral-100 text-neutral-900'
+                        }`}
                     >
                       <p className="text-sm">{message.content}</p>
                     </div>
@@ -416,11 +434,19 @@ export function Messages() {
             </div>
           </ScrollArea>
 
-<CardContent className="border-t pt-4">
-              <div className="flex gap-2">
-                <Button variant="outline" size="icon" onClick={() => toast.info('Attach file feature coming soon')}>
-                  <Paperclip className="w-4 h-4" />
-                </Button>
+          <CardContent className="border-t pt-4">
+            {attachment && (
+              <div className="mb-2 flex items-center gap-2 text-sm text-neutral-600 border border-neutral-200 bg-white shadow-xs p-2 rounded-md w-fit">
+                <Paperclip className="w-4 h-4 text-purple-600" />
+                <span className="font-medium">{attachment.name}</span>
+                <button onClick={() => setAttachment(null)} className="text-neutral-400 hover:text-red-500 transition-colors ml-2 font-bold px-1">✕</button>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+              <Button variant="outline" size="icon" onClick={triggerFileInput}>
+                <Paperclip className="w-4 h-4" />
+              </Button>
               <Input
                 placeholder="Type your message..."
                 value={messageInput}
@@ -437,58 +463,58 @@ export function Messages() {
                 Send
               </Button>
             </div>
-</CardContent>
-          </Card>
-        </div>
-
-        {/* New Question Dialog */}
-        <Dialog open={newQuestionDialogOpen} onOpenChange={setNewQuestionDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Ask a New Question</DialogTitle>
-              <DialogDescription>
-                Post your question and an instructor will respond
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Question Title</Label>
-                <Input 
-                  placeholder="e.g., Help with Two-Pointer Approach" 
-                  value={newQuestion.title}
-                  onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Question Details</Label>
-                <Textarea 
-                  placeholder="Describe your question in detail..." 
-                  rows={4}
-                  value={newQuestion.content}
-                  onChange={(e) => setNewQuestion({ ...newQuestion, content: e.target.value })}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  className="flex-1" 
-                  style={{ backgroundColor: 'var(--color-primary)' }}
-                  onClick={() => {
-                    if (!newQuestion.title || !newQuestion.content) {
-                      toast.error('Please fill all fields');
-                      return;
-                    }
-                    toast.success('Question posted successfully! An instructor will respond soon.');
-                    setNewQuestionDialogOpen(false);
-                    setNewQuestion({ title: '', content: '' });
-                  }}
-                >
-                  Post Question
-                </Button>
-                <Button variant="outline" onClick={() => setNewQuestionDialogOpen(false)}>Cancel</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+          </CardContent>
+        </Card>
       </div>
-    );
-  }
+
+      {/* New Question Dialog */}
+      <Dialog open={newQuestionDialogOpen} onOpenChange={setNewQuestionDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ask a New Question</DialogTitle>
+            <DialogDescription>
+              Post your question and an instructor will respond
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Question Title</Label>
+              <Input
+                placeholder="e.g., Help with Two-Pointer Approach"
+                value={newQuestion.title}
+                onChange={(e) => setNewQuestion({ ...newQuestion, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Question Details</Label>
+              <Textarea
+                placeholder="Describe your question in detail..."
+                rows={4}
+                value={newQuestion.content}
+                onChange={(e) => setNewQuestion({ ...newQuestion, content: e.target.value })}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                className="flex-1"
+                style={{ backgroundColor: 'var(--color-primary)' }}
+                onClick={() => {
+                  if (!newQuestion.title || !newQuestion.content) {
+                    toast.error('Please fill all fields');
+                    return;
+                  }
+                  toast.success('Question posted successfully! An instructor will respond soon.');
+                  setNewQuestionDialogOpen(false);
+                  setNewQuestion({ title: '', content: '' });
+                }}
+              >
+                Post Question
+              </Button>
+              <Button variant="outline" onClick={() => setNewQuestionDialogOpen(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

@@ -184,8 +184,10 @@ export function StudentCourseTests({ course, onBack }: StudentCourseTestsProps) 
 
   return (
     <div className="min-h-screen w-full bg-white text-neutral-900 font-sans flex flex-col">
-      <header className="h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-8 flex-shrink-0">
+      <header className="h-16 bg-white border-b border-neutral-200 flex items-center px-8 flex-shrink-0">
         <div className="flex items-center gap-4">
+          <EdRealmLogo size="small" />
+          <div className="h-6 w-px bg-neutral-200" />
           <Button variant="ghost" className="text-neutral-500 hover:text-neutral-900 p-0 h-auto" onClick={onBack}>
             <ArrowLeft className="w-5 h-5 mr-1" />
             Back
@@ -197,7 +199,6 @@ export function StudentCourseTests({ course, onBack }: StudentCourseTestsProps) 
             <span className="font-bold text-neutral-900">Tests</span>
           </div>
         </div>
-        <EdRealmLogo size="small" />
       </header>
 
       <div className="flex-1 overflow-y-auto p-8">
@@ -253,75 +254,75 @@ export function StudentCourseTests({ course, onBack }: StudentCourseTestsProps) 
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
-                  <TableHeader className="bg-neutral-50/50">
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px]">Test</TableHead>
-                      <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px]">Window</TableHead>
-                      <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-center">Status</TableHead>
-                      <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-center">Questions</TableHead>
-                      <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-center">Marks</TableHead>
-                      <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-right">Action</TableHead>
+                    <TableHeader className="bg-neutral-50/50">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px]">Test</TableHead>
+                        <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px]">Window</TableHead>
+                        <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-center">Status</TableHead>
+                        <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-center">Questions</TableHead>
+                        <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-center">Marks</TableHead>
+                        <TableHead className="px-6 py-3 font-bold text-neutral-500 uppercase text-[10px] text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {orderedTests.map((test, index) => {
-                      const result = currentUser ? getLatestResultForTest(test.id, currentUser.id) : null;
-                      const totalMarks = test.questions.reduce((sum, question) => sum + question.points, 0);
-                      const isCurrent = index === 0 && (test.status === 'active' || test.status === 'scheduled');
-                      const actionLabel = getActionLabel(test, !!result);
-                      return (
-                        <TableRow key={test.id} className="hover:bg-neutral-50/50 transition-colors border-neutral-100">
-                          <TableCell className="px-6 py-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-neutral-800">{test.title}</span>
-                                {isCurrent && (
-                                  <Badge variant="outline" className="text-[10px] h-5">
-                                    Current Test
-                                  </Badge>
-                                )}
+                        const result = currentUser ? getLatestResultForTest(test.id, currentUser.id) : null;
+                        const totalMarks = test.questions.reduce((sum, question) => sum + question.points, 0);
+                        const isCurrent = index === 0 && (test.status === 'active' || test.status === 'scheduled');
+                        const actionLabel = getActionLabel(test, !!result);
+                        return (
+                          <TableRow key={test.id} className="hover:bg-neutral-50/50 transition-colors border-neutral-100">
+                            <TableCell className="px-6 py-4">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-neutral-800">{test.title}</span>
+                                  {isCurrent && (
+                                    <Badge variant="outline" className="text-[10px] h-5">
+                                      Current Test
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-[11px] text-neutral-500 flex items-center gap-3">
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    {test.duration} min
+                                  </span>
+                                  <span>{formatDateTime(test.startDate)} - {formatDateTime(test.endDate)}</span>
+                                </div>
                               </div>
-                              <div className="text-[11px] text-neutral-500 flex items-center gap-3">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  {test.duration} min
-                                </span>
-                                <span>{formatDateTime(test.startDate)} - {formatDateTime(test.endDate)}</span>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 text-sm text-neutral-600">
-                            <div>{formatDateTime(test.startDate)}</div>
-                            <div>{formatDateTime(test.endDate)}</div>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 text-center">
-                            <Badge className={statusStyles[test.status]}>
-                              {test.status.charAt(0).toUpperCase() + test.status.slice(1)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold">{test.questions.length}</span>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 text-center">
-                            <span className="text-sm font-semibold">{result ? `${result.score}/${totalMarks}` : `-/${totalMarks}`}</span>
-                          </TableCell>
-                          <TableCell className="px-6 py-4 text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled={test.status === 'scheduled'}
-                              className="h-8 px-4 font-bold text-xs text-orange-600 hover:bg-orange-50 hover:text-orange-700 rounded-full disabled:text-neutral-400 disabled:hover:bg-transparent"
-                              onClick={() => handleOpenTest(test)}
-                            >
-                              {actionLabel}
-                              <ArrowRight className="w-3.5 h-3.5 ml-2" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 text-sm text-neutral-600">
+                              <div>{formatDateTime(test.startDate)}</div>
+                              <div>{formatDateTime(test.endDate)}</div>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 text-center">
+                              <Badge className={statusStyles[test.status]}>
+                                {test.status.charAt(0).toUpperCase() + test.status.slice(1)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 text-center">
+                              <span className="text-sm font-semibold">{test.questions.length}</span>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 text-center">
+                              <span className="text-sm font-semibold">{result ? `${result.score}/${totalMarks}` : `-/${totalMarks}`}</span>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={test.status === 'scheduled'}
+                                className="h-8 px-4 font-bold text-xs text-orange-600 hover:bg-orange-50 hover:text-orange-700 rounded-full disabled:text-neutral-400 disabled:hover:bg-transparent"
+                                onClick={() => handleOpenTest(test)}
+                              >
+                                {actionLabel}
+                                <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </div>
               )}
             </CardContent>

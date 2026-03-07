@@ -580,17 +580,15 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
                             Send New Invitation
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl w-[95vw] h-[90vh] max-h-[90vh] p-0 overflow-hidden invitation-scroll !flex !flex-col" style={{ gap: 0 }}
->
-                        <DialogHeader className="px-6 pt-6 pb-3 border-b border-neutral-200 bg-white">
+                    <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto">
+                        <DialogHeader className="px-6 pt-6 pb-3 border-b border-neutral-200 bg-white sticky top-0 z-10">
                             <DialogTitle>Send Trainer Invitation</DialogTitle>
                             <DialogDescription>
                                 Invite a trainer to teach a specific batch
                             </DialogDescription>
                         </DialogHeader>
 
-                        <ScrollArea type="always"className="flex-1 h-full min-h-0 overflow-y-auto">
-                            <div className="px-6 py-4 pr-4 space-y-4">
+                        <div className="py-4 space-y-6">
                             {/* Trainer Selection */}
                             <div className="space-y-3">
                                 <label className="text-sm font-semibold text-neutral-700 block">
@@ -696,9 +694,8 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
                                 </div>
                             )}
 
-                            </div>
-                        </ScrollArea>
-                        <div className="border-t border-neutral-200 bg-white px-6 py-3 flex gap-3 justify-end">
+                        </div>
+                        <div className="border-t border-neutral-200 bg-white px-6 py-3 flex gap-3 justify-end sticky bottom-0 z-10">
                             <Button
                                 variant="outline"
                                 onClick={() => setIsOpen(false)}
@@ -828,6 +825,6 @@ export function SendInvitation({ onNavigate }: SendInvitationProps) {
                     )}
                 </CardContent>
             </Card>
-        </div>
+        </div >
     );
 }

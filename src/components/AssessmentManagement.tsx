@@ -98,6 +98,9 @@ export function AssessmentManagement() {
     name: '',
     description: ''
   });
+  const [viewCategory, setViewCategory] = useState<Category | null>(null);
+  const [editCategory, setEditCategory] = useState<Category | null>(null);
+  const [selectedReportView, setSelectedReportView] = useState<AssessmentReport | null>(null);
 
   const handleCreateCategory = () => {
     if (!newCategory.name || !newCategory.description) {
@@ -143,6 +146,38 @@ export function AssessmentManagement() {
     toast.success('Report generated successfully');
   };
 
+  const handleUpdateCategory = () => {
+    if (!editCategory) return;
+    if (!editCategory.name.trim() || !editCategory.description.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    setCategories((prev) =>
+      prev.map((category) =>
+        category.id === editCategory.id
+          ? { ...category, name: editCategory.name.trim(), description: editCategory.description.trim() }
+          : category
+      )
+    );
+    setReports((prev) =>
+      prev.map((report) =>
+        report.categoryId === editCategory.id
+          ? { ...report, categoryName: editCategory.name.trim() }
+          : report
+      )
+    );
+    toast.success('Category updated successfully');
+    setEditCategory(null);
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    const category = categories.find((item) => item.id === categoryId);
+    if (!category) return;
+    setCategories((prev) => prev.filter((item) => item.id !== categoryId));
+    setReports((prev) => prev.filter((report) => report.categoryId !== categoryId));
+    toast.success(`${category.name} deleted`);
+  };
+
   const getReportRows = () => {
     const data = filteredReports.length ? filteredReports : reports;
     return data.map(report => ([
@@ -171,6 +206,20 @@ export function AssessmentManagement() {
       exportToCSV('assessment_reports', headers, rows);
       toast.success('Excel download started');
     }
+  };
+
+  const handleDownloadSingleReport = (report: AssessmentReport) => {
+    const headers = ['Category', 'Assessment', 'Total Students', 'Passed', 'Average Score', 'Generated On'];
+    const rows = [[
+      report.categoryName,
+      report.assessmentName,
+      report.totalStudents,
+      report.passedStudents,
+      `${report.averageScore}%`,
+      report.generatedAt
+    ]];
+    exportToPDF(`assessment_report_${report.id}`, `${report.assessmentName} Report`, headers, rows);
+    toast.success('Report download started');
   };
 
   return (
@@ -394,15 +443,20 @@ export function AssessmentManagement() {
             <CardContent>
               <p className="text-sm text-neutral-600 mb-4">{category.description}</p>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={() => setViewCategory(category)}>
                   <Eye className="w-3 h-3 mr-1" />
                   View
                 </Button>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={() => setEditCategory(category)}>
                   <Edit className="w-3 h-3 mr-1" />
                   Edit
                 </Button>
-                <Button size="sm" variant="outline" className="text-red-600">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600"
+                  onClick={() => handleDeleteCategory(category.id)}
+                >
                   <Trash2 className="w-3 h-3" />
                 </Button>
               </div>
@@ -490,11 +544,11 @@ export function AssessmentManagement() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => setSelectedReportView(report)}>
                       <Eye className="w-3 h-3 mr-1" />
                       View
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleDownloadSingleReport(report)}>
                       <Download className="w-3 h-3 mr-1" />
                       Download
                     </Button>
@@ -505,6 +559,119 @@ export function AssessmentManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* View Category Dialog */}
+      <Dialog open={!!viewCategory} onOpenChange={(open) => !open && setViewCategory(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{viewCategory?.name}</DialogTitle>
+            <DialogDescription>Category details and linked report stats.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Description</p>
+              <p className="text-sm text-neutral-700 mt-1">{viewCategory?.description}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border border-neutral-200 p-3">
+                <p className="text-xs text-neutral-500">Reports Generated</p>
+                <p className="text-xl font-bold text-neutral-900 mt-1">
+                  {reports.filter((report) => report.categoryId === viewCategory?.id).length}
+                </p>
+              </div>
+              <div className="rounded-lg border border-neutral-200 p-3">
+                <p className="text-xs text-neutral-500">Average Score</p>
+                <p className="text-xl font-bold text-neutral-900 mt-1">
+                  {(() => {
+                    const related = reports.filter((report) => report.categoryId === viewCategory?.id);
+                    if (related.length === 0) return '0%';
+                    const total = related.reduce((sum, report) => sum + report.averageScore, 0);
+                    return `${Math.round(total / related.length)}%`;
+                  })()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Category Dialog */}
+      <Dialog open={!!editCategory} onOpenChange={(open) => !open && setEditCategory(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+            <DialogDescription>Update category details.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Category Name</Label>
+              <Input
+                value={editCategory?.name || ''}
+                onChange={(event) =>
+                  setEditCategory((prev) => (prev ? { ...prev, name: event.target.value } : prev))
+                }
+              />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                rows={3}
+                value={editCategory?.description || ''}
+                onChange={(event) =>
+                  setEditCategory((prev) => (prev ? { ...prev, description: event.target.value } : prev))
+                }
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setEditCategory(null)}>Cancel</Button>
+              <Button onClick={handleUpdateCategory}>Save Changes</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report View Dialog */}
+      <Dialog open={!!selectedReportView} onOpenChange={(open) => !open && setSelectedReportView(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedReportView?.assessmentName}</DialogTitle>
+            <DialogDescription>Detailed assessment report summary.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border border-neutral-200 p-3">
+                <p className="text-xs text-neutral-500">Category</p>
+                <p className="font-semibold text-neutral-900 mt-1">{selectedReportView?.categoryName}</p>
+              </div>
+              <div className="rounded-lg border border-neutral-200 p-3">
+                <p className="text-xs text-neutral-500">Generated On</p>
+                <p className="font-semibold text-neutral-900 mt-1">{selectedReportView?.generatedAt}</p>
+              </div>
+              <div className="rounded-lg border border-neutral-200 p-3">
+                <p className="text-xs text-neutral-500">Total Students</p>
+                <p className="font-semibold text-neutral-900 mt-1">{selectedReportView?.totalStudents}</p>
+              </div>
+              <div className="rounded-lg border border-neutral-200 p-3">
+                <p className="text-xs text-neutral-500">Passed Students</p>
+                <p className="font-semibold text-neutral-900 mt-1">{selectedReportView?.passedStudents}</p>
+              </div>
+            </div>
+            <div className="rounded-lg border border-neutral-200 p-3">
+              <p className="text-xs text-neutral-500">Average Score</p>
+              <p className="text-2xl font-bold text-neutral-900 mt-1">{selectedReportView?.averageScore}%</p>
+            </div>
+            <div className="flex justify-end gap-2">
+              {selectedReportView && (
+                <Button variant="outline" onClick={() => handleDownloadSingleReport(selectedReportView)}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              )}
+              <Button onClick={() => setSelectedReportView(null)}>Close</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Category Dialog */}
       <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>

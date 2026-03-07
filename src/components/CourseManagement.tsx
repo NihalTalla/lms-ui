@@ -8,10 +8,10 @@ import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
-import { 
-  Plus, Edit, Trash2, Eye, Clock, BookOpen, 
-  ChevronRight, ArrowLeft, Image as ImageIcon, Lock, Unlock, 
-  FileText, Code, CheckCircle 
+import {
+  Plus, Edit, Trash2, Eye, Clock, BookOpen,
+  ChevronRight, ArrowLeft, Image as ImageIcon, Lock, Unlock,
+  FileText, Code, CheckCircle
 } from 'lucide-react';
 import { courses as initialCourses, Topic, TopicQuestion } from '../lib/data';
 import { toast } from 'sonner';
@@ -38,11 +38,11 @@ type ViewState = 'courses' | 'topics' | 'topic-details' | 'questions';
 export function CourseManagement() {
   const [courseList, setCourseList] = useState<ExtendedCourse[]>(initialCourses);
   const [currentView, setCurrentView] = useState<ViewState>('courses');
-  
+
   // Selection State
   const [selectedCourse, setSelectedCourse] = useState<ExtendedCourse | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<ExtendedTopic | null>(null);
-  
+
   // Dialog States
   const [isCreateCourseOpen, setIsCreateCourseOpen] = useState(false);
   const [isCreateTopicOpen, setIsCreateTopicOpen] = useState(false);
@@ -145,7 +145,7 @@ export function CourseManagement() {
 
   const handleCreateTopic = () => {
     if (!selectedCourse || !newTopic.title) return;
-    
+
     const topic: ExtendedTopic = {
       id: `topic-${Date.now()}`,
       title: newTopic.title,
@@ -260,16 +260,16 @@ export function CourseManagement() {
               <div className="space-y-4 py-4">
                 <div>
                   <Label>Title</Label>
-                  <Input value={newCourse.title} onChange={e => setNewCourse({...newCourse, title: e.target.value})} />
+                  <Input value={newCourse.title} onChange={e => setNewCourse({ ...newCourse, title: e.target.value })} />
                 </div>
                 <div>
                   <Label>Description</Label>
-                  <Textarea value={newCourse.description} onChange={e => setNewCourse({...newCourse, description: e.target.value})} />
+                  <Textarea value={newCourse.description} onChange={e => setNewCourse({ ...newCourse, description: e.target.value })} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Level</Label>
-                    <Select value={newCourse.level} onValueChange={v => setNewCourse({...newCourse, level: v})}>
+                    <Select value={newCourse.level} onValueChange={v => setNewCourse({ ...newCourse, level: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="beginner">Beginner</SelectItem>
@@ -280,7 +280,7 @@ export function CourseManagement() {
                   </div>
                   <div>
                     <Label>Duration</Label>
-                    <Input value={newCourse.duration} onChange={e => setNewCourse({...newCourse, duration: e.target.value})} />
+                    <Input value={newCourse.duration} onChange={e => setNewCourse({ ...newCourse, duration: e.target.value })} />
                   </div>
                 </div>
                 <Button onClick={handleCreateCourse} className="w-full">Create Course</Button>
@@ -352,20 +352,20 @@ export function CourseManagement() {
             <div className="space-y-4 py-4">
               <div>
                 <Label>Topic Title</Label>
-                <Input value={newTopic.title} onChange={e => setNewTopic({...newTopic, title: e.target.value})} />
+                <Input value={newTopic.title} onChange={e => setNewTopic({ ...newTopic, title: e.target.value })} />
               </div>
               <div>
                 <Label>Description</Label>
-                <Textarea value={newTopic.content} onChange={e => setNewTopic({...newTopic, content: e.target.value})} />
+                <Textarea value={newTopic.content} onChange={e => setNewTopic({ ...newTopic, content: e.target.value })} />
               </div>
               <div>
                 <Label>Duration (Access Time)</Label>
-                <Input value={newTopic.accessDuration} onChange={e => setNewTopic({...newTopic, accessDuration: e.target.value})} placeholder="e.g. 2 hours" />
+                <Input value={newTopic.accessDuration} onChange={e => setNewTopic({ ...newTopic, accessDuration: e.target.value })} placeholder="e.g. 2 hours" />
               </div>
               <div className="flex items-center gap-2">
-                <Switch 
-                  checked={newTopic.durationLocked} 
-                  onCheckedChange={checked => setNewTopic({...newTopic, durationLocked: checked})} 
+                <Switch
+                  checked={newTopic.durationLocked}
+                  onCheckedChange={checked => setNewTopic({ ...newTopic, durationLocked: checked })}
                 />
                 <Label>Lock Duration (Deny Access)</Label>
               </div>
@@ -376,36 +376,55 @@ export function CourseManagement() {
       </div>
 
       <div className="space-y-4">
-        {selectedCourse?.topics?.map(topic => (
-          <Card key={topic.id} className="hover:border-primary transition-colors cursor-pointer" onClick={() => navigateToTopicDetails(topic)}>
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-neutral-100 rounded-lg">
-                  <FileText className="w-6 h-6 text-neutral-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">{topic.title}</h3>
-                  <div className="flex items-center gap-2 text-sm text-neutral-500">
-                    <span>{topic.questions.length} Questions</span>
-                    {topic.durationLocked && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Lock className="w-3 h-3" /> Access Locked
-                      </Badge>
-                    )}
-                  </div>
+        {selectedCourse?.topics?.map((topic, index) => (
+          <Card key={topic.id} className="hover:border-primary transition-colors cursor-pointer shadow-sm w-full" onClick={() => navigateToTopicDetails(topic)}>
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-xl font-bold text-neutral-900">{topic.title}</h3>
+                <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                  <Badge className="bg-emerald-100/60 text-emerald-700 shadow-none hover:bg-emerald-100/60 border-none font-medium flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-200">
+                    <CheckCircle className="w-3.5 h-3.5" /> Published
+                  </Badge>
                 </div>
               </div>
-              <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                <Button 
-                  size="sm" 
-                  variant={topic.durationLocked ? "destructive" : "outline"}
-                  onClick={() => handleUpdateTopic({...topic, durationLocked: !topic.durationLocked})}
-                >
-                  {topic.durationLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                </Button>
-                <Button size="sm" variant="ghost">
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+
+              <div className="text-xs text-neutral-500 mb-5 flex items-center gap-1.5">
+                <span>Module {index + 1}</span>
+                <span>&bull;</span>
+                <span>{topic.accessDuration || '12 weeks'}</span>
+                <span>&bull;</span>
+                <span>100% complete</span>
+              </div>
+
+              <p className="text-sm text-neutral-700 mb-6 line-clamp-2">
+                {topic.content || 'Arrays are fundamental data structures that store elements of the same type in contiguous memory locations. In this topic, we will cover array initialization, traversal, and basic operations.'}
+              </p>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary" className="bg-emerald-100/50 text-emerald-700 font-medium border-emerald-200/50 px-3 py-1.5 hover:bg-emerald-100/50 flex items-center gap-1.5 rounded-md">
+                    <BookOpen className="w-4 h-4" />
+                    Content - 1
+                  </Badge>
+                  <Badge variant="secondary" className="bg-orange-100/50 text-orange-700 font-medium border-orange-200/50 px-3 py-1.5 hover:bg-orange-100/50 flex items-center gap-1.5 rounded-md">
+                    <Code className="w-4 h-4" />
+                    Assignment - {topic.questions?.length > 0 ? topic.questions.length : 1}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                  <Button
+                    size="sm"
+                    variant={topic.durationLocked ? "destructive" : "outline"}
+                    onClick={() => handleUpdateTopic({ ...topic, durationLocked: !topic.durationLocked })}
+                    title={topic.durationLocked ? "Unlock Access" : "Lock Access"}
+                  >
+                    {topic.durationLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                  </Button>
+                  <Button size="sm" variant="ghost">
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -443,10 +462,10 @@ export function CourseManagement() {
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea 
-                className="min-h-[200px]" 
-                value={selectedTopic?.content} 
-                onChange={e => selectedTopic && handleUpdateTopic({...selectedTopic, content: e.target.value})} 
+              <Textarea
+                className="min-h-[200px]"
+                value={selectedTopic?.content}
+                onChange={e => selectedTopic && handleUpdateTopic({ ...selectedTopic, content: e.target.value })}
               />
             </CardContent>
           </Card>
@@ -506,9 +525,9 @@ export function CourseManagement() {
             <div className="space-y-6 py-4">
               <div>
                 <Label>Question Type</Label>
-                <Select 
-                  value={newQuestion.type} 
-                  onValueChange={(v: any) => setNewQuestion({...newQuestion, type: v})}
+                <Select
+                  value={newQuestion.type}
+                  onValueChange={(v: any) => setNewQuestion({ ...newQuestion, type: v })}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -520,9 +539,9 @@ export function CourseManagement() {
 
               <div>
                 <Label>Question Text</Label>
-                <Textarea 
-                  value={newQuestion.question} 
-                  onChange={e => setNewQuestion({...newQuestion, question: e.target.value})} 
+                <Textarea
+                  value={newQuestion.question}
+                  onChange={e => setNewQuestion({ ...newQuestion, question: e.target.value })}
                   placeholder="Enter the question here..."
                 />
               </div>
@@ -535,19 +554,19 @@ export function CourseManagement() {
                       <div className="flex items-center justify-center w-8 h-10 bg-neutral-100 rounded text-sm font-bold">
                         {String.fromCharCode(65 + idx)}
                       </div>
-                      <Input 
-                        value={opt} 
+                      <Input
+                        value={opt}
                         onChange={e => {
                           const newOpts = [...(newQuestion.options || [])];
                           newOpts[idx] = e.target.value;
-                          setNewQuestion({...newQuestion, options: newOpts});
-                        }} 
-                        placeholder={`Option ${idx + 1}`} 
+                          setNewQuestion({ ...newQuestion, options: newOpts });
+                        }}
+                        placeholder={`Option ${idx + 1}`}
                       />
-                      <Button 
+                      <Button
                         variant={newQuestion.correctAnswer === opt && opt !== '' ? "default" : "outline"}
                         size="icon"
-                        onClick={() => setNewQuestion({...newQuestion, correctAnswer: opt})}
+                        onClick={() => setNewQuestion({ ...newQuestion, correctAnswer: opt })}
                         title="Mark as Correct"
                       >
                         <CheckCircle className="w-4 h-4" />
@@ -560,10 +579,10 @@ export function CourseManagement() {
                   <div>
                     <Label>Starter Code</Label>
                     <div className="mt-2 border rounded-md overflow-hidden">
-                      <Textarea 
-                        className="font-mono bg-neutral-900 text-neutral-100 border-0" 
+                      <Textarea
+                        className="font-mono bg-neutral-900 text-neutral-100 border-0"
                         value={newQuestion.starterCode}
-                        onChange={e => setNewQuestion({...newQuestion, starterCode: e.target.value})}
+                        onChange={e => setNewQuestion({ ...newQuestion, starterCode: e.target.value })}
                         placeholder="// Enter starter code here..."
                         rows={6}
                       />
@@ -573,11 +592,11 @@ export function CourseManagement() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <Label>Test Cases</Label>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => setNewQuestion({
-                          ...newQuestion, 
+                          ...newQuestion,
                           testCases: [...(newQuestion.testCases || []), { id: `tc-${Date.now()}`, input: '', expectedOutput: '', hidden: false }]
                         })}
                       >
@@ -590,14 +609,14 @@ export function CourseManagement() {
                           <CardContent className="p-4 space-y-4">
                             <div className="flex justify-between items-center">
                               <span className="font-semibold text-sm">Test Case #{idx + 1}</span>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
+                              <Button
+                                size="sm"
+                                variant="ghost"
                                 className="text-red-500"
                                 onClick={() => {
                                   const newTCs = [...(newQuestion.testCases || [])];
                                   newTCs.splice(idx, 1);
-                                  setNewQuestion({...newQuestion, testCases: newTCs});
+                                  setNewQuestion({ ...newQuestion, testCases: newTCs });
                                 }}
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -606,37 +625,37 @@ export function CourseManagement() {
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <Label className="text-xs">Input</Label>
-                                <Textarea 
-                                  className="font-mono text-sm mt-1" 
-                                  value={tc.input} 
+                                <Textarea
+                                  className="font-mono text-sm mt-1"
+                                  value={tc.input}
                                   onChange={e => {
                                     const newTCs = [...(newQuestion.testCases || [])];
                                     newTCs[idx].input = e.target.value;
-                                    setNewQuestion({...newQuestion, testCases: newTCs});
-                                  }} 
+                                    setNewQuestion({ ...newQuestion, testCases: newTCs });
+                                  }}
                                 />
                               </div>
                               <div>
                                 <Label className="text-xs">Expected Output</Label>
-                                <Textarea 
-                                  className="font-mono text-sm mt-1" 
-                                  value={tc.expectedOutput} 
+                                <Textarea
+                                  className="font-mono text-sm mt-1"
+                                  value={tc.expectedOutput}
                                   onChange={e => {
                                     const newTCs = [...(newQuestion.testCases || [])];
                                     newTCs[idx].expectedOutput = e.target.value;
-                                    setNewQuestion({...newQuestion, testCases: newTCs});
-                                  }} 
+                                    setNewQuestion({ ...newQuestion, testCases: newTCs });
+                                  }}
                                 />
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Switch 
-                                checked={tc.hidden} 
+                              <Switch
+                                checked={tc.hidden}
                                 onCheckedChange={checked => {
                                   const newTCs = [...(newQuestion.testCases || [])];
                                   newTCs[idx].hidden = checked;
-                                  setNewQuestion({...newQuestion, testCases: newTCs});
-                                }} 
+                                  setNewQuestion({ ...newQuestion, testCases: newTCs });
+                                }}
                               />
                               <Label className="text-sm text-neutral-600">Hidden Test Case (Secret)</Label>
                             </div>

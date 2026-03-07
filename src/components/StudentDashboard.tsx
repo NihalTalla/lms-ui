@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Trophy, Clock, CheckCircle2, TrendingUp, ArrowRight, Calendar, Code, Users, Flame } from 'lucide-react';
 import { problems, courses, batches, assessments } from '../lib/data';
 import { toast } from 'sonner';
-import { loadContests, Contest } from '../lib/contest-store';
+
 
 interface StudentDashboardProps {
   onNavigate: (page: string, data?: any) => void;
@@ -37,10 +37,6 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
   const recommendedProblems = problems.slice(0, 3);
   const studentAssessments = assessments.filter(assessment => assessment.batchId === 'batch-1'); // Assuming student is in batch-1
 
-  const [activeContests, setActiveContests] = useState<Contest[]>(() => {
-    const contests = loadContests();
-    return contests.filter(c => c.status === 'active' || c.status === 'scheduled');
-  });
 
   return (
     <div className="space-y-6">
@@ -259,70 +255,6 @@ export function StudentDashboard({ onNavigate }: StudentDashboardProps) {
             </CardContent>
           </Card>
 
-          {/* Active Contests */}
-          {activeContests.length > 0 && (
-            <Card className="border-indigo-100 shadow-sm overflow-hidden">
-              <CardHeader className="bg-indigo-50/50 border-b border-indigo-100/50">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-indigo-900 font-bold">Live & Upcoming Contests</CardTitle>
-                    <CardDescription className="text-indigo-700/70 font-medium">
-                      Compete with peers and improve your ranking
-                    </CardDescription>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onNavigate('contests')}
-                    className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-100 font-bold"
-                  >
-                    Enter Arena
-                    <Trophy className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-indigo-50">
-                  {activeContests.map((contest) => (
-                    <div
-                      key={contest.id}
-                      className="flex items-center justify-between p-5 hover:bg-indigo-50/30 transition-all duration-200 cursor-pointer group"
-                      onClick={() => onNavigate('contests')}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${contest.status === 'active' ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'
-                          }`}>
-                          {contest.status === 'active' ? <Flame className="w-6 h-6 animate-pulse" /> : <Calendar className="w-6 h-6" />}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors uppercase text-sm tracking-tight">{contest.name}</p>
-                          <div className="flex items-center gap-4 mt-1.5 text-xs text-slate-500 font-semibold uppercase tracking-wider">
-                            <span className="flex items-center gap-1.5">
-                              <Users className="w-3.5 h-3.5" />
-                              {contest.participants || 0} participants
-                            </span>
-                            <span className="flex items-center gap-1.5">
-                              <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                              {contest.prize || 'Award Points'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2.5">
-                        <Badge className={`${contest.status === 'active'
-                            ? 'bg-rose-50 text-rose-700 border-rose-100'
-                            : 'bg-indigo-50 text-indigo-700 border-indigo-100'
-                          } uppercase text-[10px] font-bold px-3 py-1 rounded-full shadow-sm`}>
-                          {contest.status === 'active' ? 'Live Now' : 'Starts Soon'}
-                        </Badge>
-                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transform group-hover:translate-x-1 transition-all" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Assessments */}
           {studentAssessments.length > 0 && (

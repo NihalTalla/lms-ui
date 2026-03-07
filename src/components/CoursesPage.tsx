@@ -9,7 +9,7 @@ import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { BookOpen, Clock, Users, Award, ArrowRight, Star, Plus, Edit, Trash2, Eye, Lock, Unlock, ChevronDown, ChevronRight, Code, Play, Download, FileText, ArrowLeft, Image as ImageIcon, Search, Calendar, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Clock, Users, Award, ArrowRight, Star, Plus, Edit, Trash2, Eye, Lock, Unlock, ChevronDown, ChevronRight, Code, Play, Download, FileText, ArrowLeft, Image as ImageIcon, Search, Calendar, CheckCircle2, MessageSquare } from 'lucide-react';
 import { courses, institutions, batches, users, Topic, TopicQuestion } from '../lib/data';
 import { CodePracticeConsole } from './CodePracticeConsole';
 import { useAuth } from '../lib/auth-context';
@@ -78,6 +78,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
     starterCode: '',
     expectedOutput: '',
     testCases: [] as { input: string; expectedOutput: string; hidden: boolean }[],
+    tags: [] as string[],
   });
 
   // State for adding existing questions
@@ -92,8 +93,11 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [viewCourse, setViewCourse] = useState<any>(null);
 
+  const [isStudentFeedbackOpen, setIsStudentFeedbackOpen] = useState(false);
+  const [studentFeedbackCourse, setStudentFeedbackCourse] = useState<any>(null);
+
   // Management Templates State
-  const [mgmtStep, setMgmtStep] = useState<'list' | 'topics' | 'details' | 'assessment' | 'attendance'>('list');
+  const [mgmtStep, setMgmtStep] = useState<'list' | 'topics' | 'details' | 'assessment' | 'attendance' | 'feedback'>('list');
   const [activeMgmtCourse, setActiveMgmtCourse] = useState<any>(null);
   const [activeMgmtTopic, setActiveMgmtTopic] = useState<any>(null);
   const [activeMgmtTopicIndex, setActiveMgmtTopicIndex] = useState<number>(-1);
@@ -101,6 +105,14 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const [topicSearch, setTopicSearch] = useState('');
   const [attendanceSessions, setAttendanceSessions] = useState<AttendanceSession[]>([]);
   const [activeAttendance, setActiveAttendance] = useState<AttendanceSession | null>(null);
+
+  // Feedback State
+  const [feedbackQuestions, setFeedbackQuestions] = useState<any[]>([
+    { id: 'fq1', type: 'rating', question: 'How would you rate the trainer\'s overall teaching?' },
+    { id: 'fq2', type: 'mcq', question: 'Is the pace of the course appropriate?', options: ['Too Fast', 'Just Right', 'Too Slow'] }
+  ]);
+  const [currentFeedbackQ, setCurrentFeedbackQ] = useState({ type: 'mcq' as 'mcq' | 'rating' | 'text', question: '', options: ['', ''] });
+  const [isFeedbackPublished, setIsFeedbackPublished] = useState(false);
 
   const attendanceStudents = useMemo(() => {
     if (!activeMgmtCourse) return [];
@@ -112,7 +124,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
 
   // Guard against stale selections causing blank screens
   useEffect(() => {
-    if ((mgmtStep === 'topics' || mgmtStep === 'details' || mgmtStep === 'assessment' || mgmtStep === 'attendance') && activeMgmtCourse) {
+    if ((mgmtStep === 'topics' || mgmtStep === 'details' || mgmtStep === 'assessment' || mgmtStep === 'attendance' || mgmtStep === 'feedback') && activeMgmtCourse) {
       const exists = courseList.find(c => c.id === activeMgmtCourse.id);
       if (!exists) {
         setMgmtStep('list');
@@ -191,7 +203,8 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
         question: currentQuestion.question,
         options: currentQuestion.options.filter(o => o.trim() !== ''),
         correctAnswer: currentQuestion.correctAnswer,
-        type: 'multiple_choice' // Standardize on 'multiple_choice' to match interface if needed, or keep 'mcq' if interface allows
+        type: 'multiple_choice',
+        tags: currentQuestion.tags
       };
       // Note: Interface says 'multiple_choice', state says 'mcq'. 
       // Let's force type to match interface or update interface. 
@@ -210,6 +223,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
         expectedOutput: currentQuestion.expectedOutput,
         testCases: currentQuestion.testCases,
         type: 'coding',
+        tags: currentQuestion.tags
       };
     }
 
@@ -225,6 +239,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       starterCode: '',
       expectedOutput: '',
       testCases: [],
+      tags: [],
     });
     toast.success('Question added to topic');
   };
@@ -475,7 +490,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const handleCloseAttendance = () => {
     if (!activeAttendance) return;
     const next = attendanceSessions.map(s =>
-      s.id === activeAttendance.id ? { ...s, status: 'closed' } : s
+      s.id === activeAttendance.id ? { ...s, status: 'closed' as const } : s
     );
     setAttendanceSessions(next);
     setActiveAttendance(null);
@@ -629,6 +644,9 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                 <Button variant="outline" size="sm" className="rounded-full h-9" onClick={handleOpenAttendance}>
                   <Calendar className="w-4 h-4 mr-2" /> Attendance
                 </Button>
+                <Button variant="outline" size="sm" className="rounded-full h-9 shadow-sm" onClick={() => setMgmtStep('feedback')}>
+                  <MessageSquare className="w-4 h-4 mr-2" /> Trainer Feedback
+                </Button>
                 <Button size="sm" className="bg-primary text-primary-foreground shadow-md hover:shadow-lg transition-all rounded-full h-9" onClick={() => {
                   const newTopic: Topic = {
                     id: `topic-${Date.now()}`,
@@ -651,69 +669,97 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-neutral-200 bg-white text-neutral-900 p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
+            <div className="rounded-xl bg-transparent">
+              <div className="flex items-center justify-between mb-4 px-2">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-neutral-500" />
-                  <span className="font-semibold">Topics</span>
+                  <span className="font-semibold text-neutral-700">Topics</span>
                 </div>
                 <span className="text-xs text-neutral-500">{filteredTopics.length} topics</span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {filteredTopics.map((topic: Topic) => {
+              <div className="space-y-4">
+                {filteredTopics.map((topic: Topic, idx: number) => {
                   const realIndex = activeMgmtCourse.topics.findIndex((t: Topic) => t.id === topic.id);
                   return (
-                  <div key={topic.id} className="flex items-center gap-2 bg-neutral-100 border border-neutral-200 rounded-full px-3 py-1.5 hover:bg-neutral-200/60 transition-colors">
-                    <button
-                      className="flex items-center gap-2 text-sm text-neutral-900"
-                      onClick={() => handleOpenTopicDetails(topic, realIndex)}
-                    >
-                      <span>{topic.title}</span>
-                      <span className="text-[11px] bg-white px-2 py-0.5 rounded-full text-neutral-600 border border-neutral-200">
-                        {topic.questions?.length || 0}
-                      </span>
-                    </button>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-neutral-500 hover:text-neutral-900"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
-                            i === realIndex ? { ...t, isLocked: !t.isLocked } : t
-                          );
-                          const updatedCourse = { ...activeMgmtCourse, topics: updated };
-                          setActiveMgmtCourse(updatedCourse);
-                          setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-                          toast.success(`Topic ${updated[realIndex].isLocked ? 'locked' : 'unlocked'}`);
-                        }}
-                      >
-                        {topic.isLocked ? <Lock className="w-3.5 h-3.5 text-red-400" /> : <Unlock className="w-3.5 h-3.5 text-green-400" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-neutral-500 hover:text-red-500"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm('Are you sure you want to delete this topic? This action cannot be undone.')) {
-                            const updatedTopics = activeMgmtCourse.topics.filter((_: any, i: number) => i !== realIndex);
-                            const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
-                            setActiveMgmtCourse(updatedCourse);
-                            setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
-                            toast.success('Topic deleted successfully');
-                          }
-                        }}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                );
+                    <Card key={topic.id} className="hover:border-primary transition-colors cursor-pointer shadow-sm w-full" onClick={() => handleOpenTopicDetails(topic, realIndex)}>
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-xl font-bold text-neutral-900">{topic.title}</h3>
+                          <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                            <Badge className="bg-emerald-100/60 text-emerald-700 shadow-none hover:bg-emerald-100/60 border-none font-medium flex items-center gap-1.5 px-3 py-1 rounded-full border border-emerald-200">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Published
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="text-xs text-neutral-500 mb-5 flex items-center gap-1.5">
+                          <span>Module {idx + 1}</span>
+                          <span>&bull;</span>
+                          <span>12 weeks</span>
+                          <span>&bull;</span>
+                          <span>100% complete</span>
+                        </div>
+
+                        <p className="text-sm text-neutral-700 mb-6 line-clamp-2">
+                          {topic.content || 'Data structure concepts and implementations.'}
+                        </p>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Badge variant="secondary" className="bg-emerald-100/50 text-emerald-700 font-medium border-emerald-200/50 px-3 py-1.5 hover:bg-emerald-100/50 flex items-center gap-1.5 rounded-md">
+                              <BookOpen className="w-4 h-4" />
+                              Content - 1
+                            </Badge>
+                            <Badge variant="secondary" className="bg-orange-100/50 text-orange-700 font-medium border-orange-200/50 px-3 py-1.5 hover:bg-orange-100/50 flex items-center gap-1.5 rounded-md">
+                              <Code className="w-4 h-4" />
+                              Assignment - {topic.questions?.length || 1}
+                            </Badge>
+                          </div>
+
+                          <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-neutral-500 hover:text-neutral-900"
+                              onClick={() => {
+                                const updated = activeMgmtCourse.topics.map((t: any, i: number) =>
+                                  i === realIndex ? { ...t, isLocked: !t.isLocked } : t
+                                );
+                                const updatedCourse = { ...activeMgmtCourse, topics: updated };
+                                setActiveMgmtCourse(updatedCourse);
+                                setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                                toast.success(`Topic ${updated[realIndex].isLocked ? 'locked' : 'unlocked'}`);
+                              }}
+                            >
+                              {topic.isLocked ? <Lock className="w-4 h-4 text-red-500" /> : <Unlock className="w-4 h-4" />}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-neutral-500 hover:text-red-500"
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this topic? This action cannot be undone.')) {
+                                  const updatedTopics = activeMgmtCourse.topics.filter((_: any, i: number) => i !== realIndex);
+                                  const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
+                                  setActiveMgmtCourse(updatedCourse);
+                                  setCourseList(courseList.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+                                  toast.success('Topic deleted successfully');
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-neutral-500">
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
                 })}
                 {filteredTopics.length === 0 && (
-                  <div className="text-sm text-neutral-400">No topics found. Try another search.</div>
+                  <div className="text-sm text-neutral-400 p-4 border rounded-xl bg-white text-center">No topics found. Try another search.</div>
                 )}
               </div>
             </div>
@@ -808,6 +854,159 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      )}
+
+      {isAdmin && mgmtStep === 'feedback' && activeMgmtCourse && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm" onClick={handleBackToTopics} className="rounded-full h-9 bg-white shadow-sm border-neutral-200">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Topics
+              </Button>
+              <div>
+                <h2 className="text-xl font-bold text-neutral-800">Trainer Feedback <span className="text-neutral-400 font-normal">/ {activeMgmtCourse.title}</span></h2>
+                <p className="text-sm text-neutral-500">Create a Google-forms style feedback survey for students about their trainer.</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant={isFeedbackPublished ? "secondary" : "default"} size="sm" className="rounded-full h-9" onClick={() => {
+                setIsFeedbackPublished(!isFeedbackPublished);
+                toast.success(isFeedbackPublished ? "Feedback Form Unpublished" : "Feedback Form Published to Students");
+              }}>
+                {isFeedbackPublished ? 'Unpublish Form' : 'Publish Feedback Form'}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-center text-lg">
+                    <span>Feedback Form Preview</span>
+                    {isFeedbackPublished && <Badge className="bg-green-100 text-green-700">Live</Badge>}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {feedbackQuestions.map((q, i) => (
+                    <div key={q.id} className="p-4 border border-neutral-200 rounded-lg bg-neutral-50/50 relative group">
+                      <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-500" onClick={() => {
+                          setFeedbackQuestions(feedbackQuestions.filter(x => x.id !== q.id));
+                        }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <h3 className="font-semibold text-neutral-800 mb-3 text-sm">{i + 1}. {q.question}</h3>
+                      {q.type === 'mcq' && (
+                        <div className="space-y-2 pl-4">
+                          {q.options?.map((opt: string, oi: number) => (
+                            <div key={oi} className="flex items-center gap-2">
+                              <div className="w-3.5 h-3.5 rounded-full border border-neutral-300"></div>
+                              <span className="text-sm text-neutral-600">{opt}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {q.type === 'rating' && (
+                        <div className="flex gap-2 text-neutral-300 pl-4">
+                          {[1, 2, 3, 4, 5].map(star => <Star key={star} className="w-5 h-5" />)}
+                        </div>
+                      )}
+                      {q.type === 'text' && (
+                        <div className="pl-4">
+                          <Textarea disabled placeholder="Student will enter text here..." className="bg-white/50 min-h-[80px]" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {feedbackQuestions.length === 0 && (
+                    <div className="text-center text-neutral-400 py-8 text-sm">No feedback questions added yet.</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-4">
+              <Card className="sticky top-6">
+                <CardHeader>
+                  <CardTitle className="text-lg">Add Question</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-xs">Question Type</Label>
+                    <Select value={currentFeedbackQ.type} onValueChange={(val: any) => setCurrentFeedbackQ({ ...currentFeedbackQ, type: val })}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="rating">Rating (5 Stars)</SelectItem>
+                        <SelectItem value="mcq">Multiple Choice</SelectItem>
+                        <SelectItem value="text">Long Text Answer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Question Text</Label>
+                    <Input
+                      value={currentFeedbackQ.question}
+                      onChange={e => setCurrentFeedbackQ({ ...currentFeedbackQ, question: e.target.value })}
+                      placeholder="E.g. How is the trainer explaining concepts?"
+                    />
+                  </div>
+                  {currentFeedbackQ.type === 'mcq' && (
+                    <div className="space-y-2 border-t pt-2">
+                      <Label className="text-xs">Options</Label>
+                      {currentFeedbackQ.options.map((opt, i) => (
+                        <div key={i} className="flex gap-2">
+                          <Input
+                            value={opt}
+                            onChange={e => {
+                              const newOpts = [...currentFeedbackQ.options];
+                              newOpts[i] = e.target.value;
+                              setCurrentFeedbackQ({ ...currentFeedbackQ, options: newOpts });
+                            }}
+                            placeholder={`Option ${i + 1}`}
+                            className="h-8 text-xs"
+                          />
+                          <Button variant="ghost" size="sm" className="h-8 w-8 px-0 text-red-500 outline-none" onClick={() => {
+                            const newOpts = [...currentFeedbackQ.options];
+                            newOpts.splice(i, 1);
+                            setCurrentFeedbackQ({ ...currentFeedbackQ, options: newOpts });
+                          }}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button variant="ghost" size="sm" className="w-full text-xs h-8 justify-start" onClick={() => {
+                        setCurrentFeedbackQ({ ...currentFeedbackQ, options: [...currentFeedbackQ.options, ''] });
+                      }}>
+                        <Plus className="w-3 h-3 mr-1" /> Add Option
+                      </Button>
+                    </div>
+                  )}
+                  <Button className="w-full mt-2" onClick={() => {
+                    if (!currentFeedbackQ.question) return toast.error("Enter a question text");
+                    if (currentFeedbackQ.type === 'mcq' && currentFeedbackQ.options.filter(o => o.trim()).length < 2) {
+                      return toast.error("MCQ requires at least 2 options");
+                    }
+                    const newQ = {
+                      id: `fq-${Date.now()}`,
+                      type: currentFeedbackQ.type,
+                      question: currentFeedbackQ.question,
+                      options: currentFeedbackQ.type === 'mcq' ? currentFeedbackQ.options.filter(o => o.trim()) : []
+                    };
+                    setFeedbackQuestions([...feedbackQuestions, newQ]);
+                    setCurrentFeedbackQ({ type: 'rating', question: '', options: ['', ''] });
+                    toast.success("Question Added to Form");
+                  }}>
+                    Add to Form
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       )}
@@ -1027,6 +1226,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                     starterCode: '',
                     expectedOutput: '',
                     testCases: [],
+                    tags: [],
                   });
                   toast.info("Prepare to create a new question below");
                 }}>
@@ -1146,6 +1346,16 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                       />
                     </div>
 
+                    <div className="space-y-2">
+                      <Label className="text-xs">Category Tags (comma-separated)</Label>
+                      <Input
+                        className="h-8 text-xs"
+                        value={currentQuestion.tags?.join(', ') || ''}
+                        onChange={(e) => setCurrentQuestion({ ...currentQuestion, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
+                        placeholder="e.g., arrays, strings, dynamic programming"
+                      />
+                    </div>
+
                     {currentQuestion.type === 'mcq' ? (
                       <div className="space-y-3">
                         <Label className="text-xs">Options</Label>
@@ -1244,7 +1454,8 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                       let finalQ: TopicQuestion = {
                         id: editingQuestionId || `q-${Date.now()}`,
                         question: currentQuestion.question,
-                        type: currentQuestion.type === 'mcq' ? 'multiple_choice' : 'coding'
+                        type: currentQuestion.type === 'mcq' ? 'multiple_choice' : 'coding',
+                        tags: currentQuestion.tags
                       };
 
                       if (currentQuestion.type === 'mcq') {
@@ -1277,6 +1488,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                         starterCode: '',
                         expectedOutput: '',
                         testCases: [],
+                        tags: [],
                       });
                       setEditingQuestionId(null);
                     }}>
@@ -1471,6 +1683,13 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                             className="text-sm"
                             value={currentQuestion.question}
                             onChange={(e) => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
+                          />
+
+                          <Input
+                            placeholder="Category Tags (comma-separated, e.g. arrays, strings)"
+                            className="text-sm"
+                            value={currentQuestion.tags?.join(', ') || ''}
+                            onChange={(e) => setCurrentQuestion({ ...currentQuestion, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
                           />
 
                           {currentQuestion.type === 'mcq' ? (
@@ -1768,6 +1987,16 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                             />
                           </div>
 
+                          <div>
+                            <Label className="text-xs">Category Tags</Label>
+                            <Input
+                              value={currentQuestion.tags?.join(', ') || ''}
+                              onChange={(e) => setCurrentQuestion({ ...currentQuestion, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
+                              placeholder="comma-separated e.g. loops, math"
+                              className="text-sm h-8"
+                            />
+                          </div>
+
                           {currentQuestion.type === 'mcq' ? (
                             <div className="space-y-2">
                               <Label className="text-xs">Options</Label>
@@ -2001,13 +2230,26 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                         </Button>
                       )}
                       {currentUser?.role === 'student' && (
-                        <Button
-                          className="w-full"
-                          variant="outline"
-                          onClick={() => onNavigate('course-tests', { course })}
-                        >
-                          View Tests
-                        </Button>
+                        <>
+                          <Button
+                            className="w-full"
+                            variant="outline"
+                            onClick={() => onNavigate('course-tests', { course })}
+                          >
+                            View Tests
+                          </Button>
+                          <Button
+                            className="w-full md:col-span-2 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 border-none shadow-sm"
+                            variant="outline"
+                            onClick={() => {
+                              setStudentFeedbackCourse(course);
+                              setIsStudentFeedbackOpen(true);
+                            }}
+                          >
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Evaluate Trainer
+                          </Button>
+                        </>
                       )}
                     </div>
                   </CardContent>
@@ -2188,7 +2430,10 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
 
             <div className="border rounded-md divide-y max-h-[60vh] overflow-y-auto">
               {allQuestions
-                .filter(q => q.question.toLowerCase().includes(questionSearch.toLowerCase()))
+                .filter(q =>
+                  q.question.toLowerCase().includes(questionSearch.toLowerCase()) ||
+                  (q.tags && q.tags.some(t => t.toLowerCase().includes(questionSearch.toLowerCase())))
+                )
                 .map((q) => (
                   <div key={q.id} className="p-3 flex items-start justify-between hover:bg-neutral-50 transition-colors">
                     <div className="space-y-1 flex-1 mr-4">
@@ -2200,6 +2445,13 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                         {/* @ts-ignore */}
                         {q.type === 'coding' && <span className="text-xs text-neutral-500 font-mono">Input/Output</span>}
                       </div>
+                      {q.tags && q.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {q.tags.map((tag, tIdx) => (
+                            <Badge key={tIdx} variant="secondary" className="text-[9px] h-4 py-0 px-1 bg-neutral-100 text-neutral-600">{tag}</Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <Button size="sm" variant="secondary" onClick={() => handleSelectExistingQuestion(q)}>
                       Select
@@ -2212,6 +2464,62 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                 </div>
               )}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isStudentFeedbackOpen} onOpenChange={setIsStudentFeedbackOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Trainer Feedback <span className="text-neutral-400 font-normal">/ {studentFeedbackCourse?.title}</span></DialogTitle>
+            <DialogDescription>Your feedback is anonymous and helps us improve the learning experience.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4 max-h-[60vh] overflow-y-auto pr-2">
+            {!isFeedbackPublished ? (
+              <div className="text-center py-8 text-neutral-500">
+                <MessageSquare className="w-12 h-12 mx-auto text-neutral-300 mb-3" />
+                No feedback form is currently active for this course.
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {feedbackQuestions.map((q, i) => (
+                  <div key={q.id} className="space-y-3">
+                    <Label className="text-sm font-medium text-neutral-900">{i + 1}. {q.question}</Label>
+                    {q.type === 'mcq' && (
+                      <div className="space-y-2">
+                        {q.options?.map((opt: string, oi: number) => (
+                          <label key={oi} className="flex items-center gap-3 p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors group">
+                            <div className="relative flex items-center justify-center">
+                              <input type="radio" name={`student-fq-${q.id}`} value={opt} className="peer sr-only" />
+                              <div className="w-4 h-4 rounded-full border-2 border-neutral-300 peer-checked:border-primary peer-checked:border-[5px] transition-all"></div>
+                            </div>
+                            <span className="text-sm text-neutral-700 font-medium group-hover:text-neutral-900">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {q.type === 'rating' && (
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <Star key={star} className="w-8 h-8 text-neutral-200 hover:text-yellow-400 hover:fill-yellow-400 cursor-pointer transition-colors" />
+                        ))}
+                      </div>
+                    )}
+                    {q.type === 'text' && (
+                      <Textarea placeholder="Share your detailed thoughts..." className="bg-neutral-50/50" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end pt-4 border-t gap-2">
+            <Button variant="ghost" onClick={() => setIsStudentFeedbackOpen(false)}>Cancel</Button>
+            {isFeedbackPublished && (
+              <Button className="bg-primary text-white" onClick={() => {
+                toast.success("Thank you! Your feedback has been dynamically submitted.");
+                setIsStudentFeedbackOpen(false);
+              }}>Submit Feedback</Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>

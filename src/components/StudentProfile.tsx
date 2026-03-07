@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../lib/auth-context';
 import { ResumeBuilder } from './ResumeBuilder';
+import { toast } from 'sonner';
+import { Star } from 'lucide-react';
 
 interface StudentProfileProps {
   onNavigate: (page: string, data?: any) => void;
@@ -30,25 +32,78 @@ interface StudentProfileProps {
 export function StudentProfile({ onNavigate }: StudentProfileProps) {
   const { currentUser } = useAuth();
   const [activeSection, setActiveSection] = useState('personal-info');
+
+  const [projects, setProjects] = useState<{ id: number, title: string, description: string, isActive: boolean, tags: string[] }[]>([]);
+  const [isAddingProject, setIsAddingProject] = useState(false);
+  const [newProject, setNewProject] = useState({ title: '', description: '', tags: '', isActive: false });
+
+  const [trainers] = useState([
+    { id: 1, name: 'John Doe', role: 'Lead Trainer', subject: 'Data Structures & Algorithms' },
+    { id: 2, name: 'Jane Smith', role: 'Technical Trainer', subject: 'Web Development' }
+  ]);
+  const [trainerFeedback, setTrainerFeedback] = useState<{ [key: number]: { comment: string, rating?: number } }>({});
+
+  const handleAddProject = () => {
+    if (!newProject.title.trim()) {
+      toast.error('Project title is required');
+      return;
+    }
+    const tagsArray = newProject.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+    setProjects([
+      ...projects,
+      {
+        id: Date.now(),
+        title: newProject.title,
+        description: newProject.description,
+        isActive: newProject.isActive,
+        tags: tagsArray
+      }
+    ]);
+    setNewProject({ title: '', description: '', tags: '', isActive: false });
+    setIsAddingProject(false);
+    toast.success('Project added successfully');
+  };
+
+  const handleFeedbackSubmit = (trainerId: number) => {
+    const feedback = trainerFeedback[trainerId];
+    if (!feedback?.rating) {
+      toast.error('Please select a star rating for the trainer.');
+      return;
+    }
+    if (!feedback?.comment?.trim()) {
+      toast.error('Please enter your written feedback.');
+      return;
+    }
+    const trainerName = trainers.find(t => t.id === trainerId)?.name;
+    toast.success(`Feedback submitted successfully to ${trainerName}`);
+    setTrainerFeedback({
+      ...trainerFeedback,
+      [trainerId]: { comment: '', rating: 0 }
+    });
+  };
+
   const [formData, setFormData] = useState({
-    firstName: 'TALLA NIHAL',
+    firstName: '',
     lastName: '',
-    email: '247R1A66B6@cmrtc.ac.in',
-    phone: '6305873430',
-    dateOfBirth: '06/16/2006',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
     address: '',
-    introductionVideo: 'www.gradious.com',
+    introductionVideo: '',
     careerObjective: '',
   });
 
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [socialProfiles, setSocialProfiles] = useState({
-    hackerrank: 'www.gradious.com',
-    leetcode: 'www.gradious.com',
-    codechef: 'www.gradious.com',
-    hackerearth: 'www.gradious.com',
-    linkedin: 'www.gradious.com',
-    github: 'www.gradious.com',
-    instagram: 'www.gradious.com',
+    hackerrank: '',
+    leetcode: '',
+    codechef: '',
+    hackerearth: '',
+    linkedin: '',
+    github: '',
+    instagram: '',
   });
 
   const menuItems = [
@@ -69,6 +124,23 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
     setSocialProfiles({ ...socialProfiles, [platform]: value });
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleTriggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+
+
   const renderContent = () => {
     switch (activeSection) {
       case 'personal-info':
@@ -87,6 +159,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
                     <Input
                       id="firstName"
                       value={formData.firstName}
+                      placeholder="e.g. John"
                       onChange={(e) => handleInputChange('firstName', e.target.value)}
                       className="mt-1"
                     />
@@ -96,6 +169,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
                     <Input
                       id="lastName"
                       value={formData.lastName}
+                      placeholder="e.g. Doe"
                       onChange={(e) => handleInputChange('lastName', e.target.value)}
                       className="mt-1"
                     />
@@ -107,6 +181,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
                   <Input
                     id="email"
                     type="email"
+                    placeholder="e.g. student@university.edu"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className="mt-1"
@@ -122,6 +197,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
                     </select>
                     <Input
                       id="phone"
+                      placeholder="e.g. 9876543210"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       className="flex-1"
@@ -134,6 +210,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
                   <div className="relative mt-1">
                     <Input
                       id="dateOfBirth"
+                      placeholder="e.g. 01/01/2000"
                       value={formData.dateOfBirth}
                       onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
                       className="pr-10"
@@ -146,6 +223,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
                   <Label htmlFor="address">Address</Label>
                   <Textarea
                     id="address"
+                    placeholder="e.g. 123 College Street, City"
                     value={formData.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
                     className="mt-1"
@@ -161,6 +239,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
                     </div>
                     <Input
                       id="introductionVideo"
+                      placeholder="www.youtube.com/watch?v=..."
                       value={formData.introductionVideo}
                       onChange={(e) => handleInputChange('introductionVideo', e.target.value)}
                       className="flex-1 rounded-l-none"
@@ -183,17 +262,33 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
 
               <div className="space-y-4">
                 <div className="flex flex-col items-center">
-                  <div className="w-48 h-48 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#7C3AED' }}>
-                    <Avatar className="w-32 h-32">
-                      <AvatarFallback className="text-6xl text-white" style={{ backgroundColor: '#7C3AED' }}>
-                        {currentUser?.name.split(' ').map(n => n[0]).join('') || 'T'}
-                      </AvatarFallback>
-                    </Avatar>
+                  <div className="w-48 h-48 rounded-lg flex items-center justify-center mb-4 overflow-hidden relative" style={{ backgroundColor: '#7C3AED' }}>
+                    {profileImage ? (
+                      <div className="w-full h-full flex items-center justify-center bg-white p-1">
+                        <img src={profileImage} alt="Profile" className="w-full h-full object-cover rounded-md" />
+                      </div>
+                    ) : (
+                      <Avatar className="w-32 h-32">
+                        <AvatarFallback className="text-6xl text-white" style={{ backgroundColor: '#7C3AED' }}>
+                          {currentUser?.name.split(' ').map(n => n[0]).join('') || 'T'}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                   </div>
-                  <Button variant="outline" className="w-full">
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                  />
+
+                  <Button variant="outline" className="w-full" onClick={handleTriggerUpload}>
                     <Upload className="w-4 h-4 mr-2" />
                     Upload a new Photo
                   </Button>
+
                   <p className="text-xs text-neutral-500 mt-2">800 * 800px recommended</p>
                 </div>
               </div>
@@ -236,6 +331,7 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
                         https://
                       </div>
                       <Input
+                        placeholder="username"
                         value={socialProfiles[platform.key as keyof typeof socialProfiles]}
                         onChange={(e) => handleSocialProfileChange(platform.key, e.target.value)}
                         className="flex-1 rounded-l-none border-l-0"
@@ -293,16 +389,16 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
               <div className="p-4 border border-neutral-100 bg-neutral-50/30 rounded-xl space-y-4">
                 <h4 className="font-bold text-neutral-800">Undergraduate</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <Input placeholder="Degree" defaultValue="B.Tech CS" />
-                  <Input placeholder="University" defaultValue="CMR Technical Campus" />
-                  <Input placeholder="Year of Completion" defaultValue="2027" />
-                  <Input placeholder="GPA/Percentage" defaultValue="8.5" />
+                  <Input placeholder="Degree (e.g. B.Tech CS)" />
+                  <Input placeholder="University (e.g. CMR Technical Campus)" />
+                  <Input placeholder="Year of Completion (e.g. 2027)" />
+                  <Input placeholder="GPA/Percentage (e.g. 8.5)" />
                 </div>
               </div>
               <div className="p-4 border border-neutral-100 bg-neutral-50/30 rounded-xl space-y-4">
                 <h4 className="font-bold text-neutral-800">Higher Secondary</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <Input placeholder="Stream" defaultValue="MPC" />
+                  <Input placeholder="Stream (e.g. MPC)" />
                   <Input placeholder="Institution" />
                   <Input placeholder="Year" />
                   <Input placeholder="Percentage" />
@@ -320,23 +416,76 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
               <h3 className="text-xl font-semibold">Academic Work</h3>
             </div>
             <div className="space-y-4">
-              <Card className="border-neutral-100">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-neutral-900">Final Year Project - AI Chatbot</h4>
-                    <Badge className="bg-orange-100 text-orange-600 border-none">Active</Badge>
-                  </div>
-                  <p className="text-sm text-neutral-500 mb-4">A sophisticated chatbot built with React and OpenAI API for campus automation.</p>
-                  <div className="flex gap-2">
-                    <Badge variant="outline">React</Badge>
-                    <Badge variant="outline">Node.js</Badge>
-                    <Badge variant="outline">OpenAI</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-              <Button variant="outline" className="w-full border-dashed">
-                <Plus className="w-4 h-4 mr-2" /> Add New Project
-              </Button>
+              {projects.map(project => (
+                <Card key={project.id} className="border-neutral-100">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-bold text-neutral-900">{project.title}</h4>
+                      {project.isActive && (
+                        <Badge className="bg-orange-100 text-orange-600 border-none">Active</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-neutral-500 mb-4">{project.description}</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {project.tags.map(tag => (
+                        <Badge key={tag} variant="outline">{tag}</Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {isAddingProject ? (
+                <Card className="border-dashed border-2 border-neutral-200">
+                  <CardContent className="p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold">Add New Project</h4>
+                      <Button variant="ghost" size="sm" onClick={() => setIsAddingProject(false)}>Cancel</Button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Project Title <span className="text-red-500">*</span></Label>
+                      <Input
+                        placeholder="e.g. E-commerce Website"
+                        value={newProject.title}
+                        onChange={e => setNewProject({ ...newProject, title: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Textarea
+                        placeholder="Briefly describe your project..."
+                        value={newProject.description}
+                        onChange={e => setNewProject({ ...newProject, description: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Skills/Tags (comma separated)</Label>
+                      <Input
+                        placeholder="e.g. React, Node.js, MongoDB"
+                        value={newProject.tags}
+                        onChange={e => setNewProject({ ...newProject, tags: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="isActiveProject"
+                        checked={newProject.isActive}
+                        onChange={e => setNewProject({ ...newProject, isActive: e.target.checked })}
+                        className="rounded border-gray-300 w-4 h-4 cursor-pointer"
+                      />
+                      <Label htmlFor="isActiveProject" className="cursor-pointer">Currently working on this</Label>
+                    </div>
+                    <div className="flex justify-end pt-2">
+                      <Button onClick={handleAddProject} style={{ backgroundColor: '#000' }}>Save Project</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Button variant="outline" className="w-full border-dashed" onClick={() => setIsAddingProject(true)}>
+                  <Plus className="w-4 h-4 mr-2" /> Add New Project
+                </Button>
+              )}
             </div>
           </div>
         );
@@ -344,20 +493,81 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
       case 'trainer-feedback':
         return (
           <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-6">
-              <MessageSquare className="w-5 h-5" style={{ color: '#FF6B35' }} />
-              <h3 className="text-xl font-semibold">Trainer Feedback</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" style={{ color: '#FF6B35' }} />
+                <h3 className="text-xl font-semibold">Trainer Feedback</h3>
+              </div>
             </div>
+
+            <div className="mb-8 space-y-4">
+              <h4 className="font-medium text-lg border-b pb-2">Feedback Received</h4>
+              <div className="p-4 border border-dashed border-neutral-200 rounded-xl text-center text-neutral-500">
+                <p className="text-sm">No feedback received from trainers yet.</p>
+              </div>
+            </div>
+
             <div className="space-y-4">
-              <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded-r-xl">
-                <p className="text-sm font-bold text-orange-700 mb-1">Excellent Problem Solving Skills</p>
-                <p className="text-xs text-orange-600 mb-2">"Nihal has shown great potential in competitive programming. Needs slight focus on time complexity."</p>
-                <div className="flex items-center gap-2">
-                  <Avatar className="w-6 h-6">
-                    <AvatarFallback className="text-[10px] bg-orange-500 text-white font-bold">JD</AvatarFallback>
-                  </Avatar>
-                  <span className="text-[10px] font-bold text-orange-800">John Doe, Lead Trainer</span>
-                </div>
+              <h4 className="font-medium text-lg border-b pb-2">Provide Feedback to Trainers</h4>
+              <p className="text-sm text-neutral-500 mb-4">Share your thoughts on the teaching methodology and support provided by your batch trainers.</p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {trainers.map(trainer => (
+                  <Card key={trainer.id} className="border-neutral-200">
+                    <CardContent className="p-4 flex flex-col h-full">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Avatar>
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {trainer.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h5 className="font-semibold">{trainer.name}</h5>
+                          <p className="text-xs text-neutral-500">{trainer.role} • {trainer.subject}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 flex-1 flex flex-col justify-end">
+                        <div className="flex gap-1 justify-center mb-2">
+                          {[1, 2, 3, 4, 5].map((starIndex) => {
+                            const currentRating = trainerFeedback[trainer.id]?.rating || 0;
+                            return (
+                              <button
+                                key={starIndex}
+                                onClick={() => setTrainerFeedback({
+                                  ...trainerFeedback,
+                                  [trainer.id]: { ...(trainerFeedback[trainer.id] || { comment: '' }), rating: starIndex }
+                                })}
+                                className="focus:outline-hidden transition-all duration-150"
+                              >
+                                <Star
+                                  className={`w-6 h-6 ${starIndex <= currentRating ? 'fill-yellow-400 text-yellow-400' : 'text-neutral-300 hover:text-yellow-200'}`}
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <Textarea
+                          placeholder={`Write your feedback for ${trainer.name}...`}
+                          className="min-h-[80px] text-sm"
+                          value={trainerFeedback[trainer.id]?.comment || ''}
+                          onChange={(e) => setTrainerFeedback({
+                            ...trainerFeedback,
+                            [trainer.id]: { ...(trainerFeedback[trainer.id] || {}), comment: e.target.value }
+                          })}
+                        />
+                        <Button
+                          className="w-full text-xs"
+                          size="sm"
+                          style={{ backgroundColor: '#000' }}
+                          onClick={() => handleFeedbackSubmit(trainer.id)}
+                        >
+                          Submit Feedback
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
           </div>
