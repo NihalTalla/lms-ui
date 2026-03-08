@@ -57,15 +57,27 @@ export function CodingContest() {
     });
 
     const [questionBank, setQuestionBank] = useState<Question[]>([
-        { id: '1', title: 'Two Sum', description: 'Given an array of integers, return indices of the two numbers such that they add up to a specific target.', difficulty: 'easy', topic: 'Arrays', points: 50, type: 'coding', testCases: [{ input: '[2,7,11,15]\n9', output: '[0,1]', hidden: false }] },
-        { id: '2', title: 'Valid Parentheses', description: 'Given a string containing just the characters, determine if the input string is valid.', difficulty: 'easy', topic: 'Stacks', points: 50, type: 'coding', testCases: [{ input: '()[]{}', output: 'true', hidden: false }] },
-        { id: '3', title: 'Binary Search', description: 'Implement binary search algorithm.', difficulty: 'easy', topic: 'Searching', points: 50, type: 'coding', testCases: [{ input: '[-1,0,3,5,9,12]\n9', output: '4', hidden: false }] },
-        { id: '4', title: 'Merge Intervals', description: 'Merge overlapping intervals.', difficulty: 'medium', topic: 'Arrays', points: 100, type: 'coding' },
-        { id: '5', title: 'LRU Cache', description: 'Design an LRU cache.', difficulty: 'medium', topic: 'Design', points: 100, type: 'coding' },
-        { id: '6', title: 'Longest Substring', description: 'Find longest substring without repeating characters.', difficulty: 'medium', topic: 'Strings', points: 100, type: 'coding' },
-        { id: '7', title: 'Median of Arrays', description: 'Find median of two sorted arrays.', difficulty: 'hard', topic: 'Arrays', points: 150, type: 'coding' },
-        { id: '8', title: 'Word Ladder', description: 'Find shortest transformation sequence.', difficulty: 'hard', topic: 'Graphs', points: 150, type: 'coding' },
-        { id: 'mcq-1', title: 'Time Complexity of Binary Search', description: 'What is the time complexity of binary search?', difficulty: 'easy', topic: 'Complexity', points: 30, type: 'mcq', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'], correctAnswer: 'O(log n)' },
+        { id: '1', title: 'Two Sum', description: 'Given an array of integers...', difficulty: 'easy', topic: 'Array', points: 50, type: 'coding' },
+        { id: '2', title: 'Valid Parentheses', description: 'Check bracket validity...', difficulty: 'easy', topic: 'Stack', points: 50, type: 'coding' },
+        { id: '3', title: 'Binary Search', description: 'Find element in sorted array...', difficulty: 'easy', topic: 'Binary Search', points: 50, type: 'coding' },
+        { id: '4', title: 'Merge Intervals', description: 'Combine overlapping intervals...', difficulty: 'medium', topic: 'Sorting', points: 100, type: 'coding' },
+        { id: '5', title: 'LRU Cache', description: 'Design an LRU cache...', difficulty: 'medium', topic: 'Design', points: 100, type: 'coding' },
+        { id: '6', title: 'Longest Substring', description: 'No repeating characters...', difficulty: 'medium', topic: 'String', points: 100, type: 'coding' },
+        { id: '7', title: 'Jump Game', description: 'Can you reach the end?', difficulty: 'medium', topic: 'Dynamic Programming', points: 100, type: 'coding' },
+        { id: '8', title: 'Level Order', description: 'BFS on a tree...', difficulty: 'easy', topic: 'Tree', points: 50, type: 'coding' },
+        { id: '9', title: 'Word Search', description: 'Find word in grid...', difficulty: 'medium', topic: 'Backtracking', points: 100, type: 'coding' },
+        { id: '10', title: 'Islands Count', description: 'Find connected components...', difficulty: 'medium', topic: 'Depth-First Search', points: 100, type: 'coding' },
+        { id: '11', title: 'Spiral Matrix', description: 'Traverse matrix spirally...', difficulty: 'medium', topic: 'Matrix', points: 100, type: 'coding' },
+        { id: '12', title: 'Quick Sort', description: 'Implement quick sort...', difficulty: 'medium', topic: 'Sorting', points: 100, type: 'coding' },
+        { id: '13', title: 'Dijkstra', description: 'Shortest path algorithm...', difficulty: 'hard', topic: 'Graph Theory', points: 150, type: 'coding' },
+        { id: '14', title: 'Reverse Linked List', description: 'Flip the pointers...', difficulty: 'easy', topic: 'Linked List', points: 50, type: 'coding' },
+        { id: '15', title: 'Trie Implementation', description: 'Prefix tree class...', difficulty: 'medium', topic: 'Trie', points: 100, type: 'coding' },
+        { id: '16', title: 'Sliding Window Maximum', description: 'Find max in window...', difficulty: 'hard', topic: 'Sliding Window', points: 150, type: 'coding' },
+        { id: '17', title: 'N-Queens', description: 'Classical backtracking...', difficulty: 'hard', topic: 'Recursion', points: 150, type: 'coding' },
+        { id: '18', title: 'Bit Manipulation', description: 'XOR tricks...', difficulty: 'medium', topic: 'Bit Manipulation', points: 100, type: 'coding' },
+        { id: '19', title: 'Union Find', description: 'Disjoint set implementation...', difficulty: 'medium', topic: 'Union Find', points: 100, type: 'coding' },
+        { id: '20', title: 'Topological Sort', description: 'Task scheduling...', difficulty: 'medium', topic: 'Graph', points: 100, type: 'coding' },
+        { id: 'mcq-1', title: 'Time Complexity', description: 'Complexity of binary search?', difficulty: 'easy', topic: 'Complexity', points: 30, type: 'mcq', options: ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'], correctAnswer: 'O(log n)' },
     ]);
 
     const topicStats = React.useMemo(() => {
@@ -378,26 +390,40 @@ export function CodingContest() {
                                     </div>
                                 </div>
 
-                                {/* Topics horizontal list - inspired by ProblemsPage.tsx */}
-                                <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-sm">
-                                    <div className="flex items-center justify-between mb-3 px-1">
-                                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Topic Categories</span>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
+                                {/* Topics Library Section */}
+                                <div className="bg-[#0f172a] border border-neutral-800 rounded-2xl p-6 shadow-lg relative overflow-hidden group">
+                                    <div className="flex items-center justify-between mb-6 relative z-10 px-1">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-6 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
+                                            <span className="text-sm font-black text-white uppercase tracking-[0.15em]">Topics Library</span>
+                                        </div>
                                         <button
                                             onClick={() => setSelectedTopic(null)}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${!selectedTopic ? 'bg-neutral-900 border-neutral-900 text-white' : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300'}`}
+                                            className={`text-[10px] font-black uppercase tracking-widest transition-all py-2 px-5 rounded-xl border ${selectedTopic ? 'text-blue-400 border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-300' : 'text-neutral-500 border-neutral-800 opacity-40 cursor-default'}`}
+                                            disabled={!selectedTopic}
                                         >
-                                            All Topics
+                                            Reset Filter
                                         </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-3 max-h-[220px] overflow-y-auto scrollbar-hide pr-2 relative z-10">
                                         {topicStats.map(topic => (
                                             <button
                                                 key={topic.name}
                                                 onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${selectedTopic === topic.name ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300'}`}
+                                                className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all duration-300 group/topic ${selectedTopic === topic.name
+                                                    ? 'bg-blue-600 border-blue-500 text-white shadow-xl shadow-blue-500/30 scale-[1.03]'
+                                                    : 'bg-white/5 border-neutral-800 text-neutral-300 hover:border-blue-500/50 hover:bg-white/10 hover:text-white'
+                                                    }`}
                                             >
-                                                {topic.name}
-                                                <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${selectedTopic === topic.name ? 'bg-blue-500/50' : 'bg-neutral-100 text-neutral-400'}`}>{topic.total}</span>
+                                                <span className="text-[13px] font-bold tracking-tight">
+                                                    {topic.name}
+                                                </span>
+                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black min-w-[28px] text-center transition-all ${selectedTopic === topic.name
+                                                    ? 'bg-white/20 text-white'
+                                                    : 'bg-neutral-800 text-neutral-400 group-hover/topic:bg-neutral-700 group-hover/topic:text-neutral-200'
+                                                    }`}>
+                                                    {topic.total}
+                                                </span>
                                             </button>
                                         ))}
                                     </div>
@@ -424,7 +450,7 @@ export function CodingContest() {
                                                         <div>
                                                             <div className="flex items-center gap-2">
                                                                 <p className="font-bold text-neutral-800">{q.title}</p>
-                                                                <Badge variant="outline" className="text-[9px] h-4 font-bold border-neutral-100 text-neutral-400 uppercase">{q.topic}</Badge>
+                                                                <Badge className="bg-blue-100/50 text-blue-700 border-blue-200 text-[9px] h-4.5 px-2 font-black uppercase tracking-wider">{q.topic}</Badge>
                                                             </div>
                                                             <div className="flex items-center gap-3 mt-0.5">
                                                                 <span className="text-xs text-neutral-500 font-bold">{q.points} Points</span>
@@ -709,13 +735,45 @@ export function CodingContest() {
                     </div>)}
 
                     <div className="flex justify-between pt-4 border-t">
-                        <Button variant="outline" onClick={currentStep === 1 ? () => setShowCreateDialog(false) : () => setCurrentStep(1)} style={{ color: 'oklch(.205 0 0)' }}><ArrowLeft className="w-4 h-4 mr-2" />{currentStep === 1 ? 'Cancel' : 'Previous'}</Button>
-                        {currentStep === 1 ? <Button onClick={handleNextStep} style={{ color: 'white' }}>Next<ArrowRight className="w-4 h-4 ml-2" style={{ color: 'white' }} /></Button> : <Button onClick={handleCreateContest} className="bg-green-600 hover:bg-green-700 text-white" style={{ color: 'white' }}><Trophy className="w-4 h-4 mr-2" style={{ color: 'white' }} />Create</Button>}
+                        <Button variant="outline" onClick={currentStep === 2 ? () => setCurrentStep(1) : () => setShowCreateDialog(false)} className="text-neutral-700 border-neutral-200 hover:bg-neutral-50 rounded-xl px-6">
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            {currentStep === 1 ? 'Cancel' : 'Previous'}
+                        </Button>
+                        <Button
+                            onClick={currentStep === 1 ? handleNextStep : handleCreateContest}
+                            className={`${currentStep === 1 ? 'bg-neutral-900 hover:bg-neutral-800' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-2xl px-12 h-12 shadow-xl shadow-blue-500/20 font-black text-xs uppercase tracking-widest transition-all active:scale-95`}
+                            style={{ color: 'white' }}
+                        >
+                            {currentStep === 1 ? 'Next Step' : 'Create Contest'}
+                            {currentStep === 1 ? <ArrowRight className="w-4 h-4 ml-2" /> : <Trophy className="w-4 h-4 ml-2" />}
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={showQuestionDialog} onOpenChange={setShowQuestionDialog}><DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle className="text-2xl">{selectedContest?.name} - Questions</DialogTitle></DialogHeader>{selectedContest && (<div className="space-y-4 mt-4">{selectedContest.questions.map((q, i) => (<div key={q.id} className="p-4 border rounded-xl flex justify-between items-center hover:bg-neutral-50 transition-colors shadow-sm"><div className="flex items-center gap-4"><span className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-base">{i + 1}</span><div><p className="font-bold text-neutral-800 text-lg">{q.title}</p><p className="text-sm text-neutral-500 font-medium italic">{q.topic} • {q.points}pts</p></div></div><Badge className={`${getDifficultyColor(q.difficulty)} px-4 py-1.5 rounded-full text-xs font-semibold`}>{q.difficulty}</Badge></div>))}</div>)}</DialogContent></Dialog>
+            <Dialog open={showQuestionDialog} onOpenChange={setShowQuestionDialog}>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl">{selectedContest?.name} - Questions</DialogTitle>
+                    </DialogHeader>
+                    {selectedContest && (
+                        <div className="space-y-4 mt-4">
+                            {selectedContest.questions.map((q, i) => (
+                                <div key={q.id} className="p-4 border rounded-xl flex justify-between items-center hover:bg-neutral-50 transition-colors shadow-sm">
+                                    <div className="flex items-center gap-4">
+                                        <span className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-base">{i + 1}</span>
+                                        <div>
+                                            <p className="font-bold text-neutral-800 text-lg">{q.title}</p>
+                                            <p className="text-sm text-neutral-500 font-medium italic">{q.topic} • {q.points}pts</p>
+                                        </div>
+                                    </div>
+                                    <Badge className={`${getDifficultyColor(q.difficulty)} px-4 py-1.5 rounded-full text-xs font-semibold`}>{q.difficulty}</Badge>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog open={showNextQuestionPrompt} onOpenChange={setShowNextQuestionPrompt}>
                 <AlertDialogContent className="max-w-md">
@@ -739,7 +797,19 @@ export function CodingContest() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete</AlertDialogTitle><AlertDialogDescription>Delete "{selectedContest?.name}"?</AlertDialogDescription></AlertDialogHeader><div className="flex gap-3 justify-end"><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteContest} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction></div></AlertDialogContent></AlertDialog>
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete</AlertDialogTitle>
+                        <AlertDialogDescription>Delete "{selectedContest?.name}"?</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex gap-3 justify-end">
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteContest} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                    </div>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
+

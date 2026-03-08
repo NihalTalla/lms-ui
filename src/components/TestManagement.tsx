@@ -38,6 +38,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
           difficulty: 'easy',
           points: 20,
           type: 'coding',
+          topic: 'Array',
           testCases: [
             { input: '[2,7,11,15], 9', expectedOutput: '[0,1]', isHidden: false },
             { input: '[3,2,4], 6', expectedOutput: '[1,2]', isHidden: true },
@@ -50,9 +51,60 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
           difficulty: 'easy',
           points: 10,
           type: 'mcq',
+          topic: 'Complexity',
           options: ['O(1)', 'O(log n)', 'O(n)', 'O(n^2)'],
           correctAnswer: 'O(log n)',
         },
+        {
+          id: 'q3',
+          title: 'Longest Palindrome',
+          description: 'Find the longest palindromic substring...',
+          difficulty: 'medium',
+          points: 40,
+          type: 'coding',
+          topic: 'String',
+          testCases: [],
+        },
+        {
+          id: 'q4',
+          title: 'Quick Sort',
+          description: 'Implement quick sort...',
+          difficulty: 'medium',
+          points: 30,
+          type: 'coding',
+          topic: 'Sorting',
+          testCases: [],
+        },
+        {
+          id: 'q5',
+          title: 'House Robber',
+          description: 'Maximize loot without adjacent houses...',
+          difficulty: 'medium',
+          points: 50,
+          type: 'coding',
+          topic: 'Dynamic Programming',
+          testCases: [],
+        },
+        {
+          id: 'q6',
+          title: 'Number of Islands',
+          description: 'Count connected land masses...',
+          difficulty: 'medium',
+          points: 40,
+          type: 'coding',
+          topic: 'Depth-First Search',
+          testCases: [],
+        },
+        {
+          id: 'q7',
+          title: 'Matrix Rotation',
+          description: 'Rotate matrix 90 degrees...',
+          difficulty: 'medium',
+          points: 30,
+          type: 'coding',
+          topic: 'Matrix',
+          testCases: [],
+        }
       ],
       status: 'active',
       startDate: '2025-01-15T10:00:00',
@@ -481,65 +533,83 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                               />
                             </div>
 
-                            <div className="space-y-3">
-                              <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Filter by Topic</span>
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  onClick={() => setSelectedTopic(null)}
-                                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${!selectedTopic ? 'bg-neutral-900 border-neutral-900 text-white' : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300'}`}
-                                >
-                                  All Topics
-                                </button>
-                                {topicStats.map(topic => (
-                                  <button
-                                    key={topic.name}
-                                    onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${selectedTopic === topic.name ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300'}`}
-                                  >
-                                    {topic.name}
-                                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${selectedTopic === topic.name ? 'bg-blue-500/50' : 'bg-neutral-100 text-neutral-400'}`}>{topic.total}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4">
-                              {questionBank
-                                .filter(q => {
-                                  const matchesSearch = q.title.toLowerCase().includes(questionSearch.toLowerCase()) || (q.topic?.toLowerCase().includes(questionSearch.toLowerCase()));
-                                  const matchesTopic = !selectedTopic || q.topic === selectedTopic;
-                                  return matchesSearch && matchesTopic;
-                                })
-                                .map((q) => (
-                                  <div key={q.id} className="bg-white p-4 rounded-2xl border border-neutral-200 hover:border-blue-300 hover:shadow-md transition-all group relative overflow-hidden">
-                                    <div className="flex items-center justify-between relative z-10">
-                                      <div className="flex-1 mr-4">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <h4 className="font-bold text-neutral-900 group-hover:text-blue-600 transition-colors">{q.title}</h4>
-                                          <Badge variant="outline" className="text-[8px] h-3.5 px-1 font-black bg-neutral-100 border-none text-neutral-400 uppercase">{q.topic || 'General'}</Badge>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                          <Badge className={`${q.difficulty === 'easy' ? 'bg-green-100 text-green-700' : q.difficulty === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'} text-[9px] font-bold border-none h-5`}>
-                                            {q.difficulty}
-                                          </Badge>
-                                          <Badge variant="outline" className="text-[9px] font-bold h-5 border-neutral-100 bg-neutral-50 text-neutral-500">
-                                            {q.type === 'mcq' ? 'MCQ' : 'Coding'}
-                                          </Badge>
-                                          <span className="text-xs font-bold text-neutral-400">{q.points} Points</span>
-                                        </div>
-                                      </div>
-                                      <Button
-                                        size="sm"
-                                        onClick={() => handleAddExistingQuestion(q)}
-                                        className="bg-neutral-900 hover:bg-neutral-800 text-white shadow-lg rounded-xl h-9 px-5 transition-transform active:scale-95"
-                                        style={{ color: 'white' }}
-                                      >
-                                        Select
-                                      </Button>
-                                    </div>
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/0 group-hover:bg-blue-50/50 rounded-full -mr-12 -mt-12 transition-all duration-500 blur-2xl z-0" />
+                            {/* Topics Library Section - Improved visibility with dark theme and high contrast */}
+                            <div className="bg-white border-2 border-blue-100 rounded-3xl p-8 shadow-xl relative overflow-hidden group">
+                              <div className="flex items-center justify-between mb-6 relative z-10 px-1">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-2 h-6 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
+                                    <span className="text-sm font-black text-white uppercase tracking-[0.15em]">Topics Library</span>
                                   </div>
-                                ))}
+                                  <button
+                                    onClick={() => setSelectedTopic(null)}
+                                    className={`text-[10px] font-black uppercase tracking-widest transition-all py-2 px-5 rounded-xl border ${selectedTopic ? 'text-blue-400 border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-300' : 'text-neutral-500 border-neutral-800 opacity-40 cursor-default'}`}
+                                    disabled={!selectedTopic}
+                                  >
+                                    Reset Filter
+                                  </button>
+                                </div>
+                                <div className="flex flex-wrap gap-3 max-h-[220px] overflow-y-auto scrollbar-hide pr-2 relative z-10">
+                                  {topicStats.map(topic => (
+                                    <button
+                                      key={topic.name}
+                                      onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
+                                      className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all duration-300 group/topic ${selectedTopic === topic.name
+                                        ? 'bg-blue-600 border-blue-500 text-white shadow-xl shadow-blue-500/30 scale-[1.03]'
+                                        : 'bg-slate-50 border-slate-100 text-slate-600 hover:border-blue-500/50 hover:bg-white/10 hover:text-white'
+                                        }`}
+                                    >
+                                      <span className="text-[13px] font-bold tracking-tight">
+                                        {topic.name}
+                                      </span>
+                                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black min-w-[28px] text-center transition-all ${selectedTopic === topic.name
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-slate-200 text-slate-500 group-hover/topic:bg-blue-100 group-hover/topic:text-blue-700'
+                                        }`}>
+                                        {topic.total}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-4">
+                                {questionBank
+                                  .filter(q => {
+                                    const matchesSearch = q.title.toLowerCase().includes(questionSearch.toLowerCase()) || (q.topic?.toLowerCase().includes(questionSearch.toLowerCase()));
+                                    const matchesTopic = !selectedTopic || q.topic === selectedTopic;
+                                    return matchesSearch && matchesTopic;
+                                  })
+                                  .map((q) => (
+                                    <div key={q.id} className="bg-white p-4 rounded-2xl border border-neutral-200 hover:border-blue-300 hover:shadow-md transition-all group relative overflow-hidden">
+                                      <div className="flex items-center justify-between relative z-10">
+                                        <div className="flex-1 mr-4">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <h4 className="font-bold text-neutral-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{q.title}</h4>
+                                            <Badge className="bg-blue-100/50 text-blue-700 border-blue-200 text-[9px] h-4.5 px-2 font-black uppercase tracking-wider">{q.topic || 'General'}</Badge>
+                                          </div>
+                                          <div className="flex flex-wrap gap-2">
+                                            <Badge className={`${q.difficulty === 'easy' ? 'bg-green-100 text-green-700' : q.difficulty === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'} text-[9px] font-bold border-none h-5`}>
+                                              {q.difficulty}
+                                            </Badge>
+                                            <Badge variant="outline" className="text-[9px] font-bold h-5 border-neutral-100 bg-neutral-50 text-neutral-500">
+                                              {q.type === 'mcq' ? 'MCQ' : 'Coding'}
+                                            </Badge>
+                                            <span className="text-xs font-bold text-neutral-400">{q.points} Points</span>
+                                          </div>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          onClick={() => handleAddExistingQuestion(q)}
+                                          className="bg-blue-600 hover:bg-blue-700 text-white shadow-md rounded-lg h-9 px-5 transition-all active:scale-95 shrink-0 font-bold"
+                                        >
+                                          Select
+                                        </Button>
+                                      </div>
+                                      <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50/0 group-hover:bg-blue-50/50 rounded-full -mr-12 -mt-12 transition-all duration-500 blur-2xl z-0" />
+                                    </div>
+                                  ))}
+                              </div>
                             </div>
                           </div>
                         </DialogContent>
@@ -822,12 +892,20 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                   </div>
                 )}
 
-                <div className="flex justify-end gap-2 pt-4 border-t">
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                <div className="flex justify-end gap-4 pt-8 border-t border-neutral-100">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCreateDialogOpen(false)}
+                    className="rounded-2xl px-10 h-14 font-black uppercase text-xs tracking-widest border-neutral-200 text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900 shadow-sm transition-all"
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateTest} style={{ backgroundColor: 'var(--color-primary)', color: 'white' }} className="text-white">
-                    Create Test
+                  <Button
+                    onClick={handleCreateTest}
+                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-500/20 rounded-2xl px-14 h-14 font-black uppercase text-xs tracking-widest transition-all active:scale-95"
+                    style={{ color: 'white' }}
+                  >
+                    Create New Test
                   </Button>
                 </div>
               </div>

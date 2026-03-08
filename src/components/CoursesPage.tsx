@@ -2626,41 +2626,60 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                   <div className="relative z-10">
                     <p className="text-[10px] font-black uppercase opacity-70 tracking-widest mb-1">Library Strength</p>
                     <p className="text-2xl font-black">{allQuestions.length}</p>
-                    <p className="text-[10px] font-medium opacity-80 mt-1">Verified Questions</p>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 transition-all duration-500 blur-2xl" />
                   </div>
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 transition-all duration-500 blur-2xl" />
                 </div>
               </div>
             </div>
 
             {/* Questions List and Topic Filter Above it */}
             <div className="flex-1 overflow-hidden flex flex-col p-8 bg-white">
-              {/* Topic Filter Horizontal Bar */}
-              <div className="mb-6 space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Filter by Topic</label>
-                  {selectedTopic && (
-                    <button onClick={() => setSelectedTopic(null)} className="text-[9px] font-bold text-blue-500 hover:underline">Show All</button>
-                  )}
-                </div>
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none scroll-smooth">
+              {/* Topics Library Section - Refined for better visibility and alignment */}
+              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden group mb-6">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-50" />
+                <div className="flex items-center justify-between mb-8 relative z-10 px-1">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-6 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
+                      <span className="text-sm font-black text-white uppercase tracking-[0.15em]">Topics Library</span>
+                    </div>
+                  </div>
                   <button
                     onClick={() => setSelectedTopic(null)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border shrink-0 ${!selectedTopic ? 'bg-neutral-900 border-neutral-900 text-white' : 'bg-white border-neutral-100 text-neutral-500 hover:bg-neutral-50'}`}
+                    className={`text-[10px] font-black uppercase tracking-widest transition-all py-2 px-6 rounded-2xl border ${selectedTopic ? 'text-blue-400 border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-300' : 'text-neutral-500 border-neutral-800 opacity-40 cursor-default'}`}
+                    disabled={!selectedTopic}
                   >
-                    All Topics
+                    Reset Filter
                   </button>
+                </div>
+                <div className="flex flex-wrap gap-3 max-h-[220px] overflow-y-auto scrollbar-hide pr-2 relative z-10">
                   {topicStats.map(topic => (
                     <button
                       key={topic.name}
                       onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border shrink-0 flex items-center gap-2 ${selectedTopic === topic.name ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white border-neutral-100 text-neutral-500 hover:bg-neutral-50'}`}
+                      className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all duration-300 group/topic ${selectedTopic === topic.name
+                        ? 'bg-blue-600 border-blue-500 text-white shadow-xl shadow-blue-500/30 scale-[1.03]'
+                        : 'bg-white/5 border-neutral-800 text-neutral-300 hover:border-blue-500/50 hover:bg-white/10 hover:text-white'
+                        }`}
                     >
-                      {topic.name}
-                      <span className={`px-1.5 py-0.5 rounded-full text-[9px] ${selectedTopic === topic.name ? 'bg-blue-500/50' : 'bg-neutral-100 text-neutral-400'}`}>{topic.total}</span>
+                      <span className="text-[13px] font-bold tracking-tight">
+                        {topic.name}
+                      </span>
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black min-w-[28px] text-center transition-all ${selectedTopic === topic.name
+                        ? 'bg-white/20 text-white'
+                        : 'bg-neutral-800 text-neutral-400 group-hover/topic:bg-neutral-700 group-hover/topic:text-neutral-200'
+                        }`}>
+                        {topic.total}
+                      </span>
                     </button>
                   ))}
+                  {topicStats.length === 0 && (
+                    <div className="w-full py-12 text-center">
+                      <p className="text-neutral-500 font-bold uppercase tracking-widest text-[10px]">No topics available</p>
+                    </div>
+                  )}
                 </div>
+                <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-neutral-900 to-transparent pointer-events-none" />
               </div>
 
               <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin">

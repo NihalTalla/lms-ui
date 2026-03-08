@@ -141,33 +141,63 @@ export function ProblemsPage({ onSelectProblem }: ProblemsPageProps) {
       {/* ── Topics Panel ── */}
       <div
         style={{
-          background: '#ffffff',
-          border: '1px solid #e5e7eb',
-          borderRadius: 12,
-          padding: '14px 18px',
-          marginBottom: 16,
-          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          background: '#0f172a',
+          border: '1px solid #1e293b',
+          borderRadius: 16,
+          padding: '20px 24px',
+          marginBottom: 20,
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+          position: 'relative',
+          overflow: 'hidden'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ color: '#6b7280', fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            Topics
-          </span>
-          <button
-            type="button"
-            onClick={() => setTopicsExpanded(prev => !prev)}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: '#6b7280', fontSize: 13, fontWeight: 500,
-            }}
-          >
-            {topicsExpanded ? 'Collapse' : 'Expand'}
-            <ChevronDown
-              size={15}
-              style={{ transition: 'transform 0.2s', transform: topicsExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-            />
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 6, height: 20, background: '#3b82f6', borderRadius: 4, boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)' }}></div>
+            <span style={{ color: '#ffffff', fontSize: 13, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Topics Library
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              onClick={() => setSelectedTopic(null)}
+              style={{
+                background: selectedTopic ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                border: '1px solid',
+                borderColor: selectedTopic ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255,255,255,0.05)',
+                color: selectedTopic ? '#60a5fa' : '#475569',
+                fontSize: 10,
+                fontWeight: 900,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                padding: '6px 16px',
+                borderRadius: 12,
+                cursor: selectedTopic ? 'pointer' : 'default',
+                transition: 'all 0.2s',
+                opacity: selectedTopic ? 1 : 0.4
+              }}
+              disabled={!selectedTopic}
+            >
+              Reset Filter
+            </button>
+            <button
+              type="button"
+              onClick={() => setTopicsExpanded(prev => !prev)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+                color: '#ffffff', fontSize: 11, fontWeight: 800,
+                padding: '6px 16px', borderRadius: 12, transition: 'all 0.2s',
+                textTransform: 'uppercase', letterSpacing: '0.05em'
+              }}
+            >
+              {topicsExpanded ? 'Collapse' : 'Expand'}
+              <ChevronDown
+                size={14}
+                style={{ transition: 'transform 0.2s', transform: topicsExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              />
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -180,29 +210,30 @@ export function ProblemsPage({ onSelectProblem }: ProblemsPageProps) {
                 onClick={() => setSelectedTopic(active ? null : topic.name)}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '4px 10px',
-                  borderRadius: 20,
+                  padding: '6px 14px',
+                  borderRadius: 12,
                   border: '1px solid',
-                  borderColor: active ? '#111827' : '#e5e7eb',
+                  borderColor: active ? '#3b82f6' : '#1e293b',
                   cursor: 'pointer',
-                  background: active ? '#111827' : '#ffffff',
-                  color: active ? '#ffffff' : '#4b5563',
+                  background: active ? '#3b82f6' : 'rgba(30, 41, 59, 0.4)',
+                  color: active ? '#ffffff' : '#94a3b8',
                   fontSize: 13,
-                  fontWeight: 500,
-                  transition: 'all 0.15s',
+                  fontWeight: 600,
+                  transition: 'all 0.3s',
                 }}
               >
                 <span>{topic.name}</span>
                 <span
                   style={{
-                    background: active ? '#374151' : '#f3f4f6',
-                    color: active ? '#f9fafb' : '#6b7280',
-                    borderRadius: 10,
+                    background: active ? 'rgba(255,255,255,0.2)' : 'rgba(30, 41, 59, 0.8)',
+                    color: active ? '#ffffff' : '#64748b',
+                    borderRadius: 8,
                     fontSize: 11,
-                    fontWeight: 600,
-                    padding: '1px 7px',
-                    minWidth: 22,
+                    fontWeight: 700,
+                    padding: '1px 8px',
+                    minWidth: 24,
                     textAlign: 'center',
+                    transition: 'all 0.3s'
                   }}
                 >
                   {topic.total}
