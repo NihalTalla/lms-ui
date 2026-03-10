@@ -6,7 +6,7 @@ import { Progress } from './ui/progress';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { BookOpen, Clock, Users, Award, ArrowRight, Star, Plus, Edit, Trash2, Eye, Lock, Unlock, ChevronDown, ChevronRight, Code, Play, Download, FileText, ArrowLeft, Image as ImageIcon, Search, Calendar, CheckCircle2, MessageSquare } from 'lucide-react';
@@ -86,7 +86,6 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   });
 
   // State for adding existing questions
-  const [isSelectQuestionOpen, setIsSelectQuestionOpen] = useState(false);
   const [allQuestions, setAllQuestions] = useState<TopicQuestion[]>([]);
   const [questionSearch, setQuestionSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -106,7 +105,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const topicStats = useMemo(() => {
     const stats = new Map<string, number>();
     allQuestions.forEach(q => {
-      const t = q.topic || 'General';
+      const t = (q.topic || '').trim() || 'General';
       stats.set(t, (stats.get(t) || 0) + 1);
     });
     return Array.from(stats.entries()).map(([name, total]) => ({ name, total }));
@@ -122,7 +121,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const [studentFeedbackCourse, setStudentFeedbackCourse] = useState<any>(null);
 
   // Management Templates State
-  const [mgmtStep, setMgmtStep] = useState<'list' | 'topics' | 'details' | 'assessment' | 'attendance' | 'feedback'>('list');
+  const [mgmtStep, setMgmtStep] = useState<'list' | 'topics' | 'details' | 'assessment' | 'question-library' | 'attendance' | 'feedback'>('list');
   const [activeMgmtCourse, setActiveMgmtCourse] = useState<any>(null);
   const [activeMgmtTopic, setActiveMgmtTopic] = useState<any>(null);
   const [activeMgmtTopicIndex, setActiveMgmtTopicIndex] = useState<number>(-1);
@@ -149,7 +148,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
 
   // Guard against stale selections causing blank screens
   useEffect(() => {
-    if ((mgmtStep === 'topics' || mgmtStep === 'details' || mgmtStep === 'assessment' || mgmtStep === 'attendance' || mgmtStep === 'feedback') && activeMgmtCourse) {
+    if ((mgmtStep === 'topics' || mgmtStep === 'details' || mgmtStep === 'assessment' || mgmtStep === 'question-library' || mgmtStep === 'attendance' || mgmtStep === 'feedback') && activeMgmtCourse) {
       const exists = courseList.find(c => c.id === activeMgmtCourse.id);
       if (!exists) {
         setMgmtStep('list');
@@ -158,7 +157,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
         setActiveMgmtTopicIndex(-1);
       }
     }
-    if ((mgmtStep === 'details' || mgmtStep === 'assessment') && !activeMgmtTopic) {
+    if ((mgmtStep === 'details' || mgmtStep === 'assessment' || mgmtStep === 'question-library') && !activeMgmtTopic) {
       setMgmtStep('topics');
       setActiveMgmtTopicIndex(-1);
     }
@@ -296,7 +295,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
         t.questions?.forEach(q => {
           // Simple duplicate check by unique combination of question text + id
           if (!questions.find(existing => existing.id === q.id)) {
-            questions.push({ ...q, topic: t.title });
+            questions.push({ ...q, topic: (t.title || '').trim() || 'General' });
           }
         });
       });
@@ -312,18 +311,39 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
 
     setAllQuestions(questions);
     setActiveTopicIndex(topicIndex);
-    setIsSelectQuestionOpen(true);
+    setQuestionSearch('');
+    setSelectedTag(null);
+    setSelectedTopic(null);
+    setMgmtStep('question-library');
   };
 
   const handleSelectExistingQuestion = (question: TopicQuestion) => {
     // Clone question to give it a new ID so it's treated as a new instance
     const newQ = { ...question, id: `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` };
 
-    const updatedTopics = newCourse.topics.map((t, i) =>
-      i === activeTopicIndex ? { ...t, questions: [...t.questions, newQ] } : t
-    );
-    setNewCourse(prev => ({ ...prev, topics: updatedTopics }));
-    setIsSelectQuestionOpen(false);
+    if ((mgmtStep === 'assessment' || mgmtStep === 'question-library') && activeMgmtTopic) {
+      const updatedMgmtTopic = {
+        ...activeMgmtTopic,
+        questions: [...(activeMgmtTopic.questions || []), newQ],
+      };
+      setActiveMgmtTopic(updatedMgmtTopic);
+
+      if (activeMgmtCourse && activeMgmtTopicIndex >= 0) {
+        const updatedTopics = (activeMgmtCourse.topics || []).map((t: any, i: number) =>
+          i === activeMgmtTopicIndex ? updatedMgmtTopic : t
+        );
+        const updatedCourse = { ...activeMgmtCourse, topics: updatedTopics };
+        setActiveMgmtCourse(updatedCourse);
+        setCourseList(prev => prev.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+      }
+    } else {
+      const updatedTopics = newCourse.topics.map((t, i) =>
+        i === activeTopicIndex ? { ...t, questions: [...t.questions, newQ] } : t
+      );
+      setNewCourse(prev => ({ ...prev, topics: updatedTopics }));
+    }
+
+    setMgmtStep('assessment');
     toast.success('Question added successfully');
   };
 
@@ -540,6 +560,19 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       t.title.toLowerCase().includes(topicSearch.toLowerCase())
     );
   }, [activeMgmtCourse, topicSearch]);
+
+  const filteredLibraryQuestions = useMemo(() => {
+    return allQuestions.filter(q => {
+      const title = q.title?.toLowerCase() || '';
+      const question = q.question?.toLowerCase() || '';
+      const query = questionSearch.toLowerCase();
+      const matchesSearch = title.includes(query) || question.includes(query);
+      const matchesTag = !selectedTag || q.tags?.includes(selectedTag);
+      const questionTopic = (q.topic || '').trim() || 'General';
+      const matchesTopic = !selectedTopic || questionTopic === selectedTopic;
+      return matchesSearch && matchesTag && matchesTopic;
+    });
+  }, [allQuestions, questionSearch, selectedTag, selectedTopic]);
 
 
   return (
@@ -1073,7 +1106,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
               }}>
                 <Clock className="w-4 h-4 mr-2" /> Set Deadlines
               </Button>
-              <Button size="sm" onClick={handleOpenAssessment} className="bg-primary shadow-md hover:shadow-lg transition-all rounded-full h-9 px-6" style={{ color: 'white' }}>
+              <Button size="sm" onClick={handleOpenAssessment} className="!bg-black hover:!bg-neutral-900 !text-white shadow-md hover:shadow-lg transition-all rounded-full h-9 px-6">
                 Manage Assessment <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
@@ -1223,14 +1256,14 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                   </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-lg bg-gradient-to-br from-primary to-primary-dark text-white overflow-hidden relative">
+                <Card className="border-none shadow-lg !bg-black text-white overflow-hidden relative">
                   <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
                   <CardHeader>
                     <CardTitle className="text-lg font-bold">Manage Assessment</CardTitle>
                     <CardDescription className="text-white/70">Create MCQs and Coding problems for this module</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button variant="secondary" className="w-full font-bold shadow-md hover:shadow-lg transition-all" onClick={handleOpenAssessment}>
+                    <Button variant="secondary" className="w-full !bg-black hover:!bg-neutral-900 !text-white font-bold shadow-md hover:shadow-lg transition-all" onClick={handleOpenAssessment}>
                       Open Question Builder
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
@@ -1588,7 +1621,7 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                       </div>
                     )}
 
-                    <Button className="w-full h-14 bg-neutral-900 hover:bg-neutral-800 text-white shadow-2xl rounded-2xl font-black uppercase tracking-widest text-xs mt-6 transition-all active:scale-[0.98]" onClick={() => {
+                    <Button className="w-full h-14 !bg-black hover:!bg-neutral-900 !text-white shadow-2xl rounded-2xl font-black uppercase tracking-widest text-xs mt-6 transition-all active:scale-[0.98]" onClick={() => {
                       if (!currentQuestion.title && !currentQuestion.question) return toast.error("Please enter a question or title");
 
                       let finalQ: TopicQuestion = {
@@ -1660,6 +1693,196 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
                 handleBackToTopics();
               }}>Complete Setup</Button>
             </div>
+          </div>
+        )
+      }
+
+      {
+        isAdmin && mgmtStep === 'question-library' && activeMgmtTopic && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Button variant="outline" size="sm" onClick={() => setMgmtStep('assessment')} className="rounded-full h-9 bg-white shadow-sm border-neutral-200">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Assessment
+              </Button>
+              <p className="text-sm text-neutral-500 font-medium hidden sm:block">
+                Question Library / <span className="text-neutral-800 font-semibold">{activeMgmtTopic.title}</span>
+              </p>
+            </div>
+
+            <Card className="border border-neutral-200 shadow-lg overflow-hidden">
+              <div className="p-5 sm:p-6 lg:p-8 bg-neutral-900 text-white">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-3 text-white">
+                      <div className="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center border border-blue-500/10">
+                        <Search className="w-5 h-5 text-blue-400" />
+                      </div>
+                      Question Library
+                    </h3>
+                    <p className="text-white/80 mt-1 font-medium">
+                      Fetch from the existing LMS question bank and add directly to this assessment.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setMgmtStep('assessment')}
+                    className="!bg-[#0b122b] hover:!bg-[#111c3b] !text-white border border-white/30 shadow-sm"
+                  >
+                    Done
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex flex-col lg:flex-row min-h-[70vh]">
+                <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-neutral-200 bg-neutral-50 p-6 flex flex-col gap-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em] pl-1">Filters</label>
+                    <div className="relative group">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-primary transition-colors" />
+                      <Input
+                        placeholder="Search title..."
+                        value={questionSearch}
+                        onChange={(e) => setQuestionSearch(e.target.value)}
+                        className="pl-10 h-11 border-neutral-200 rounded-2xl bg-white shadow-sm focus:bg-white transition-all text-sm font-medium text-neutral-900"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em] pl-1">Popular Tags</label>
+                      {selectedTag && (
+                        <button onClick={() => setSelectedTag(null)} className="text-[9px] font-bold text-blue-600 hover:underline">Clear all</button>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1.5 max-h-[38vh] overflow-y-auto pr-2 scrollbar-thin">
+                      <button
+                        onClick={() => setSelectedTag(null)}
+                        className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${!selectedTag ? 'bg-neutral-900 text-white shadow-lg' : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'}`}
+                      >
+                        All Questions
+                      </button>
+                      {tagStats.map(tag => (
+                        <button
+                          key={tag.name}
+                          onClick={() => setSelectedTag(selectedTag === tag.name ? null : tag.name)}
+                          className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${selectedTag === tag.name ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'}`}
+                        >
+                          <span className="truncate flex-1">{tag.name}</span>
+                          <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] ${selectedTag === tag.name ? 'bg-blue-500/50' : 'bg-neutral-100 text-neutral-500'}`}>{tag.total}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-auto pt-6 border-t border-neutral-200">
+                    <div
+                      className="p-4 rounded-2xl bg-white shadow-md relative overflow-hidden border border-neutral-200"
+                    >
+                      <div className="relative z-10">
+                        <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-neutral-900">Library Strength</p>
+                        <p className="text-2xl font-black text-neutral-900">{allQuestions.length}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 p-4 sm:p-6 lg:p-8 bg-white">
+                  <div className="bg-white border border-neutral-300 rounded-2xl p-6 shadow-sm relative overflow-hidden mb-6">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-50" />
+                    <div className="flex items-center justify-between mb-8 relative z-10 px-1">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-6 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
+                        <span className="text-sm font-black text-neutral-900 uppercase tracking-[0.15em]">Topics Library</span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedTopic(null)}
+                        className={`text-[10px] font-black uppercase tracking-widest transition-all py-2 px-6 rounded-2xl border ${selectedTopic ? 'text-neutral-900 border-blue-300 bg-blue-100 hover:bg-blue-200' : 'text-neutral-900 border-neutral-300 bg-neutral-100 cursor-default'}`}
+                        disabled={!selectedTopic}
+                      >
+                        Reset Filter
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-3 max-h-[220px] overflow-y-auto scrollbar-hide pr-2 relative z-10">
+                      {topicStats.map(topic => (
+                        <button
+                          key={topic.name}
+                          onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
+                          className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all duration-300 ${selectedTopic === topic.name
+                            ? 'bg-blue-100 border-blue-300 text-neutral-900 shadow-sm scale-[1.01]'
+                            : 'bg-white border-neutral-300 text-neutral-900 hover:border-blue-300 hover:bg-neutral-50'
+                            }`}
+                        >
+                          <span className="text-[13px] font-bold tracking-tight text-neutral-900">{topic.name || 'General'}</span>
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black min-w-[28px] text-center transition-all ${selectedTopic === topic.name
+                            ? 'bg-blue-200 text-neutral-900'
+                            : 'bg-neutral-200 text-neutral-900'
+                            }`}>
+                            {topic.total}
+                          </span>
+                        </button>
+                      ))}
+                      {topicStats.length === 0 && (
+                        <div className="w-full py-12 text-center">
+                          <p className="text-neutral-500 font-bold uppercase tracking-widest text-[10px]">No topics available</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="max-h-[50vh] lg:max-h-[55vh] overflow-y-auto pr-2 scrollbar-thin">
+                    <div className="grid grid-cols-1 gap-4">
+                      {filteredLibraryQuestions.map((q) => (
+                        <div key={q.id} className="group p-6 border border-neutral-200 rounded-[1.5rem] bg-neutral-50 hover:bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-blue-200/20 transition-all duration-300 relative overflow-hidden">
+                          <div className="flex items-start justify-between relative z-10">
+                            <div className="flex-1 mr-6">
+                              <div className="flex items-center gap-3 mb-3">
+                                <Badge className={`${q.type === 'coding' ? 'bg-indigo-50 text-indigo-700' : 'bg-emerald-50 text-emerald-700'} border-none rounded-lg text-[9px] font-black uppercase px-2 h-5 tracking-wide`}>
+                                  {q.type === 'coding' ? 'Coding' : 'MCQ'}
+                                </Badge>
+                                <div className="flex gap-1.5">
+                                  {q.tags?.slice(0, 3).map((tag, i) => (
+                                    <span key={i} className="text-[9px] font-bold text-neutral-500 bg-white border border-neutral-200 px-2 py-0.5 rounded-full">#{tag}</span>
+                                  ))}
+                                  {(q.tags?.length || 0) > 3 && <span className="text-[9px] font-bold text-neutral-400">+{q.tags!.length - 3} more</span>}
+                                </div>
+                              </div>
+                              <h4 className="text-base font-black text-neutral-900 leading-tight mb-2">
+                                {q.title || q.question}
+                              </h4>
+                              <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed">
+                                {q.description || (q.type === 'multiple_choice' ? 'Multiple choice assessment question.' : 'Technical coding challenge.')}
+                              </p>
+                              <div className="flex items-center gap-4 mt-4">
+                                <div className="flex items-center gap-1.5">
+                                  <div className={`w-1.5 h-1.5 rounded-full ${q.difficulty === 'hard' ? 'bg-red-500' : q.difficulty === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                                  <span className="text-[10px] font-black uppercase text-neutral-600 tracking-wider font-mono">{q.difficulty || 'medium'}</span>
+                                </div>
+                                <span className="text-[10px] font-black uppercase text-neutral-500 tracking-wider font-mono">{q.points || 10} Points</span>
+                              </div>
+                            </div>
+                            <Button
+                              onClick={() => handleSelectExistingQuestion(q)}
+                              className="!bg-black hover:!bg-neutral-900 !text-white rounded-2xl h-11 px-6 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shrink-0"
+                            >
+                              Select
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {filteredLibraryQuestions.length === 0 && (
+                        <div className="p-20 flex flex-col items-center justify-center text-center">
+                          <div className="w-20 h-20 bg-neutral-50 rounded-[2.5rem] flex items-center justify-center mb-6">
+                            <Search className="w-8 h-8 text-neutral-300" />
+                          </div>
+                          <p className="text-lg font-black text-neutral-900">No questions found</p>
+                          <p className="text-sm text-neutral-500 mt-1 max-w-xs">Try changing search text or clearing filters.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
         )
       }
@@ -2553,196 +2776,6 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
           </div>
           <div className="flex justify-end pt-4 border-t">
             <Button onClick={() => setIsViewDialogOpen(false)}>Close</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={isSelectQuestionOpen} onOpenChange={setIsSelectQuestionOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 border-none shadow-2xl rounded-[2rem]">
-          <DialogHeader className="p-8 bg-neutral-900 text-white shrink-0">
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-500/20 flex items-center justify-center border border-blue-500/10">
-                    <Search className="w-5 h-5 text-blue-400" />
-                  </div>
-                  Question Library
-                </DialogTitle>
-                <DialogDescription className="text-neutral-400 mt-1 font-medium">
-                  Fetch from our curated collection of coding problems and MCQs.
-                </DialogDescription>
-              </div>
-              <Button size="sm" variant="ghost" onClick={() => setIsSelectQuestionOpen(false)} className="text-neutral-400 hover:text-white hover:bg-white/10 rounded-full">
-                Close
-              </Button>
-            </div>
-          </DialogHeader>
-
-          <div className="flex flex-1 overflow-hidden">
-            {/* Sidebar Filters */}
-            <div className="w-72 border-r border-neutral-100 bg-neutral-50/50 p-6 flex flex-col shrink-0">
-              <div className="space-y-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] pl-1">Filters</label>
-                  <div className="relative group">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 group-focus-within:text-primary transition-colors" />
-                    <Input
-                      placeholder="Search title..."
-                      value={questionSearch}
-                      onChange={(e) => setQuestionSearch(e.target.value)}
-                      className="pl-10 h-11 border-neutral-200 rounded-2xl bg-white shadow-sm focus:bg-white transition-all text-sm font-medium"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] pl-1">Popular Tags</label>
-                    {selectedTag && (
-                      <button onClick={() => setSelectedTag(null)} className="text-[9px] font-bold text-blue-500 hover:underline">Clear all</button>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1.5 max-h-[40vh] overflow-y-auto pr-2 scrollbar-thin">
-                    <button
-                      onClick={() => setSelectedTag(null)}
-                      className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${!selectedTag ? 'bg-neutral-900 text-white shadow-lg' : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-100'}`}
-                    >
-                      All Questions
-                    </button>
-                    {tagStats.map(tag => (
-                      <button
-                        key={tag.name}
-                        onClick={() => setSelectedTag(selectedTag === tag.name ? null : tag.name)}
-                        className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${selectedTag === tag.name ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-100'}`}
-                      >
-                        <span className="truncate flex-1">{tag.name}</span>
-                        <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] ${selectedTag === tag.name ? 'bg-blue-500/50' : 'bg-neutral-100 text-neutral-400'}`}>{tag.total}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-auto pt-6 border-t border-neutral-200/50">
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl shadow-blue-200/50 relative overflow-hidden">
-                  <div className="relative z-10">
-                    <p className="text-[10px] font-black uppercase opacity-70 tracking-widest mb-1">Library Strength</p>
-                    <p className="text-2xl font-black">{allQuestions.length}</p>
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 transition-all duration-500 blur-2xl" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Questions List and Topic Filter Above it */}
-            <div className="flex-1 overflow-hidden flex flex-col p-8 bg-white">
-              {/* Topics Library Section - Refined for better visibility and alignment */}
-              <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden group mb-6">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-50" />
-                <div className="flex items-center justify-between mb-8 relative z-10 px-1">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-6 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.6)]" />
-                      <span className="text-sm font-black text-white uppercase tracking-[0.15em]">Topics Library</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedTopic(null)}
-                    className={`text-[10px] font-black uppercase tracking-widest transition-all py-2 px-6 rounded-2xl border ${selectedTopic ? 'text-blue-400 border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-300' : 'text-neutral-500 border-neutral-800 opacity-40 cursor-default'}`}
-                    disabled={!selectedTopic}
-                  >
-                    Reset Filter
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-3 max-h-[220px] overflow-y-auto scrollbar-hide pr-2 relative z-10">
-                  {topicStats.map(topic => (
-                    <button
-                      key={topic.name}
-                      onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
-                      className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all duration-300 group/topic ${selectedTopic === topic.name
-                        ? 'bg-blue-600 border-blue-500 text-white shadow-xl shadow-blue-500/30 scale-[1.03]'
-                        : 'bg-white/5 border-neutral-800 text-neutral-300 hover:border-blue-500/50 hover:bg-white/10 hover:text-white'
-                        }`}
-                    >
-                      <span className="text-[13px] font-bold tracking-tight">
-                        {topic.name}
-                      </span>
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black min-w-[28px] text-center transition-all ${selectedTopic === topic.name
-                        ? 'bg-white/20 text-white'
-                        : 'bg-neutral-800 text-neutral-400 group-hover/topic:bg-neutral-700 group-hover/topic:text-neutral-200'
-                        }`}>
-                        {topic.total}
-                      </span>
-                    </button>
-                  ))}
-                  {topicStats.length === 0 && (
-                    <div className="w-full py-12 text-center">
-                      <p className="text-neutral-500 font-bold uppercase tracking-widest text-[10px]">No topics available</p>
-                    </div>
-                  )}
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-neutral-900 to-transparent pointer-events-none" />
-              </div>
-
-              <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin">
-                <div className="grid grid-cols-1 gap-4">
-                  {allQuestions
-                    .filter(q => {
-                      const matchesSearch = q.question.toLowerCase().includes(questionSearch.toLowerCase()) ||
-                        q.title?.toLowerCase().includes(questionSearch.toLowerCase());
-                      const matchesTag = !selectedTag || q.tags?.includes(selectedTag);
-                      const matchesTopic = !selectedTopic || q.topic === selectedTopic;
-                      return matchesSearch && matchesTag && matchesTopic;
-                    })
-                    .map((q) => (
-                      <div key={q.id} className="group p-6 border border-neutral-100 rounded-[2rem] bg-neutral-50/30 hover:bg-white hover:border-blue-200 hover:shadow-2xl hover:shadow-blue-200/20 transition-all duration-500 relative overflow-hidden">
-                        <div className="flex items-start justify-between relative z-10">
-                          <div className="flex-1 mr-6">
-                            <div className="flex items-center gap-3 mb-3">
-                              <Badge className={`${q.type === 'coding' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'} border-none rounded-lg text-[9px] font-black uppercase px-2 h-5 tracking-wide`}>
-                                {q.type === 'coding' ? 'Coding' : 'MCQ'}
-                              </Badge>
-                              <div className="flex gap-1.5">
-                                {q.tags?.slice(0, 3).map((tag, i) => (
-                                  <span key={i} className="text-[9px] font-bold text-neutral-400 bg-white border border-neutral-100 px-2 py-0.5 rounded-full">#{tag}</span>
-                                ))}
-                                {(q.tags?.length || 0) > 3 && <span className="text-[9px] font-bold text-neutral-300">+{q.tags!.length - 3} more</span>}
-                              </div>
-                            </div>
-                            <h4 className="text-base font-black text-neutral-800 group-hover:text-blue-600 transition-colors leading-tight mb-2">
-                              {q.title || q.question}
-                            </h4>
-                            <p className="text-xs text-neutral-500 line-clamp-2 leading-relaxed">
-                              {q.description || (q.type === 'multiple_choice' ? 'Multiple choice assessment question.' : 'Technical coding challenge.')}
-                            </p>
-                            <div className="flex items-center gap-4 mt-4">
-                              <div className="flex items-center gap-1.5">
-                                <div className={`w-1.5 h-1.5 rounded-full ${q.difficulty === 'hard' ? 'bg-red-500' : q.difficulty === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                                <span className="text-[10px] font-black uppercase text-neutral-500 tracking-wider font-mono">{q.difficulty || 'medium'}</span>
-                              </div>
-                              <span className="text-[10px] font-black uppercase text-neutral-300 tracking-wider font-mono">{q.points || 10} Points</span>
-                            </div>
-                          </div>
-                          <Button
-                            onClick={() => handleSelectExistingQuestion(q)}
-                            className="bg-neutral-900 hover:bg-neutral-800 text-white shadow-xl shadow-neutral-200 rounded-2xl h-11 px-6 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shrink-0"
-                          >
-                            Select
-                          </Button>
-                        </div>
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/0 group-hover:bg-blue-50/50 rounded-full -mr-16 -mt-16 transition-all duration-700 blur-3xl z-0" />
-                      </div>
-                    ))}
-                  {allQuestions.length === 0 && (
-                    <div className="p-20 flex flex-col items-center justify-center text-center">
-                      <div className="w-20 h-20 bg-neutral-50 rounded-[2.5rem] flex items-center justify-center mb-6">
-                        <Search className="w-8 h-8 text-neutral-200" />
-                      </div>
-                      <p className="text-lg font-black text-neutral-800">No questions found</p>
-                      <p className="text-sm text-neutral-400 mt-1 max-w-xs">We couldn't find any questions matching your search criteria.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
         </DialogContent>
       </Dialog>

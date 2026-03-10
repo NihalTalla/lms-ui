@@ -534,7 +534,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                             </div>
 
                             {/* Topics Library Section - Improved visibility with dark theme and high contrast */}
-                            <div className="bg-white border-2 border-blue-100 rounded-3xl p-8 shadow-xl relative overflow-hidden group">
+                            <div className="!bg-black border border-neutral-800 rounded-3xl p-8 shadow-xl relative overflow-hidden group">
                               <div className="flex items-center justify-between mb-6 relative z-10 px-1">
                                 <div className="flex items-center gap-3">
                                   <div className="flex items-center gap-3">
@@ -556,7 +556,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                                       onClick={() => setSelectedTopic(selectedTopic === topic.name ? null : topic.name)}
                                       className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all duration-300 group/topic ${selectedTopic === topic.name
                                         ? 'bg-blue-600 border-blue-500 text-white shadow-xl shadow-blue-500/30 scale-[1.03]'
-                                        : 'bg-slate-50 border-slate-100 text-slate-600 hover:border-blue-500/50 hover:bg-white/10 hover:text-white'
+                                        : 'bg-white/5 border-neutral-800 text-neutral-300 hover:border-blue-500/50 hover:bg-white/10 hover:text-white'
                                         }`}
                                     >
                                       <span className="text-[13px] font-bold tracking-tight">
@@ -564,7 +564,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                                       </span>
                                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black min-w-[28px] text-center transition-all ${selectedTopic === topic.name
                                         ? 'bg-white/20 text-white'
-                                        : 'bg-slate-200 text-slate-500 group-hover/topic:bg-blue-100 group-hover/topic:text-blue-700'
+                                        : 'bg-neutral-800 text-neutral-400 group-hover/topic:bg-neutral-700 group-hover/topic:text-neutral-200'
                                         }`}>
                                         {topic.total}
                                       </span>
@@ -902,8 +902,7 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                   </Button>
                   <Button
                     onClick={handleCreateTest}
-                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-500/20 rounded-2xl px-14 h-14 font-black uppercase text-xs tracking-widest transition-all active:scale-95"
-                    style={{ color: 'white' }}
+                    className="!bg-black hover:!bg-neutral-900 !text-white shadow-2xl shadow-black/20 rounded-2xl px-14 h-14 font-black uppercase text-xs tracking-widest transition-all active:scale-95"
                   >
                     Create New Test
                   </Button>
