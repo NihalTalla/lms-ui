@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, users } from './data';
+
+const STORAGE_KEY = 'codify_user';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -13,18 +15,40 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
+  const persistUser = (user: User | null) => {
+    setCurrentUser(user);
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (user) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+
   useEffect(() => {
-    // Don't auto-load from localStorage - require fresh login
-    // Users will need to log in each time
-    const savedUser = localStorage.getItem('codify_user');
-    // Commented out auto-load to show login page on fresh start
-    // if (savedUser) {
-    //   setCurrentUser(JSON.parse(savedUser));
-    // }
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const savedUser = localStorage.getItem(STORAGE_KEY);
+    if (!savedUser) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(savedUser) as User;
+      const matchingUser = users.find((user) => user.id === parsed.id) || parsed;
+      setCurrentUser(matchingUser);
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Determine role from email
@@ -48,23 +72,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user = users.find(u => u.role === role);
     }
     if (user) {
-      setCurrentUser(user);
-      localStorage.setItem('codify_user', JSON.stringify(user));
+      persistUser(user);
       return true;
     }
     return false;
   };
 
   const logout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('codify_user');
+    persistUser(null);
   };
 
   const setRole = (role: 'admin' | 'faculty' | 'trainer' | 'student') => {
     const user = users.find(u => u.role === role);
     if (user) {
-      setCurrentUser(user);
-      localStorage.setItem('codify_user', JSON.stringify(user));
+      persistUser(user);
     }
   };
 

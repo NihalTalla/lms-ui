@@ -98,14 +98,27 @@ export function CodingChallengeUI({
     setCode(starterCode?.[language] || templates[language] || templates.java);
   }, [language, starterCode]);
 
+  const evaluateAttempt = () => {
+    const normalizedCode = code.replace(/\s+/g, '');
+    const starterTemplate = (starterCode?.[language] || '').replace(/\s+/g, '');
+    const wroteCustomSolution = normalizedCode.length > starterTemplate.length && normalizedCode !== starterTemplate;
+    const hasSolutionShape = /(return|print|cout|System\.out|printf)/.test(code);
+    const passedAll = wroteCustomSolution && hasSolutionShape;
+
+    return {
+      passedAll,
+      results: testCases.reduce<{ [key: string]: 'passed' | 'failed' }>((accumulator, testCase) => {
+        accumulator[testCase.id] = passedAll ? 'passed' : 'failed';
+        return accumulator;
+      }, {}),
+    };
+  };
+
   const handleRunCode = () => {
     setIsRunning(true);
     setTimeout(() => {
-      const results: any = {};
-      testCases.forEach(tc => {
-        results[tc.id] = Math.random() > 0.2 ? 'passed' : 'failed';
-      });
-      setTestResults(results);
+      const evaluation = evaluateAttempt();
+      setTestResults(evaluation.results);
       setIsRunning(false);
       toast.success('Code execution finished');
     }, 1500);
@@ -114,10 +127,12 @@ export function CodingChallengeUI({
   const handleFinalSubmit = () => {
     setIsRunning(true);
     setTimeout(() => {
-      const passedCount = testCases.filter(() => Math.random() > 0.1).length; // Mock logic
+      const evaluation = evaluateAttempt();
+      const passedCount = Object.values(evaluation.results).filter((result) => result === 'passed').length;
       const totalCount = testCases.length;
+      setTestResults(evaluation.results);
       const result: TestResult = {
-        passed: passedCount === totalCount,
+        passed: evaluation.passedAll,
         testCasesPassed: passedCount,
         totalTestCases: totalCount,
         failedCase: passedCount < totalCount ? {

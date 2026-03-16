@@ -41,57 +41,80 @@ import { CodingChallengeUI } from './components/CodingChallengeUI';
 import { StudentCourseTests } from './components/StudentCourseTests';
 import { MaterialManagement } from './components/MaterialManagement';
 import { TrainerMaterials } from './components/TrainerMaterials';
+import { AccountProfile } from './components/AccountProfile';
+import { AccountSettings } from './components/AccountSettings';
 import { Problem } from './lib/data';
+import { canAccessPage, normalizePageId, PageId } from './lib/navigation';
 import { Toaster } from './components/ui/sonner';
 
 function AppContent() {
     const { currentUser } = useAuth();
-    const [currentPage, setCurrentPage] = useState('dashboard');
+    const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
     const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
-    const [pageData, setPageData] = useState<any>(null);
+    const [pageData, setPageData] = useState<unknown>(null);
 
-    // Reset page state when user changes (including logout/login)
     React.useEffect(() => {
         if (currentUser) {
             setCurrentPage('dashboard');
             setSelectedProblem(null);
             setPageData(null);
         }
-    }, [currentUser?.id]); // Reset when user ID changes
+    }, [currentUser?.id]);
 
     if (!currentUser) {
         return <SignIn />;
     }
 
-    const handleNavigate = (page: string, data?: any) => {
-        setPageData(data || null);
-        if (page === 'problem' && data) {
-            setSelectedProblem(data);
+    const handleNavigate = (page: string, data?: unknown) => {
+        const normalizedPage = normalizePageId(page);
+
+        if (normalizedPage === 'problem' && data) {
+            if (!canAccessPage(currentUser.role, 'editor')) {
+                setCurrentPage('dashboard');
+                setPageData(null);
+                setSelectedProblem(null);
+                return;
+            }
+
+            setPageData(data);
+            setSelectedProblem(data as Problem);
             setCurrentPage('editor');
-        } else {
-            setCurrentPage(page);
-            setSelectedProblem(null);
+            return;
         }
+
+        if (!canAccessPage(currentUser.role, normalizedPage)) {
+            setCurrentPage('dashboard');
+            setPageData(null);
+            setSelectedProblem(null);
+            return;
+        }
+
+        setPageData(data || null);
+        setCurrentPage(normalizedPage);
+        setSelectedProblem(null);
     };
 
     const renderContent = () => {
-        // Code Editor view (no layout)
         if (currentPage === 'editor' && selectedProblem) {
-            return <CodeEditor problem={selectedProblem} onBack={() => setCurrentPage('problems')} />;
+            return <CodeEditor problem={selectedProblem} onBack={() => handleNavigate('problems')} />;
         }
 
-        // Code Practice Console view (no layout)
         if (currentPage === 'code-practice') {
-            return <CodePracticeConsole onBack={() => setCurrentPage('dashboard')} />;
+            return <CodePracticeConsole onBack={() => handleNavigate('dashboard')} />;
         }
 
-        // Assignment Listing Page (no layout)
         if (currentPage === 'assignment-listing' && pageData) {
+            const assignmentPageData = pageData as {
+                assignment: any;
+                moduleName: string;
+                courseName: string;
+                previousData: unknown;
+            };
             return (
                 <AssignmentListingPage
-                    assignment={pageData.assignment}
-                    moduleName={pageData.moduleName}
-                    courseName={pageData.courseName}
+                    assignment={assignmentPageData.assignment}
+                    moduleName={assignmentPageData.moduleName}
+                    courseName={assignmentPageData.courseName}
                     onSelectTopic={(topic) => {
                         handleNavigate('coding-challenge-ui', {
                             topicTitle: topic.title,
@@ -110,31 +133,36 @@ function AppContent() {
                                 { id: 'tc-2', input: 'bbbbb', expectedOutput: '1', hidden: false },
                                 { id: 'tc-3', input: 'pwwkew', expectedOutput: '3', hidden: false },
                             ],
-                            previousData: pageData,
+                            previousData: assignmentPageData,
                         });
                     }}
-                    onBack={() => handleNavigate('student-module', pageData.previousData)}
+                    onBack={() => handleNavigate('student-module', assignmentPageData.previousData as any)}
                 />
             );
         }
 
-        // Topic Details Page (no layout)
         if (currentPage === 'topic-details' && pageData) {
+            const topicPageData = pageData as {
+                assignment: { question: string };
+                moduleName: string;
+                courseName: string;
+                topic: { id: string; title: string; difficulty?: 'Easy' | 'Medium' | 'Hard'; content: string };
+            };
             return (
                 <TopicDetailsPage
-                    assignmentTitle={pageData.assignment.question}
-                    moduleName={pageData.moduleName}
-                    courseName={pageData.courseName}
-                    selectedTopicId={pageData.topic.id}
+                    assignmentTitle={topicPageData.assignment.question}
+                    moduleName={topicPageData.moduleName}
+                    courseName={topicPageData.courseName}
+                    selectedTopicId={topicPageData.topic.id}
                     onSelectTopic={(topicId) => {
-                        const updatedData = { ...pageData, topic: { ...pageData.topic, id: topicId } };
+                        const updatedData = { ...topicPageData, topic: { ...topicPageData.topic, id: topicId } };
                         setPageData(updatedData);
                     }}
                     onStartCoding={() => {
                         handleNavigate('coding-challenge-ui', {
-                            topicTitle: pageData.topic.title,
-                            difficulty: pageData.topic.difficulty || 'Easy',
-                            problemDescription: pageData.topic.content,
+                            topicTitle: topicPageData.topic.title,
+                            difficulty: topicPageData.topic.difficulty || 'Easy',
+                            problemDescription: topicPageData.topic.content,
                             examples: [
                                 {
                                     id: 'ex-1',
@@ -150,59 +178,64 @@ function AppContent() {
                             ],
                         });
                     }}
-                    onBack={() => setCurrentPage('assignment-listing')}
+                    onBack={() => handleNavigate('assignment-listing')}
                 />
             );
         }
 
-        // Student Course Tests (no layout)
         if (currentPage === 'course-tests' && pageData && currentUser.role === 'student') {
-            return <StudentCourseTests course={pageData.course} onBack={() => handleNavigate('courses')} />;
+            return <StudentCourseTests course={(pageData as { course: any }).course} onBack={() => handleNavigate('courses')} />;
         }
 
-        // Student Module View (no layout - has its own sidebar)
         if (currentPage === 'student-module' && pageData) {
+            const modulePageData = pageData as { course: any; module: any };
             return (
                 <StudentModuleView
-                    course={pageData.course}
-                    selectedModule={pageData.module}
+                    course={modulePageData.course}
+                    selectedModule={modulePageData.module}
                     onNavigate={(page, data) => {
                         if (page === 'assignment-listing') {
                             handleNavigate('assignment-listing', {
                                 assignment: data,
-                                moduleName: pageData.module.title,
-                                courseName: pageData.course.title,
-                                previousData: pageData,
+                                moduleName: modulePageData.module.title,
+                                courseName: modulePageData.course.title,
+                                previousData: modulePageData,
                             });
                         } else {
                             handleNavigate(page, data);
                         }
                     }}
-                    onBack={() => handleNavigate('course-modules', pageData.course)}
+                    onBack={() => handleNavigate('course-modules', modulePageData.course)}
                 />
             );
         }
 
-        // Full-Screen Coding Challenge (no layout)
         if (currentPage === 'coding-challenge-ui' && pageData) {
+            const challengePageData = pageData as {
+                topicTitle: string;
+                difficulty: 'Easy' | 'Medium' | 'Hard';
+                problemDescription: string;
+                examples: any[];
+                testCases: any[];
+                previousData?: unknown;
+            };
             return (
                 <CodingChallengeUI
-                    topicTitle={pageData.topicTitle}
-                    difficulty={pageData.difficulty}
-                    problemDescription={pageData.problemDescription}
-                    examples={pageData.examples}
-                    testCases={pageData.testCases}
-                    onSubmit={(code, language) => {
-                        console.log('Code submitted:', { code, language });
-                        if (pageData.previousData) {
-                            handleNavigate('assignment-listing', pageData.previousData);
+                    topicTitle={challengePageData.topicTitle}
+                    difficulty={challengePageData.difficulty}
+                    problemDescription={challengePageData.problemDescription}
+                    examples={challengePageData.examples}
+                    testCases={challengePageData.testCases}
+                    onSubmit={() => {
+                        if (challengePageData.previousData) {
+                            handleNavigate('assignment-listing', challengePageData.previousData as any);
                         } else {
                             handleNavigate('dashboard');
                         }
                     }}
                     onBack={() => {
-                        if (pageData.previousData) {
-                            handleNavigate('assignment-listing', pageData.previousData);
+                        if (challengePageData.previousData) {
+                            handleNavigate('assignment-listing', challengePageData.previousData as any);
                         } else {
                             handleNavigate('dashboard');
                         }
@@ -211,34 +244,29 @@ function AppContent() {
             );
         }
 
-        // Full-Screen Coding Challenge (no layout)
         if (currentPage === 'student-coding' && pageData) {
+            const studentCodingData = pageData as { challenge: any; module: any; course: any };
             return (
                 <StudentCodingChallenge
-                    challenge={pageData.challenge}
-                    module={pageData.module}
-                    course={pageData.course}
+                    challenge={studentCodingData.challenge}
+                    module={studentCodingData.module}
+                    course={studentCodingData.course}
                     onNavigate={handleNavigate}
-                    onBack={() => setCurrentPage('student-module')}
+                    onBack={() => handleNavigate('student-module', { course: studentCodingData.course, module: studentCodingData.module })}
                 />
             );
         }
 
-        // Full-Screen Contest Participation (no layout)
         if (currentPage === 'contest-play' && pageData) {
             return (
                 <ContestParticipation
-                    contest={pageData.contest}
-                    onSubmit={(answers) => {
-                        console.log('Contest submitted:', answers);
-                        handleNavigate('contests');
-                    }}
+                    contest={(pageData as { contest: any }).contest}
+                    onSubmit={() => handleNavigate('contests')}
                     onExit={() => handleNavigate('contests')}
                 />
             );
         }
 
-        // All other views use Layout
         return (
             <Layout
                 currentPage={currentPage}
@@ -258,19 +286,9 @@ function AppContent() {
                 {currentPage === 'messages' && <Messages />}
                 {currentPage === 'profile' && currentUser.role === 'student' && <StudentProfile onNavigate={handleNavigate} />}
                 {currentPage === 'profile' && currentUser.role === 'trainer' && <TrainerProfile />}
-                {currentPage === 'profile' && currentUser.role !== 'student' && currentUser.role !== 'trainer' && (
-                    <div className="space-y-6">
-                        <div>
-                            <h2 className="text-3xl font-bold text-neutral-900">Profile</h2>
-                            <p className="text-neutral-600 mt-1">View and manage your profile information</p>
-                        </div>
-                        <div className="bg-white rounded-lg border border-neutral-200 p-6">
-                            <p className="text-neutral-600">Profile management coming soon...</p>
-                        </div>
-                    </div>
-                )}
+                {currentPage === 'profile' && currentUser.role !== 'student' && currentUser.role !== 'trainer' && <AccountProfile />}
                 {currentPage === 'courses' && <CoursesPage onNavigate={handleNavigate} />}
-                {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} initialFilters={pageData} />}
+                {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} initialFilters={pageData as any} />}
                 {currentPage === 'manage-institutions' && <ManageInstitutions />}
                 {currentPage === 'batch-years' && <BatchYears onNavigate={handleNavigate} />}
                 {currentPage === 'trainer-invitation' && <MyTrainers onNavigate={handleNavigate} />}
@@ -284,12 +302,13 @@ function AppContent() {
                 {currentPage === 'analytics' && <AnalyticsPage onNavigate={handleNavigate} />}
                 {currentPage === 'attendance' && <AttendancePage />}
                 {currentPage === 'settings' && currentUser.role === 'student' && <StudentSettings onNavigate={handleNavigate} />}
+                {currentPage === 'settings' && currentUser.role !== 'student' && <AccountSettings />}
                 {currentPage === 'tests' && (currentUser.role === 'admin' || currentUser.role === 'trainer') && <TestManagement onNavigate={handleNavigate} />}
                 {currentPage === 'materials' && currentUser.role === 'admin' && <MaterialManagement />}
                 {currentPage === 'materials' && currentUser.role === 'trainer' && <TrainerMaterials />}
                 {currentPage === 'course-modules' && pageData && currentUser.role === 'student' && (
                     <CourseModulesPage
-                        course={pageData}
+                        course={pageData as any}
                         onNavigate={handleNavigate}
                         userRole={currentUser.role as 'faculty' | 'trainer' | 'student'}
                         canLock={false}
@@ -297,7 +316,7 @@ function AppContent() {
                 )}
                 {currentPage === 'course-modules' && pageData && (currentUser.role === 'faculty' || currentUser.role === 'trainer') && (
                     <CourseModulesPage
-                        course={pageData}
+                        course={pageData as any}
                         onNavigate={handleNavigate}
                         userRole={currentUser.role as 'faculty' | 'trainer' | 'student'}
                         canLock={currentUser.role === 'faculty' || currentUser.role === 'trainer'}
@@ -306,13 +325,13 @@ function AppContent() {
 
                 {currentPage === 'test-monitoring' && pageData && (
                     <TestMonitoring
-                        testName={pageData.testName}
-                        batch={pageData.batch}
+                        testName={(pageData as { testName: string }).testName}
+                        batch={(pageData as { batch: string }).batch}
                         onNavigate={handleNavigate}
                         userRole={currentUser.role as 'faculty' | 'trainer'}
                     />
                 )}
-                {currentPage === 'trainer-compiler' && <ProgramizCompiler onBack={() => setCurrentPage('dashboard')} />}
+                {currentPage === 'trainer-compiler' && <ProgramizCompiler onBack={() => handleNavigate('dashboard')} />}
             </Layout>
         );
     };

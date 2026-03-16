@@ -9,52 +9,7 @@ import { FileText, Send, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
 import { useAuth } from '../lib/auth-context';
-
-interface Material {
-  id: string;
-  title: string;
-  format: 'pdf' | 'doc';
-  description: string;
-  fileName?: string;
-  content?: string;
-  assignedTrainerIds: string[];
-}
-
-interface MaterialRequest {
-  id: string;
-  trainerId: string;
-  title: string;
-  message: string;
-  status: 'pending' | 'approved' | 'declined';
-  createdAt: string;
-}
-
-const MATERIALS_KEY = 'materials_store';
-const REQUESTS_KEY = 'material_requests_store';
-
-const loadMaterials = (): Material[] => {
-  if (typeof window === 'undefined') return [];
-  const raw = localStorage.getItem(MATERIALS_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw) as Material[]; } catch { return []; }
-};
-
-const saveMaterials = (data: Material[]) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(MATERIALS_KEY, JSON.stringify(data));
-};
-
-const saveRequests = (data: MaterialRequest[]) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(REQUESTS_KEY, JSON.stringify(data));
-};
-
-const loadRequests = (): MaterialRequest[] => {
-  if (typeof window === 'undefined') return [];
-  const raw = localStorage.getItem(REQUESTS_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw) as MaterialRequest[]; } catch { return []; }
-};
+import { Material, MaterialRequest, loadMaterialRequests, loadMaterials, saveMaterialRequests, saveMaterials } from '../lib/materials-store';
 
 export function TrainerMaterials() {
   const { currentUser } = useAuth();
@@ -65,7 +20,7 @@ export function TrainerMaterials() {
 
   useEffect(() => {
     const mats = loadMaterials();
-    const reqs = loadRequests();
+    const reqs = loadMaterialRequests();
 
     // Seed a demo material for the logged-in trainer if none assigned
     if (currentUser) {
@@ -106,7 +61,7 @@ export function TrainerMaterials() {
     };
     const next = [req, ...requests];
     setRequests(next);
-    saveRequests(next);
+    saveMaterialRequests(next);
     setReqTitle('');
     setReqMsg('');
   };
@@ -138,7 +93,7 @@ export function TrainerMaterials() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-3xl font-bold text-neutral-900">Materials</h2>
           <p className="text-neutral-600">Materials assigned to you by Admin.</p>

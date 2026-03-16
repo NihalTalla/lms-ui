@@ -15,35 +15,11 @@ import { CodePracticeConsole } from './CodePracticeConsole';
 import { useAuth } from '../lib/auth-context';
 import { toast } from 'sonner';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import { AttendanceSession, loadAttendanceSessions, saveAttendanceSessions } from '../lib/attendance-store';
 
 interface CoursesPageProps {
   onNavigate: (page: string, data?: any) => void;
 }
-
-interface AttendanceSession {
-  id: string;
-  courseId: string;
-  courseTitle: string;
-  batchId?: string;
-  createdAt: string;
-  markedStudentIds: string[];
-  totalStudentIds: string[];
-  status: 'open' | 'closed';
-}
-
-const ATTENDANCE_KEY = 'attendance_sessions_store';
-
-const loadAttendanceSessions = (): AttendanceSession[] => {
-  if (typeof window === 'undefined') return [];
-  const raw = localStorage.getItem(ATTENDANCE_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw) as AttendanceSession[]; } catch { return []; }
-};
-
-const saveAttendanceSessions = (data: AttendanceSession[]) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(data));
-};
 
 export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const { currentUser } = useAuth();

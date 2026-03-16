@@ -14,16 +14,20 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 import { EdRealmLogo } from './EdRealmLogo';
 import { useIsMobile } from './ui/use-mobile';
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from './ui/sheet';
+import { AttendanceSession, loadAttendanceSessions, markAttendanceForStudent } from '../lib/attendance-store';
+import { PageId } from '../lib/navigation';
 
 interface LayoutProps {
   children: React.ReactNode;
-  currentPage: string;
+  currentPage: PageId;
   onNavigate: (page: string) => void;
   hideSidebar?: boolean;
 }
@@ -32,8 +36,6 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
   const { currentUser, logout } = useAuth();
   const isMobile = useIsMobile();
 
-  if (!currentUser) return null;
-
   const [isInstitutionsOpen, setIsInstitutionsOpen] = React.useState(false);
   const [isAssessmentsOpen, setIsAssessmentsOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -41,15 +43,11 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
   const notificationRef = React.useRef<HTMLDivElement>(null);
 
   // Attendance-based notification: check for active sessions the student hasn't marked
-  const [attendanceSessions, setAttendanceSessions] = React.useState<any[]>([]);
+  const [attendanceSessions, setAttendanceSessions] = React.useState<AttendanceSession[]>([]);
 
   React.useEffect(() => {
     const loadSessions = () => {
-      try {
-        const raw = localStorage.getItem('attendance_sessions_store');
-        if (raw) setAttendanceSessions(JSON.parse(raw));
-        else setAttendanceSessions([]);
-      } catch { setAttendanceSessions([]); }
+      setAttendanceSessions(loadAttendanceSessions());
     };
     loadSessions();
     const interval = setInterval(loadSessions, 5000);
@@ -68,7 +66,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
   }, []);
 
   // Find active attendance sessions student hasn't marked
-  const pendingAttendance = currentUser.role === 'student'
+  const pendingAttendance = currentUser?.role === 'student'
     ? attendanceSessions.filter(s =>
         s.status === 'open' &&
         (!currentUser.batchId || s.batchId === currentUser.batchId) &&
@@ -78,7 +76,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
   const unreadCount = pendingAttendance.length;
 
   // Also find sessions where student already marked
-  const markedAttendance = currentUser.role === 'student'
+  const markedAttendance = currentUser?.role === 'student'
     ? attendanceSessions.filter(s =>
         s.status === 'open' &&
         (!currentUser.batchId || s.batchId === currentUser.batchId) &&
@@ -87,16 +85,11 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
     : [];
 
   const handleQuickMarkAttendance = (sessionId: string) => {
-    const sessions = [...attendanceSessions];
-    const idx = sessions.findIndex(s => s.id === sessionId);
-    if (idx === -1) return;
-    if (sessions[idx].markedStudentIds?.includes(currentUser.id)) return;
-    sessions[idx] = {
-      ...sessions[idx],
-      markedStudentIds: [...(sessions[idx].markedStudentIds || []), currentUser.id],
-    };
-    setAttendanceSessions(sessions);
-    localStorage.setItem('attendance_sessions_store', JSON.stringify(sessions));
+    if (!currentUser) return;
+    const selectedSession = attendanceSessions.find((session) => session.id === sessionId);
+    if (!selectedSession || selectedSession.markedStudentIds.includes(currentUser.id)) return;
+    const next = markAttendanceForStudent(sessionId, currentUser.id);
+    setAttendanceSessions(next);
     toast.success('Attendance marked successfully! ✅');
   };
 
@@ -117,6 +110,8 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
       description: 'Assignment history panel stays blank for some users. Support team will update this issue status as progress is made.'
     }
   ]);
+
+  if (!currentUser) return null;
 
   const handleIssueSubmit = () => {
     if (!issueTitle.trim() || !issueDescription.trim() || !issueCategory.trim()) {
@@ -195,15 +190,6 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
   const navItems = getNavItems();
   const shouldShowSidebar = !hideSidebar;
 
-  // Mobile students only see Attendance
-  const getMobileNavItems = () => {
-    if (currentUser.role === 'student') {
-      return [{ id: 'attendance', label: 'Attendance', icon: Calendar }];
-    }
-    return navItems;
-  };
-  const mobileNavItems = getMobileNavItems();
-
   const handleNavigateWithClose = (page: string) => {
     onNavigate(page);
     if (isMobile) {
@@ -220,7 +206,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
   };
 
   const renderSidebarContent = (isMobileMenu = false) => {
-    const itemsToRender = isMobileMenu ? mobileNavItems : navItems;
+    const itemsToRender = navItems;
     return (
     <>
       <nav className={`p-4 space-y-1 flex-1 overflow-y-auto overflow-x-hidden ${isMobileMenu ? 'pt-10' : ''}`}>
@@ -337,30 +323,37 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
       </nav>
 
       {/* Bottom Profile & Logout Section — hidden for mobile students */}
-      {!(isMobileMenu && currentUser.role === 'student') && (
-        <div className="p-4 border-t border-neutral-200 space-y-2">
-          {currentUser.role === 'student' && (
-            <button
-              onClick={() => handleNavigateWithClose('settings')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'settings'
-                ? 'text-white shadow-md'
-                : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
-                }`}
-              style={currentPage === 'settings' ? { backgroundColor: 'var(--color-primary)' } : {}}
-            >
-              <Settings className="w-5 h-5" />
-              <span className="text-sm font-medium">Settings</span>
-            </button>
-          )}
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 hover:shadow-sm"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-sm font-medium">Logout</span>
-          </button>
-        </div>
-      )}
+      <div className="p-4 border-t border-neutral-200 space-y-2">
+        <button
+          onClick={() => handleNavigateWithClose('profile')}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'profile'
+            ? 'text-white shadow-md'
+            : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
+            }`}
+          style={currentPage === 'profile' ? { backgroundColor: 'var(--color-primary)' } : {}}
+        >
+          <User className="w-5 h-5" />
+          <span className="text-sm font-medium">Profile</span>
+        </button>
+        <button
+          onClick={() => handleNavigateWithClose('settings')}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'settings'
+            ? 'text-white shadow-md'
+            : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
+            }`}
+          style={currentPage === 'settings' ? { backgroundColor: 'var(--color-primary)' } : {}}
+        >
+          <Settings className="w-5 h-5" />
+          <span className="text-sm font-medium">Settings</span>
+        </button>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 hover:shadow-sm"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="text-sm font-medium">Logout</span>
+        </button>
+      </div>
     </>
   );
   };
@@ -512,6 +505,13 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
                     <span className="text-neutral-700 text-sm">View Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
+                    onClick={() => onNavigate('settings')}
+                    className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50"
+                  >
+                    <Settings className="w-4 h-4 text-neutral-600" />
+                    <span className="text-neutral-700 text-sm">Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                     onClick={handleLogout}
                     className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50 text-neutral-700"
                   >
@@ -612,9 +612,11 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
       <Dialog open={isIssueDialogOpen} onOpenChange={setIsIssueDialogOpen}>
         <DialogContent className="sm:max-w-[1000px] w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden bg-white selection:bg-blue-100 selection:text-blue-900">
           <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-neutral-50/50 block">
-            <div className="mb-8 relative">
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Raise an Issue</h2>
-              <p className="text-black">Report bugs, platform issues, or support requests.</p>
+            <DialogHeader className="mb-8 relative text-left space-y-2">
+              <DialogTitle className="text-2xl font-bold text-slate-900">Raise an Issue</DialogTitle>
+              <DialogDescription className="text-black">
+                Report bugs, platform issues, or support requests.
+              </DialogDescription>
 
               <button
                 onClick={() => setIsIssueDialogOpen(false)}
@@ -622,7 +624,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
               >
                 X
               </button>
-            </div>
+            </DialogHeader>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
               {/* Left Column: Form */}

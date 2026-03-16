@@ -5,31 +5,7 @@ import { Badge } from './ui/badge';
 import { Calendar, CheckCircle2, Clock, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/auth-context';
-
-interface AttendanceSession {
-  id: string;
-  courseId: string;
-  courseTitle: string;
-  batchId?: string;
-  createdAt: string;
-  markedStudentIds: string[];
-  totalStudentIds: string[];
-  status: 'open' | 'closed';
-}
-
-const ATTENDANCE_KEY = 'attendance_sessions_store';
-
-const loadAttendanceSessions = (): AttendanceSession[] => {
-  if (typeof window === 'undefined') return [];
-  const raw = localStorage.getItem(ATTENDANCE_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw) as AttendanceSession[]; } catch { return []; }
-};
-
-const saveAttendanceSessions = (data: AttendanceSession[]) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(data));
-};
+import { AttendanceSession, loadAttendanceSessions, markAttendanceForStudent } from '../lib/attendance-store';
 
 export function AttendancePage() {
   const { currentUser } = useAuth();
@@ -38,6 +14,8 @@ export function AttendancePage() {
 
   useEffect(() => {
     setSessions(loadAttendanceSessions());
+    const interval = window.setInterval(() => setSessions(loadAttendanceSessions()), 5000);
+    return () => window.clearInterval(interval);
   }, []);
 
   const activeSession = sessions.find(s =>
@@ -78,13 +56,7 @@ export function AttendancePage() {
   const handleMarkAttendance = () => {
     if (!activeSession || !currentUser) return;
     if (activeSession.markedStudentIds.includes(currentUser.id)) return;
-    const next = sessions.map(s =>
-      s.id === activeSession.id
-        ? { ...s, markedStudentIds: [...s.markedStudentIds, currentUser.id] }
-        : s
-    );
-    setSessions(next);
-    saveAttendanceSessions(next);
+    setSessions(markAttendanceForStudent(activeSession.id, currentUser.id));
     toast.success('Attendance marked successfully!');
   };
 
@@ -200,8 +172,7 @@ export function AttendancePage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Mark Today's Attendance - hidden on mobile, use notification bell instead */}
-        <Card className="lg:col-span-1 hidden md:block">
+        <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Mark Attendance</CardTitle>
             <CardDescription>
@@ -269,7 +240,7 @@ export function AttendancePage() {
               {attendanceRecords.map((record) => (
                 <div
                   key={record.id}
-                  className="flex items-center justify-between p-4 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+                  className="flex flex-col gap-3 p-4 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
@@ -305,40 +276,42 @@ export function AttendancePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-7 gap-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-center text-xs font-medium text-neutral-600 py-2">
-                {day}
-              </div>
-            ))}
-            {[...Array(31)].map((_, i) => {
-              const day = i + 1;
-              const hasSession = day % 2 === 1 && day <= 20;
-              const status = hasSession
-                ? day % 7 === 0
-                  ? 'absent'
-                  : day % 5 === 0
-                  ? 'late'
-                  : 'present'
-                : null;
-
-              return (
-                <div
-                  key={day}
-                  className={`aspect-square flex items-center justify-center rounded-md text-sm ${
-                    hasSession
-                      ? status === 'present'
-                        ? 'bg-green-100 text-green-700'
-                        : status === 'late'
-                        ? 'bg-amber-100 text-amber-700'
-                        : 'bg-red-100 text-red-700'
-                      : 'bg-neutral-50 text-neutral-400'
-                  }`}
-                >
+          <div className="overflow-x-auto">
+            <div className="grid min-w-[560px] grid-cols-7 gap-2">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div key={day} className="text-center text-xs font-medium text-neutral-600 py-2">
                   {day}
                 </div>
-              );
-            })}
+              ))}
+              {[...Array(31)].map((_, i) => {
+                const day = i + 1;
+                const hasSession = day % 2 === 1 && day <= 20;
+                const status = hasSession
+                  ? day % 7 === 0
+                    ? 'absent'
+                    : day % 5 === 0
+                    ? 'late'
+                    : 'present'
+                  : null;
+
+                return (
+                  <div
+                    key={day}
+                    className={`aspect-square flex items-center justify-center rounded-md text-sm ${
+                      hasSession
+                        ? status === 'present'
+                          ? 'bg-green-100 text-green-700'
+                          : status === 'late'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-red-100 text-red-700'
+                        : 'bg-neutral-50 text-neutral-400'
+                    }`}
+                  >
+                    {day}
+                  </div>
+                );
+              })}
+            </div>
           </div>
           <div className="flex items-center justify-center gap-6 mt-4 text-xs">
             <div className="flex items-center gap-2">

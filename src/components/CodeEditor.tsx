@@ -85,6 +85,35 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
     setSavedFiles(files);
   };
 
+  const buildSimulationMetrics = (sourceCode: string) => {
+    const normalizedLength = sourceCode.replace(/\s+/g, '').length;
+    return {
+      executionTime: Math.max(24, Math.min(180, 24 + Math.floor(normalizedLength / 10))),
+      memory: Math.max(18, Math.min(72, 18 + Math.floor(normalizedLength / 30))),
+    };
+  };
+
+  const buildTestCaseResults = (includeHidden: boolean) => {
+    const relevantCases = problem.testCases.filter((testCase) => includeHidden || !testCase.hidden);
+    const starterTemplate = getStarterCode(language).replace(/\s+/g, '');
+    const normalizedCode = code.replace(/\s+/g, '');
+    const wroteCustomSolution = normalizedCode.length > starterTemplate.length && normalizedCode !== starterTemplate;
+    const hasSolutionShape = /(return|print|cout|System\.out|printf)/.test(code);
+    const passedAll = wroteCustomSolution && hasSolutionShape;
+    const metrics = buildSimulationMetrics(code);
+
+    return {
+      metrics,
+      passedAll,
+      results: relevantCases.map((testCase, index) => ({
+        testCaseId: testCase.id,
+        passed: passedAll,
+        actualOutput: passedAll ? testCase.expectedOutput : 'No matching output',
+        executionTime: metrics.executionTime + index * 4,
+      })),
+    };
+  };
+
   const runCode = async () => {
     setIsRunning(true);
     setOutput('Running test cases...\n');
@@ -92,15 +121,8 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
     // Simulate code execution
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Simulate test results
-    const results: TestCaseResult[] = problem.testCases
-      .filter(tc => !tc.hidden)
-      .map(tc => ({
-        testCaseId: tc.id,
-        passed: Math.random() > 0.3, // Random pass/fail for demo
-        actualOutput: tc.expectedOutput,
-        executionTime: Math.floor(Math.random() * 100) + 10,
-      }));
+    const simulation = buildTestCaseResults(false);
+    const results: TestCaseResult[] = simulation.results;
     
     setTestResults(results);
     const passed = results.filter(r => r.passed).length;
@@ -112,8 +134,8 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
         `Test Case ${i + 1}: ${r.passed ? '✓ Passed' : '✗ Failed'} (${r.executionTime}ms)`
       ).join('\n')
     );
-    setExecutionTime(Math.floor(Math.random() * 100) + 50);
-    setMemory(Math.floor(Math.random() * 20) + 10);
+    setExecutionTime(simulation.metrics.executionTime);
+    setMemory(simulation.metrics.memory);
     setIsRunning(false);
     
     toast.success(`Ran ${results.length} test cases`);
@@ -172,27 +194,23 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
     
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Simulate final result
-    const allPassed = Math.random() > 0.4;
+    const simulation = buildTestCaseResults(true);
+    const allPassed = simulation.passedAll;
     setSubmissionStatus(allPassed ? 'accepted' : 'wrong_answer');
     
-    // Simulate all test cases (including hidden)
-    const allResults: TestCaseResult[] = problem.testCases.map(tc => ({
-      testCaseId: tc.id,
-      passed: allPassed || Math.random() > 0.5,
-      actualOutput: tc.expectedOutput,
-      executionTime: Math.floor(Math.random() * 100) + 10,
-    }));
+    const allResults: TestCaseResult[] = simulation.results;
     
     setTestResults(allResults);
     const passed = allResults.filter(r => r.passed).length;
+    setExecutionTime(simulation.metrics.executionTime);
+    setMemory(simulation.metrics.memory);
     
     setOutput(
       `Submission Results:\n` +
       `Status: ${allPassed ? '✓ ACCEPTED' : '✗ WRONG ANSWER'}\n` +
       `Test Cases: ${passed}/${allResults.length} passed\n` +
-      `Execution Time: ${executionTime}ms\n` +
-      `Memory: ${memory}MB\n\n` +
+      `Execution Time: ${simulation.metrics.executionTime}ms\n` +
+      `Memory: ${simulation.metrics.memory}MB\n\n` +
       allResults.map((r, i) => 
         `Test Case ${i + 1}: ${r.passed ? '✓ Passed' : '✗ Failed'} (${r.executionTime}ms)`
       ).join('\n')

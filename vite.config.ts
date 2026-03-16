@@ -49,12 +49,16 @@
         '@': path.resolve(__dirname, './src'),
       },
     },
-    build: {
-      target: 'esnext',
-      outDir: 'build',
-    },
-    server: {
-      port: 3000,
+  build: {
+    target: 'esnext',
+    outDir: 'build',
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+  },
+  server: {
+    port: 3000,
       open: true,
       strictPort: false,
       hmr: {

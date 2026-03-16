@@ -9,52 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Bell, Eye, FileText, Plus, Upload, Users } from 'lucide-react';
 import { users } from '../lib/data';
-
-interface Material {
-  id: string;
-  title: string;
-  format: 'pdf' | 'doc';
-  description: string;
-  fileName?: string;
-  content?: string;
-  assignedTrainerIds: string[];
-}
-
-interface MaterialRequest {
-  id: string;
-  trainerId: string;
-  title: string;
-  message: string;
-  status: 'pending' | 'approved' | 'declined';
-  createdAt: string;
-}
-
-const MATERIALS_KEY = 'materials_store';
-const REQUESTS_KEY = 'material_requests_store';
-
-const loadMaterials = (): Material[] => {
-  if (typeof window === 'undefined') return [];
-  const raw = localStorage.getItem(MATERIALS_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw) as Material[]; } catch { return []; }
-};
-
-const saveMaterials = (data: Material[]) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(MATERIALS_KEY, JSON.stringify(data));
-};
-
-const loadRequests = (): MaterialRequest[] => {
-  if (typeof window === 'undefined') return [];
-  const raw = localStorage.getItem(REQUESTS_KEY);
-  if (!raw) return [];
-  try { return JSON.parse(raw) as MaterialRequest[]; } catch { return []; }
-};
-
-const saveRequests = (data: MaterialRequest[]) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(REQUESTS_KEY, JSON.stringify(data));
-};
+import { Material, MaterialRequest, loadMaterialRequests, loadMaterials, saveMaterialRequests, saveMaterials } from '../lib/materials-store';
 
 export function MaterialManagement() {
   const trainerUsers = useMemo(() => users.filter(u => u.role === 'trainer'), []);
@@ -77,11 +32,11 @@ export function MaterialManagement() {
   useEffect(() => {
     const loaded = loadMaterials();
     setMaterials(loaded.length ? loaded : []);
-    setRequests(loadRequests());
+    setRequests(loadMaterialRequests());
   }, []);
 
   useEffect(() => { saveMaterials(materials); }, [materials]);
-  useEffect(() => { saveRequests(requests); }, [requests]);
+  useEffect(() => { saveMaterialRequests(requests); }, [requests]);
 
   const pendingCount = requests.filter(r => r.status === 'pending').length;
   const filteredAssignTrainers = trainerUsers.filter(t =>
@@ -113,23 +68,23 @@ export function MaterialManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-neutral-900">Materials</h2>
-          <p className="text-neutral-600">Create, manage, and assign materials to trainers.</p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-neutral-900">Materials</h2>
+            <p className="text-neutral-600">Create, manage, and assign materials to trainers.</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> New Material
+            </Button>
+            <Button variant="outline" onClick={() => setNotifyOpen(true)}>
+              <Bell className="w-4 h-4 mr-2" /> Notifications
+              {pendingCount > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold">{pendingCount}</span>
+              )}
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> New Material
-          </Button>
-          <Button variant="outline" onClick={() => setNotifyOpen(true)}>
-            <Bell className="w-4 h-4 mr-2" /> Notifications
-            {pendingCount > 0 && (
-              <span className="ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold">{pendingCount}</span>
-            )}
-          </Button>
-        </div>
-      </div>
 
       <Tabs defaultValue="materials" className="space-y-4">
         <TabsList>
@@ -197,7 +152,7 @@ export function MaterialManagement() {
               const trainer = users.find(u => u.id === req.trainerId);
               return (
                 <Card key={req.id}>
-                  <CardContent className="p-4 flex items-center justify-between gap-4">
+                  <CardContent className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-semibold text-neutral-900">{req.title}</p>
                       <p className="text-sm text-neutral-500">{trainer?.name || 'Trainer'} • {new Date(req.createdAt).toLocaleString()}</p>
