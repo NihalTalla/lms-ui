@@ -200,8 +200,8 @@ export function AttendancePage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Mark Today's Attendance */}
-        <Card className="lg:col-span-1">
+        {/* Mark Today's Attendance - hidden on mobile, use notification bell instead */}
+        <Card className="lg:col-span-1 hidden md:block">
           <CardHeader>
             <CardTitle>Mark Attendance</CardTitle>
             <CardDescription>

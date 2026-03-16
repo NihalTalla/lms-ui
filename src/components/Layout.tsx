@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../lib/auth-context';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { Search, Settings, LogOut, Home, BookOpen, FileCode, MessageSquare, Award, Users, BarChart3, Calendar, User, AlertCircle, ChevronDown, Trophy, CreditCard, Send, ClipboardList, TrendingUp, FileText, Menu } from 'lucide-react';
+import { Search, Settings, LogOut, Home, BookOpen, FileCode, MessageSquare, Award, Users, BarChart3, Calendar, User, AlertCircle, ChevronDown, Trophy, CreditCard, Send, ClipboardList, TrendingUp, FileText, Menu, Bell, X, CheckCircle2, Clock } from 'lucide-react';
 import { Input } from './ui/input';
 import {
   DropdownMenu,
@@ -37,6 +37,68 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
   const [isInstitutionsOpen, setIsInstitutionsOpen] = React.useState(false);
   const [isAssessmentsOpen, setIsAssessmentsOpen] = React.useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = React.useState(false);
+  const notificationRef = React.useRef<HTMLDivElement>(null);
+
+  // Attendance-based notification: check for active sessions the student hasn't marked
+  const [attendanceSessions, setAttendanceSessions] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    const loadSessions = () => {
+      try {
+        const raw = localStorage.getItem('attendance_sessions_store');
+        if (raw) setAttendanceSessions(JSON.parse(raw));
+        else setAttendanceSessions([]);
+      } catch { setAttendanceSessions([]); }
+    };
+    loadSessions();
+    const interval = setInterval(loadSessions, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Close notification panel when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Find active attendance sessions student hasn't marked
+  const pendingAttendance = currentUser.role === 'student'
+    ? attendanceSessions.filter(s =>
+        s.status === 'open' &&
+        (!currentUser.batchId || s.batchId === currentUser.batchId) &&
+        !s.markedStudentIds?.includes(currentUser.id)
+      )
+    : [];
+  const unreadCount = pendingAttendance.length;
+
+  // Also find sessions where student already marked
+  const markedAttendance = currentUser.role === 'student'
+    ? attendanceSessions.filter(s =>
+        s.status === 'open' &&
+        (!currentUser.batchId || s.batchId === currentUser.batchId) &&
+        s.markedStudentIds?.includes(currentUser.id)
+      )
+    : [];
+
+  const handleQuickMarkAttendance = (sessionId: string) => {
+    const sessions = [...attendanceSessions];
+    const idx = sessions.findIndex(s => s.id === sessionId);
+    if (idx === -1) return;
+    if (sessions[idx].markedStudentIds?.includes(currentUser.id)) return;
+    sessions[idx] = {
+      ...sessions[idx],
+      markedStudentIds: [...(sessions[idx].markedStudentIds || []), currentUser.id],
+    };
+    setAttendanceSessions(sessions);
+    localStorage.setItem('attendance_sessions_store', JSON.stringify(sessions));
+    toast.success('Attendance marked successfully! ✅');
+  };
 
   const [isIssueDialogOpen, setIsIssueDialogOpen] = React.useState(false);
   const [issueTitle, setIssueTitle] = React.useState('');
@@ -133,6 +195,15 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
   const navItems = getNavItems();
   const shouldShowSidebar = !hideSidebar;
 
+  // Mobile students only see Attendance
+  const getMobileNavItems = () => {
+    if (currentUser.role === 'student') {
+      return [{ id: 'attendance', label: 'Attendance', icon: Calendar }];
+    }
+    return navItems;
+  };
+  const mobileNavItems = getMobileNavItems();
+
   const handleNavigateWithClose = (page: string) => {
     onNavigate(page);
     if (isMobile) {
@@ -148,10 +219,12 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
     }
   };
 
-  const renderSidebarContent = (isMobileMenu = false) => (
+  const renderSidebarContent = (isMobileMenu = false) => {
+    const itemsToRender = isMobileMenu ? mobileNavItems : navItems;
+    return (
     <>
       <nav className={`p-4 space-y-1 flex-1 overflow-y-auto overflow-x-hidden ${isMobileMenu ? 'pt-10' : ''}`}>
-        {navItems.map(item => {
+        {itemsToRender.map(item => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
           return (
@@ -263,31 +336,34 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
         )}
       </nav>
 
-      {/* Bottom Profile & Logout Section */}
-      <div className="p-4 border-t border-neutral-200 space-y-2">
-        {currentUser.role === 'student' && (
+      {/* Bottom Profile & Logout Section — hidden for mobile students */}
+      {!(isMobileMenu && currentUser.role === 'student') && (
+        <div className="p-4 border-t border-neutral-200 space-y-2">
+          {currentUser.role === 'student' && (
+            <button
+              onClick={() => handleNavigateWithClose('settings')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'settings'
+                ? 'text-white shadow-md'
+                : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
+                }`}
+              style={currentPage === 'settings' ? { backgroundColor: 'var(--color-primary)' } : {}}
+            >
+              <Settings className="w-5 h-5" />
+              <span className="text-sm font-medium">Settings</span>
+            </button>
+          )}
           <button
-            onClick={() => handleNavigateWithClose('settings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentPage === 'settings'
-              ? 'text-white shadow-md'
-              : 'text-neutral-700 hover:bg-neutral-100 hover:shadow-sm'
-              }`}
-            style={currentPage === 'settings' ? { backgroundColor: 'var(--color-primary)' } : {}}
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 hover:shadow-sm"
           >
-            <Settings className="w-5 h-5" />
-            <span className="text-sm font-medium">Settings</span>
+            <LogOut className="w-5 h-5" />
+            <span className="text-sm font-medium">Logout</span>
           </button>
-        )}
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 hover:shadow-sm"
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="text-sm font-medium">Logout</span>
-        </button>
-      </div>
+        </div>
+      )}
     </>
   );
+  };
 
   return (
     <div className="flex flex-col h-screen w-screen bg-neutral-50 overflow-hidden">
@@ -303,7 +379,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
                 onClick={() => setIsMobileMenuOpen(true)}
                 aria-label="Open navigation menu"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5" style={{ color: '#7C3AED' }} />
               </Button>
             )}
 
@@ -341,6 +417,72 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Notification Bell */}
+            <div className="relative" ref={notificationRef}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 relative hover:bg-purple-50"
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                aria-label="Notifications"
+              >
+                <Bell className="w-5 h-5" style={{ color: '#7C3AED' }} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white rounded-full" style={{ backgroundColor: '#EF4444' }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Button>
+
+              {/* Notification Dropdown */}
+              {isNotificationOpen && (
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-neutral-200 z-[60] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 bg-neutral-50">
+                    <h4 className="text-sm font-semibold text-neutral-900">Attendance Notifications</h4>
+                    <button onClick={() => setIsNotificationOpen(false)} className="text-neutral-400 hover:text-neutral-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto">
+                    {pendingAttendance.length === 0 ? (
+                      <div className="px-4 py-8 text-center">
+                        <Calendar className="w-8 h-8 mx-auto mb-2 text-neutral-300" />
+                        <p className="text-sm text-neutral-500">No pending attendance</p>
+                        <p className="text-xs text-neutral-400 mt-1">You're all caught up!</p>
+                      </div>
+                    ) : (
+                      pendingAttendance.map(session => (
+                        <div
+                          key={session.id}
+                          className="px-4 py-3 border-b border-neutral-50 bg-purple-50/30"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="mt-1 w-2 h-2 rounded-full flex-shrink-0 bg-purple-500" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-neutral-900">Attendance Request</p>
+                              <p className="text-xs text-neutral-600 mt-0.5">{session.courseTitle || 'New attendance session posted'}</p>
+                              <p className="text-xs text-neutral-400 mt-1">
+                                {session.createdAt ? new Date(session.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                              </p>
+                              <button
+                                onClick={() => { handleQuickMarkAttendance(session.id); setIsNotificationOpen(false); }}
+                                className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-white font-semibold text-xs transition-all duration-200 hover:opacity-90"
+                                style={{ backgroundColor: '#10B981' }}
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                Mark Present
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Profile Dropdown - For All Users */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -398,17 +540,60 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
       </header>
 
       {shouldShowSidebar && isMobile && (
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetContent side="left" className="w-[85vw] max-w-[320px] p-0">
-            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-            <SheetDescription className="sr-only">
-              Use this menu to switch between pages.
-            </SheetDescription>
-            <div className="h-full flex flex-col bg-white">
+        <>
+          {/* Mobile sidebar overlay */}
+          {isMobileMenuOpen && (
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 50,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+              }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          )}
+          {/* Mobile sidebar panel */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              bottom: 0,
+              width: '280px',
+              maxWidth: '85vw',
+              zIndex: 51,
+              backgroundColor: '#ffffff',
+              boxShadow: '4px 0 16px rgba(0,0,0,0.1)',
+              transform: isMobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.3s ease-in-out',
+              display: 'flex',
+              flexDirection: 'column' as const,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                zIndex: 10,
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                color: '#6b7280',
+              }}
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {renderSidebarContent(true)}
             </div>
-          </SheetContent>
-        </Sheet>
+          </div>
+        </>
       )}
 
       {/* Fixed Sidebar */}
