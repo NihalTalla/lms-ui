@@ -140,52 +140,52 @@ export function CodingChallengeUI({
   };
 
   return (
-    <div className={`fixed inset-0 z-50 w-screen h-screen flex flex-col ${isDarkMode ? 'dark bg-neutral-900 text-white' : 'bg-white text-neutral-900'} font-sans overflow-hidden`}>
+    <div className={`fixed inset-0 z-50 w-screen h-dvh flex flex-col ${isDarkMode ? 'dark bg-neutral-900 text-white' : 'bg-white text-neutral-900'} font-sans overflow-hidden`}>
 
       {/* 🔴 1. SINGLE HEADER ROW */}
-      <header className="h-20 border-b border-neutral-100 flex items-center justify-between px-8 bg-white flex-shrink-0 z-20">
-        <div className="flex items-center gap-6">
+      <header className="border-b border-neutral-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-3 sm:px-8 py-3 bg-white flex-shrink-0 z-20">
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0">
           <Button variant="ghost" onClick={onBack} className="p-0 hover:bg-transparent text-neutral-500 hover:text-neutral-900 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <EdRealmLogo size="small" />
 
-          <div className="flex flex-col">
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-neutral-900 tracking-tight">{topicTitle}</h1>
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <h1 className="text-base sm:text-xl font-bold text-neutral-900 tracking-tight truncate">{topicTitle}</h1>
               {/* 🔴 8. DIFFICULTY BADGE IN HEADER */}
-              <Badge className="bg-white border border-neutral-200 text-neutral-600 rounded-full px-3 py-0.5 text-[11px] font-black uppercase tracking-widest shadow-sm">
+              <Badge className="bg-white border border-neutral-200 text-neutral-600 rounded-full px-2 sm:px-3 py-0.5 text-[10px] sm:text-[11px] font-black uppercase tracking-widest shadow-sm shrink-0">
                 {difficulty}
               </Badge>
             </div>
-            <span className="text-xs font-medium text-neutral-400">Write a program to print the following series of numbers:</span>
+            <span className="hidden sm:block text-xs font-medium text-neutral-400">Write a program to print the following series of numbers:</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-100 px-4 py-2 rounded-xl">
+        <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto overflow-x-auto">
+          <div className="hidden sm:flex items-center gap-2 bg-neutral-50 border border-neutral-100 px-4 py-2 rounded-xl shrink-0">
             <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Score</span>
             <span className="text-sm font-black text-neutral-900">10/10</span>
           </div>
-          <Button variant="outline" className="h-10 rounded-xl px-5 font-bold text-neutral-600 ml-2">View Comments</Button>
-          <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold ring-4 ring-purple-50">T</div>
+          <Button variant="outline" className="h-9 sm:h-10 rounded-xl px-3 sm:px-5 font-bold text-neutral-600 shrink-0 text-xs sm:text-sm">View Comments</Button>
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold ring-4 ring-purple-50 shrink-0">T</div>
         </div>
       </header>
 
       {/* 🔴 2. SPLIT LAYOUT (50/50 Grid) */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
 
         {/* === LEFT PANEL: PROBLEM === */}
-        <section className="w-[45%] flex flex-col border-r border-neutral-200 bg-white overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar">
+        <section className="w-full lg:w-[45%] h-[40dvh] sm:h-[45dvh] lg:h-auto flex flex-col border-b lg:border-b-0 lg:border-r border-neutral-200 bg-white overflow-hidden shrink-0">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 space-y-6 sm:space-y-10 custom-scrollbar">
 
             {/* 🔴 4. SEPARATE CARDS FOR CONTENT */}
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-neutral-900">Problem Statement</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-900">Problem Statement</h2>
 
               {/* Series Card */}
-              <div className="bg-neutral-50 border border-neutral-100 p-8 rounded-2xl text-center">
-                <span className="font-mono text-xl font-medium text-neutral-800 tracking-widest">Series: 2, 4, 8, 14, 22, ..., n</span>
+              <div className="bg-neutral-50 border border-neutral-100 p-4 sm:p-8 rounded-2xl text-center">
+                <span className="font-mono text-sm sm:text-xl font-medium text-neutral-800 tracking-widest">Series: 2, 4, 8, 14, 22, ..., n</span>
               </div>
 
               <div className="prose prose-neutral max-w-none text-neutral-600 leading-loose">
@@ -206,14 +206,14 @@ export function CodingChallengeUI({
               {examples.map((example, idx) => (
                 <div key={example.id} className="space-y-3">
                   <h3 className="text-xs font-black text-neutral-400 uppercase tracking-widest">Example {idx + 1}</h3>
-                  <div className="border border-neutral-200 rounded-2xl p-6 bg-white space-y-4 shadow-sm">
+                  <div className="border border-neutral-200 rounded-2xl p-4 sm:p-6 bg-white space-y-4 shadow-sm">
                     <div className="flex items-center gap-4">
                       <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest w-16">Input:</span>
-                      <code className="bg-neutral-100 px-2 py-1 rounded text-sm font-bold text-neutral-900">{example.input}</code>
+                      <code className="bg-neutral-100 px-2 py-1 rounded text-xs sm:text-sm font-bold text-neutral-900 break-all">{example.input}</code>
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest w-16">Output:</span>
-                      <code className="text-sm font-bold text-neutral-900">{example.output}</code>
+                      <code className="text-xs sm:text-sm font-bold text-neutral-900 break-all">{example.output}</code>
                     </div>
                   </div>
                 </div>
@@ -228,10 +228,10 @@ export function CodingChallengeUI({
         <section className="flex-1 flex flex-col min-w-0 bg-[#FAFAFA]">
 
           {/* 🔴 5. EDITOR HEADER */}
-          <div className="h-14 bg-white border-b border-neutral-200 px-6 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-4">
+          <div className="h-14 bg-white border-b border-neutral-200 px-3 sm:px-6 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="w-32 h-9 border-neutral-200 rounded-lg text-xs font-bold bg-white">
+                <SelectTrigger className="w-24 sm:w-32 h-9 border-neutral-200 rounded-lg text-xs font-bold bg-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -242,7 +242,7 @@ export function CodingChallengeUI({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400"><RefreshCw className="w-4 h-4" /></Button>
               <Button variant="ghost" size="icon" onClick={() => setIsDarkMode(!isDarkMode)} className="h-8 w-8 text-neutral-400"><Moon className="w-4 h-4" /></Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400"><Expand className="w-4 h-4" /></Button>
@@ -252,7 +252,7 @@ export function CodingChallengeUI({
           {/* CODE AREA */}
           <div className="flex-1 relative">
             <textarea
-              className={`w-full h-full p-8 font-mono text-sm leading-relaxed resize-none outline-none ${isDarkMode ? 'bg-[#1e1e1e] text-white' : 'bg-white text-neutral-800'}`}
+              className={`w-full h-full p-4 sm:p-8 font-mono text-xs sm:text-sm leading-relaxed resize-none outline-none ${isDarkMode ? 'bg-[#1e1e1e] text-white' : 'bg-white text-neutral-800'}`}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               spellCheck={false}
@@ -260,10 +260,10 @@ export function CodingChallengeUI({
           </div>
 
           {/* 🔴 6. TESTCASE MODULE (FIXED BOTTOM) */}
-          <div className="h-80 bg-white border-t border-neutral-200 flex flex-col shadow-[0_-4px_20px_rgba(0,0,0,0.02)] z-10">
+          <div className="h-64 sm:h-80 bg-white border-t border-neutral-200 flex flex-col shadow-[0_-4px_20px_rgba(0,0,0,0.02)] z-10">
             {/* Testcase Header */}
-            <div className="h-12 border-b border-neutral-100 flex items-center justify-between px-6 bg-neutral-50/50">
-              <div className="flex items-center gap-1">
+            <div className="h-12 border-b border-neutral-100 flex items-center justify-between px-3 sm:px-6 bg-neutral-50/50 gap-2">
+              <div className="flex items-center gap-1 overflow-x-auto">
                 <span className="text-xs font-black text-neutral-400 uppercase tracking-widest mr-4">Testcases</span>
                 {testCases.map((tc, idx) => (
                   <button
@@ -278,7 +278,7 @@ export function CodingChallengeUI({
               </div>
 
               {/* 🔴 ALIGNED RUN BUTTON */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <Button onClick={handleRunCode} disabled={isRunning} className="h-8 px-6 bg-white border border-neutral-200 text-neutral-700 font-bold hover:bg-neutral-50 rounded-lg text-xs shadow-sm">
                   <Play className="w-3 h-3 mr-2" />
                   Run
@@ -287,7 +287,7 @@ export function CodingChallengeUI({
             </div>
 
             {/* Testcase Body */}
-            <div className="flex-1 p-6 flex flex-col gap-6 overflow-y-auto">
+            <div className="flex-1 p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 overflow-y-auto">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Input (n)</label>
                 <div className="w-full p-4 bg-neutral-50 border border-neutral-100 rounded-xl font-mono text-sm font-bold text-neutral-800">
@@ -295,7 +295,7 @@ export function CodingChallengeUI({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Actual Output</label>
                   <div className="w-full p-4 bg-white border border-neutral-100 rounded-xl font-mono text-sm text-neutral-400 italic min-h-[50px]">

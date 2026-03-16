@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Mail, Lock, ArrowRight, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
+import { useIsMobile } from './ui/use-mobile';
 
 const animationStyles = `
 @keyframes float1 {
@@ -92,6 +93,7 @@ const animationStyles = `
 
 export function SignIn() {
   const { login } = useAuth();
+  const isMobile = useIsMobile();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -118,9 +120,12 @@ export function SignIn() {
   }, []);
 
   useEffect(() => {
+    if (isMobile) {
+      return;
+    }
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [handleMouseMove]);
+  }, [handleMouseMove, isMobile]);
 
   const pupil = (max = 10) => ({
     transform: isPasswordFocused ? 'translate(0px, 0px)' : `translate(${mouse.x * max}px, ${mouse.y * max}px)`,
@@ -132,12 +137,12 @@ export function SignIn() {
   return (
     <>
       <style>{animationStyles}</style>
-      <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: '100dvh', width: '100%' }}>
 
         {/* ====== LEFT — 2/3 ANIMATED CHARACTERS ====== */}
         <div style={{
           width: '66.666%', minHeight: '100vh', background: '#EEEEF0',
-          display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden',
+          display: isMobile ? 'none' : 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden',
         }}>
           {/* ED REALM Logo */}
           <div style={{ padding: '32px 36px', display: 'flex', alignItems: 'center', gap: 12, zIndex: 20 }}>
@@ -391,26 +396,39 @@ export function SignIn() {
 
         {/* ====== RIGHT — 1/3 LOGIN FORM ====== */}
         <div style={{
-          width: '33.333%', minHeight: '100vh', background: '#FFFFFF',
+          width: isMobile ? '100%' : '33.333%', minHeight: isMobile ? '100dvh' : '100vh', background: '#FFFFFF',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '28px 24px', borderLeft: '1px solid #f0f0f0',
+          padding: isMobile ? '24px 20px 28px' : '28px 24px', borderLeft: isMobile ? 'none' : '1px solid #f0f0f0',
           overflowY: 'auto',
         }}>
-          <div style={{ width: '100%', maxWidth: 320 }}>
-            <h2 style={{ fontSize: 21, fontWeight: 600, color: '#111', marginBottom: 4 }}>Welcome Back</h2>
-            <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Sign in to continue your learning journey</p>
+          <div style={{ width: '100%', maxWidth: isMobile ? 420 : 320 }}>
+            {isMobile && (
+              <div style={{ marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                }}>
+                  <span style={{ color: '#fff', fontWeight: 900, fontSize: 15, letterSpacing: 1, fontFamily: 'Arial, sans-serif' }}>ED</span>
+                </div>
+                <span style={{ fontWeight: 800, fontSize: 22, color: '#1a1a1a', letterSpacing: 3, fontFamily: 'Arial, sans-serif' }}>REALM</span>
+              </div>
+            )}
+
+            <h2 style={{ fontSize: isMobile ? 32 : 21, fontWeight: 700, color: '#111', marginBottom: 6, lineHeight: 1.15 }}>Welcome Back</h2>
+            <p style={{ fontSize: isMobile ? 17 : 13, color: '#666', marginBottom: isMobile ? 22 : 20, lineHeight: 1.45 }}>Sign in to continue your learning journey</p>
 
             {/* Demo Credentials */}
             <div style={{
-              padding: '10px 12px', marginBottom: 18,
+              padding: isMobile ? '14px 14px' : '10px 12px', marginBottom: isMobile ? 20 : 18,
               background: 'linear-gradient(135deg, #FFF7ED, #FFFBEB)',
               borderRadius: 10, border: '1px solid #FED7AA',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                 <KeyRound size={12} style={{ color: '#EA580C' }} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#EA580C', letterSpacing: 1 }}>DEMO CREDENTIALS</span>
+                <span style={{ fontSize: isMobile ? 11 : 10, fontWeight: 700, color: '#EA580C', letterSpacing: 1 }}>DEMO CREDENTIALS</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 11, color: '#444' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 4 : 3, fontSize: isMobile ? 13 : 11, color: '#444' }}>
                 {[
                   { c: '#7C3AED', r: 'Admin', e: 'admin01@gmail.com' },
                   { c: '#3B82F6', r: 'Faculty', e: 'faculty01@gmail.com' },
@@ -422,22 +440,22 @@ export function SignIn() {
                     <span><b>{d.r}:</b> {d.e}</span>
                   </div>
                 ))}
-                <span style={{ fontSize: 10, color: '#aaa', fontStyle: 'italic', marginTop: 2 }}>Password can be anything in demo mode</span>
+                <span style={{ fontSize: isMobile ? 12 : 10, color: '#999', fontStyle: 'italic', marginTop: 2 }}>Password can be anything in demo mode</span>
               </div>
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: 12 }}>
-                <Label htmlFor="email" style={{ fontSize: 12, color: '#555', marginBottom: 3, display: 'block' }}>Email Address</Label>
+              <div style={{ marginBottom: isMobile ? 14 : 12 }}>
+                <Label htmlFor="email" style={{ fontSize: isMobile ? 14 : 12, color: '#555', marginBottom: 3, display: 'block' }}>Email Address</Label>
                 <div style={{ position: 'relative' }}>
                   <Mail size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
                   <Input id="email" type="email" placeholder="admin01@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} required
-                    style={{ paddingLeft: 34, height: 40, borderRadius: 8, border: '2px solid #e5e5e5', fontSize: 12, width: '100%' }} />
+                    style={{ paddingLeft: 34, height: isMobile ? 44 : 40, borderRadius: 8, border: '2px solid #e5e5e5', fontSize: isMobile ? 14 : 12, width: '100%' }} />
                 </div>
               </div>
 
-              <div style={{ marginBottom: 12 }}>
-                <Label htmlFor="password" style={{ fontSize: 12, color: '#555', marginBottom: 3, display: 'block' }}>Password</Label>
+              <div style={{ marginBottom: isMobile ? 14 : 12 }}>
+                <Label htmlFor="password" style={{ fontSize: isMobile ? 14 : 12, color: '#555', marginBottom: 3, display: 'block' }}>Password</Label>
                 <div style={{ position: 'relative' }}>
                   <Lock size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
                   <Input id="password" type="password" placeholder="••••••••" value={password}
@@ -445,11 +463,11 @@ export function SignIn() {
                     onFocus={() => setIsPasswordFocused(true)}
                     onBlur={() => setIsPasswordFocused(false)}
                     required
-                    style={{ paddingLeft: 34, height: 40, borderRadius: 8, border: '2px solid #e5e5e5', fontSize: 12, width: '100%' }} />
+                    style={{ paddingLeft: 34, height: isMobile ? 44 : 40, borderRadius: 8, border: '2px solid #e5e5e5', fontSize: isMobile ? 14 : 12, width: '100%' }} />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, fontSize: 11 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, fontSize: isMobile ? 13 : 11, gap: 10 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}>
                   <input type="checkbox" style={{ borderRadius: 3 }} />
                   <span style={{ color: '#666' }}>Remember me</span>
@@ -459,8 +477,8 @@ export function SignIn() {
 
               <Button type="submit" disabled={loading}
                 style={{
-                  width: '100%', height: 40, borderRadius: 8,
-                  background: '#111', color: '#fff', fontSize: 13, fontWeight: 600,
+                  width: '100%', height: isMobile ? 46 : 40, borderRadius: 10,
+                  background: '#111', color: '#fff', fontSize: isMobile ? 18 : 13, fontWeight: 700,
                   border: 'none', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
@@ -470,7 +488,7 @@ export function SignIn() {
               </Button>
             </form>
 
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#aaa', marginTop: 14 }}>
+            <p style={{ textAlign: 'center', fontSize: isMobile ? 13 : 11, color: '#999', marginTop: 14 }}>
               Don't have an account?{' '}
               <a href="#" style={{ color: '#EA580C', textDecoration: 'none', fontWeight: 500 }}>Request access</a>
             </p>
@@ -480,3 +498,4 @@ export function SignIn() {
     </>
   );
 }
+

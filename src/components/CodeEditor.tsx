@@ -34,6 +34,7 @@ import { FileManager, SavedFile } from '../lib/fileManager';
 import { useAuth } from '../lib/auth-context';
 import { recordSubmission } from '../lib/submission-store';
 import { EdRealmLogo } from './EdRealmLogo';
+import { useIsMobile } from './ui/use-mobile';
 
 interface CodeEditorProps {
   problem: Problem;
@@ -42,6 +43,7 @@ interface CodeEditorProps {
 
 export function CodeEditor({ problem, onBack }: CodeEditorProps) {
   const { currentUser } = useAuth();
+  const isMobile = useIsMobile();
   const [language, setLanguage] = useState('python');
   const [code, setCode] = useState(
     problem.starterCode[language] || problem.starterCode.python || '// Write your solution here'
@@ -73,6 +75,10 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
     setCode(getStarterCode(language));
     loadSavedFiles();
   }, [language, problem]);
+
+  useEffect(() => {
+    setShowSidebar(!isMobile);
+  }, [isMobile]);
 
   const loadSavedFiles = () => {
     const files = FileManager.getFilesByProblem(problem.id);
@@ -225,29 +231,31 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
   };
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col">
+    <div className="h-dvh flex flex-col">
       {/* Top Toolbar */}
-      <div className="bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <EdRealmLogo size="small" />
-          <Separator orientation="vertical" className="h-6" />
+      <div className="bg-white border-b border-neutral-200 px-3 sm:px-4 py-2 sm:py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <div className="hidden sm:block">
+            <EdRealmLogo size="small" />
+          </div>
+          <Separator orientation="vertical" className="h-6 hidden sm:block" />
           <Button variant="ghost" size="sm" onClick={onBack}>
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back
+            <ChevronLeft className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Back</span>
           </Button>
-          <Separator orientation="vertical" className="h-6" />
-          <div className="flex items-center gap-3">
-            <h4>{problem.title}</h4>
-            <Badge className={getDifficultyColor()}>
+          <Separator orientation="vertical" className="h-6 hidden sm:block" />
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <h4 className="truncate text-sm sm:text-base">{problem.title}</h4>
+            <Badge className={`${getDifficultyColor()} shrink-0`}>
               {problem.difficulty}
             </Badge>
-            <span className="text-sm text-neutral-600">{problem.points} points</span>
+            <span className="hidden sm:inline text-sm text-neutral-600">{problem.points} points</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
           <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-24 sm:w-32 shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -274,16 +282,17 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
             {showSidebar ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
 
-          <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-6 hidden sm:block" />
 
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowSaveDialog(true)}
             title="Save your solution"
+            className="shrink-0"
           >
-            <Save className="w-4 h-4 mr-2" />
-            Save
+            <Save className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Save</span>
           </Button>
 
           <Button
@@ -291,45 +300,49 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
             size="sm"
             onClick={() => setShowFilesDialog(true)}
             title="View saved solutions"
+            className="shrink-0"
           >
-            <FolderOpen className="w-4 h-4 mr-2" />
-            Files ({savedFiles.length})
+            <FolderOpen className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Files ({savedFiles.length})</span>
+            <span className="sm:hidden">{savedFiles.length}</span>
           </Button>
 
-          <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-6 hidden sm:block" />
 
           <Button
             variant="outline"
             onClick={runCode}
             disabled={isRunning || isSubmitting}
+            className="shrink-0"
           >
             {isRunning ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
             ) : (
-              <Play className="w-4 h-4 mr-2" />
+              <Play className="w-4 h-4 sm:mr-2" />
             )}
-            Run
+            <span className="hidden sm:inline">Run</span>
           </Button>
 
           <Button
             onClick={submitCode}
             disabled={isRunning || isSubmitting}
             style={{ backgroundColor: 'var(--color-primary)' }}
+            className="shrink-0"
           >
             {isSubmitting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
             ) : (
-              <Send className="w-4 h-4 mr-2" />
+              <Send className="w-4 h-4 sm:mr-2" />
             )}
-            Submit
+            <span className="hidden sm:inline">Submit</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
         {/* Problem Description Sidebar */}
         {showSidebar && (
-          <div className="w-[500px] bg-white border-r border-neutral-200 flex flex-col">
+          <div className="w-full md:w-[420px] lg:w-[500px] h-[45dvh] md:h-auto bg-white border-b md:border-b-0 md:border-r border-neutral-200 flex flex-col shrink-0 min-h-0">
             <Tabs defaultValue="description" className="flex-1 flex flex-col">
               <TabsList className="w-full justify-start rounded-none border-b">
                 <TabsTrigger value="description">Description</TabsTrigger>
@@ -444,7 +457,7 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
           </div>
 
           {/* Console/Output */}
-          <div className="h-64 border-t border-neutral-200 bg-white">
+          <div className="h-56 sm:h-64 border-t border-neutral-200 bg-white">
             <Tabs defaultValue="testcases" className="h-full flex flex-col">
               <TabsList className="w-full justify-start rounded-none border-b">
                 <TabsTrigger value="testcases">Test Cases</TabsTrigger>
@@ -547,7 +560,7 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
 
                     {/* Metrics */}
                     {executionTime && memory && (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="p-3 bg-neutral-50 rounded-lg">
                           <div className="flex items-center gap-2 text-sm text-neutral-600 mb-1">
                             <Clock className="w-4 h-4" />
