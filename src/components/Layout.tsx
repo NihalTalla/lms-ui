@@ -8,12 +8,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -36,12 +34,6 @@ interface LayoutProps {
 export function Layout({ children, currentPage, onNavigate, hideSidebar = false }: LayoutProps) {
   const { currentUser, logout } = useAuth();
   const isMobile = useIsMobile();
-  const profileMenuContentClass = isMobile
-    ? 'w-[calc(100vw-1rem)] max-w-[20rem] p-0 rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden'
-    : 'w-[220px] max-w-[calc(100vw-1rem)] p-0 rounded-xl shadow-lg border border-neutral-200 overflow-hidden';
-  const profileMenuItemClass = isMobile
-    ? 'flex items-center gap-3 cursor-pointer px-3 py-3 rounded-xl hover:bg-neutral-50 focus:bg-neutral-50'
-    : 'flex items-center gap-2.5 cursor-pointer px-2.5 py-2 rounded-md hover:bg-neutral-50 focus:bg-neutral-50';
 
   const [isInstitutionsOpen, setIsInstitutionsOpen] = React.useState(false);
   const [isAssessmentsOpen, setIsAssessmentsOpen] = React.useState(false);
@@ -483,66 +475,77 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
               )}
             </div>
 
-            {/* Profile Dropdown - For All Users */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 px-2 sm:px-3 py-2 h-auto hover:bg-transparent">
-                  <Avatar className="w-8 h-8">
-                    <AvatarFallback style={{ backgroundColor: currentUser.role === 'student' ? '#7C3AED' : 'var(--color-primary)', color: 'white' }}>
-                      {currentUser.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <ChevronDown className="hidden sm:block w-4 h-4 text-neutral-600" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" sideOffset={isMobile ? 10 : 8} className={profileMenuContentClass}>
-                <div className="px-3 py-3 bg-neutral-50">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10 shrink-0">
-                      <AvatarFallback style={{ backgroundColor: currentUser.role === 'student' ? '#7C3AED' : 'var(--color-primary)', color: 'white' }}>
-                        {currentUser.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate text-sm font-semibold text-neutral-900">{currentUser.name}</div>
-                      <div className="text-[11px] text-neutral-500 capitalize">{currentUser.role} account</div>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-neutral-400" />
-                  </div>
-                </div>
-                <DropdownMenuSeparator className="m-0" />
-                <div className="p-2">
-                  <DropdownMenuItem
-                    onClick={() => setIsIssueDialogOpen(true)}
-                    className={profileMenuItemClass}
-                  >
-                    <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-                    <span className="text-sm text-neutral-700">Raise an Issue</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onNavigate('profile')}
-                    className={profileMenuItemClass}
-                  >
-                    <User className="w-4 h-4 shrink-0 text-neutral-600" />
-                    <span className="text-sm text-neutral-700">View Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onNavigate('settings')}
-                    className={profileMenuItemClass}
-                  >
-                    <Settings className="w-4 h-4 shrink-0 text-neutral-600" />
-                    <span className="text-sm text-neutral-700">Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className={`${profileMenuItemClass} text-neutral-700`}
-                  >
-                    <LogOut className="w-4 h-4 shrink-0" />
-                    <span className="text-sm">Logout</span>
-                  </DropdownMenuItem>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        {/* Profile Dropdown - For All Users */}
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button
+      variant="ghost"
+      className="flex items-center gap-2 px-2 sm:px-3 py-2 h-auto hover:bg-neutral-100 rounded-lg transition-colors"
+    >
+      <Avatar className="w-8 h-8 shrink-0">
+        <AvatarFallback
+          className="text-xs font-semibold"
+          style={{ backgroundColor: currentUser.role === 'student' ? '#7C3AED' : 'var(--color-primary)', color: 'white' }}
+        >
+          {currentUser.name.split(' ').map(n => n[0]).join('')}
+        </AvatarFallback>
+      </Avatar>
+      <span className="hidden sm:block text-sm font-medium text-neutral-800 max-w-[120px] truncate">
+        {currentUser.name.split(' ')[0]}
+      </span>
+      <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-neutral-500 shrink-0" />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl shadow-xl border border-neutral-200 bg-white">
+    {/* User identity header */}
+    <div className="flex items-center gap-3 px-3 py-3 mb-1 rounded-lg bg-neutral-50 border border-neutral-100">
+      <Avatar className="w-9 h-9 shrink-0">
+        <AvatarFallback
+          className="text-xs font-semibold"
+          style={{ backgroundColor: currentUser.role === 'student' ? '#7C3AED' : 'var(--color-primary)', color: 'white' }}
+        >
+          {currentUser.name.split(' ').map(n => n[0]).join('')}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold truncate text-neutral-900">{currentUser.name}</div>
+        <div className="text-xs text-neutral-500 capitalize mt-0.5">{currentUser.role}</div>
+      </div>
+    </div>
+
+    <DropdownMenuItem
+      onClick={() => setIsIssueDialogOpen(true)}
+      className="flex items-center gap-3 cursor-pointer px-3 py-3 rounded-lg hover:bg-neutral-100 focus:bg-neutral-100 text-neutral-700 text-sm font-medium transition-colors"
+    >
+      <AlertCircle className="w-4 h-4 text-neutral-500 shrink-0" />
+      Raise an Issue
+    </DropdownMenuItem>
+    <DropdownMenuItem
+      onClick={() => onNavigate('profile')}
+      className="flex items-center gap-3 cursor-pointer px-3 py-3 rounded-lg hover:bg-neutral-100 focus:bg-neutral-100 text-neutral-700 text-sm font-medium transition-colors"
+    >
+      <User className="w-4 h-4 text-neutral-500 shrink-0" />
+      View Profile
+    </DropdownMenuItem>
+    <DropdownMenuItem
+      onClick={() => onNavigate('settings')}
+      className="flex items-center gap-3 cursor-pointer px-3 py-3 rounded-lg hover:bg-neutral-100 focus:bg-neutral-100 text-neutral-700 text-sm font-medium transition-colors"
+    >
+      <Settings className="w-4 h-4 text-neutral-500 shrink-0" />
+      Settings
+    </DropdownMenuItem>
+
+    <div className="my-1.5 h-px bg-neutral-100 mx-1" />
+
+    <DropdownMenuItem
+      onClick={handleLogout}
+      className="flex items-center gap-3 cursor-pointer px-3 py-3 rounded-lg hover:bg-red-50 focus:bg-red-50 text-red-600 text-sm font-medium transition-colors"
+    >
+      <LogOut className="w-4 h-4 shrink-0" />
+      Logout
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
           </div>
         </div>
       </header>
@@ -618,49 +621,25 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
         </div>
       </main>
       <Dialog open={isIssueDialogOpen} onOpenChange={setIsIssueDialogOpen}>
-        <DialogContent
-          onEscapeKeyDown={() => setIsIssueDialogOpen(false)}
-          className={
-            isMobile
-              ? 'dialog-fullscreen flex flex-col overflow-hidden bg-white selection:bg-blue-100 selection:text-blue-900'
-              : 'sm:max-w-[1000px] w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden bg-white selection:bg-blue-100 selection:text-blue-900'
-          }
-        >
+        <DialogContent className="sm:max-w-[1000px] w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden bg-white selection:bg-blue-100 selection:text-blue-900">
           <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-neutral-50/50 block">
-            <DialogHeader className={isMobile ? 'mb-5 text-left space-y-1 sticky top-0 z-10 bg-neutral-50/80 backdrop-blur border-b border-neutral-200 px-4 py-4 -mx-4 -mt-4' : 'mb-8 relative text-left space-y-2'}>
-              <div className="flex items-center gap-2">
-                <DialogTitle className="text-2xl font-bold text-slate-900">Raise an Issue</DialogTitle>
-              </div>
+            <DialogHeader className="mb-8 relative text-left space-y-2">
+              <DialogTitle className="text-2xl font-bold text-slate-900">Raise an Issue</DialogTitle>
               <DialogDescription className="text-black">
                 Report bugs, platform issues, or support requests.
               </DialogDescription>
 
               <button
-                type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsIssueDialogOpen(false);
-                }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsIssueDialogOpen(false);
-                }}
-                className={
-                  isMobile
-                    ? 'fixed top-4 right-4 z-[9999] h-10 w-10 rounded-xl border border-neutral-200 bg-white text-neutral-600 shadow-sm'
-                    : 'absolute -top-2 right-0 p-2 text-neutral-400 hover:text-neutral-900 transition-colors'
-                }
-                aria-label="Close raise issue dialog"
+                onClick={() => setIsIssueDialogOpen(false)}
+                className="absolute -top-2 right-0 p-2 text-neutral-400 hover:text-neutral-900 transition-colors"
               >
-                ×
+                X
               </button>
             </DialogHeader>
 
-            <div className={isMobile ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8'}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
               {/* Left Column: Form */}
-              <div className={isMobile ? 'bg-white rounded-xl shadow-xs border border-neutral-200 p-4 flex flex-col gap-4' : 'bg-white rounded-xl shadow-xs border border-neutral-200 p-6 flex flex-col gap-6'}>
+              <div className="bg-white rounded-xl shadow-xs border border-neutral-200 p-6 flex flex-col gap-6">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 mb-1">Submit New Issue</h3>
                   <p className="text-sm text-neutral-500">Share details so support can resolve it faster.</p>
@@ -723,7 +702,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
 
                 <Button
                   onClick={handleIssueSubmit}
-                  className={isMobile ? 'w-full mt-1 font-semibold h-12' : 'w-full mt-2 font-semibold h-11'}
+                  className="w-full mt-2 font-semibold h-11"
                   style={{ backgroundColor: '#111827', color: 'white' }}
                 >
                   <AlertCircle className="w-4 h-4 mr-2" />
@@ -732,7 +711,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
               </div>
 
               {/* Right Column: History */}
-              <div className={isMobile ? 'bg-white rounded-xl shadow-xs border border-neutral-200 p-4' : 'bg-white rounded-xl shadow-xs border border-neutral-200 p-6'}>
+              <div className="bg-white rounded-xl shadow-xs border border-neutral-200 p-6">
                 <div className="mb-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-1">My Issue History</h3>
                   <p className="text-sm text-neutral-500">Track your reported issues and statuses.</p>

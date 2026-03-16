@@ -58,17 +58,11 @@
     setupFiles: './src/test/setup.ts',
   },
   server: {
-    host: true,
     port: 3000,
       open: true,
-      strictPort: true,
+      strictPort: false,
       hmr: {
         overlay: true,
-        // Use dedicated HMR port (more reliable on LAN/mobile)
-        host: '192.168.1.37',
-        protocol: 'ws',
-        port: 24678,
-        clientPort: 24678,
       },
     },
   });

@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { TopicQuestion } from '../lib/data';
 import { EdRealmLogo } from './EdRealmLogo';
-import { useIsMobile } from './ui/use-mobile';
 
 interface AssignmentListingPageProps {
   assignment: TopicQuestion;
@@ -53,7 +52,6 @@ export function AssignmentListingPage({
   onSelectTopic,
   onBack,
 }: AssignmentListingPageProps) {
-  const isMobile = useIsMobile();
   const [expandedAssignments, setExpandedAssignments] = useState<{ [key: string]: boolean }>({
     'assign-1': true,
   });
@@ -83,106 +81,6 @@ export function AssignmentListingPage({
     const completed = assign.topics.filter(t => t.status === 'submitted').length;
     return Math.round((completed / assign.topics.length) * 100);
   };
-
-  if (isMobile) {
-    return (
-      <div className="fixed inset-0 z-50 w-screen h-screen bg-neutral-50 overflow-hidden text-neutral-900 font-sans flex flex-col">
-        <header className="bg-white border-b border-neutral-100 px-4 py-3 shrink-0 shadow-sm z-10">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <EdRealmLogo size="small" />
-              <Button variant="ghost" className="text-neutral-600 px-2 py-2 h-auto rounded-xl" onClick={onBack}>
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                <span className="font-bold">Back</span>
-              </Button>
-            </div>
-          </div>
-          <div className="mt-2">
-            <h1 className="text-lg font-bold text-neutral-900 leading-tight">{moduleName}</h1>
-            <p className="text-sm text-neutral-500 truncate">{courseName}</p>
-          </div>
-        </header>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <div className="space-y-3">
-            {assignments.map((assign) => (
-              <Card key={assign.id} className="overflow-hidden border-neutral-200 shadow-sm">
-                <button
-                  className="w-full text-left p-4 flex items-center justify-between bg-white"
-                  onClick={() => setExpandedAssignments(prev => ({ ...prev, [assign.id]: !prev[assign.id] }))}
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-neutral-900">{assign.title}</h3>
-                      <Badge className="bg-neutral-100 text-neutral-700 border-neutral-200 text-[10px] uppercase">
-                        {calculateProgress(assign)}%
-                      </Badge>
-                    </div>
-                    <div className="mt-1 text-xs text-neutral-500 flex items-center gap-2 flex-wrap">
-                      <span className="flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                        {assign.topics.filter(t => t.status === 'submitted').length}/{assign.topics.length} completed
-                      </span>
-                      {assign.dueDate && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          Due {assign.dueDate}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-2">
-                      <Progress value={calculateProgress(assign)} className="h-2 bg-neutral-100" />
-                    </div>
-                  </div>
-                  <ChevronDown className={`w-5 h-5 text-neutral-400 transition-transform ${expandedAssignments[assign.id] ? '' : '-rotate-90'}`} />
-                </button>
-
-                {expandedAssignments[assign.id] && assign.topics.length > 0 && (
-                  <div className="border-t border-neutral-100 bg-white">
-                    <div className="p-4 space-y-3">
-                      {assign.topics.map((topic) => (
-                        <div key={topic.id} className="border border-neutral-200 rounded-xl p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="font-bold text-neutral-900 truncate">{topic.title}</div>
-                              <div className="mt-1 flex items-center gap-2 flex-wrap">
-                                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-medium border-neutral-200 bg-neutral-100 text-neutral-600">
-                                  {topic.difficulty}
-                                </Badge>
-                                <span className="text-[10px] text-neutral-400">{topic.duration}</span>
-                              </div>
-                            </div>
-                            {topic.status === 'submitted' ? (
-                              <Badge className="bg-green-50 text-green-600 hover:bg-green-50 border-green-100 px-3 py-1 font-bold text-[10px] uppercase rounded-full">
-                                Submitted
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-neutral-100 text-neutral-500 hover:bg-neutral-100 border-neutral-200 px-3 py-1 font-bold text-[10px] uppercase rounded-full">
-                                Pending
-                              </Badge>
-                            )}
-                          </div>
-
-                          <Button
-                            variant="outline"
-                            className="w-full mt-3 font-bold"
-                            onClick={() => onSelectTopic(topic)}
-                          >
-                            {topic.hasAttempted ? 'Retake Test' : 'Start Test'}
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 z-50 w-screen h-screen bg-neutral-50 overflow-hidden text-neutral-900 font-sans flex flex-col">

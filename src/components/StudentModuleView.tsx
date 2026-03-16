@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Progress } from './ui/progress';
 import {
   ArrowLeft,
   ChevronDown,
   ChevronUp,
   CheckCircle2,
-  Clock,
   ArrowRight,
   Code2,
   ChevronRight,
@@ -23,7 +21,6 @@ import {
 import { Course, Topic } from '../lib/data';
 import { toast } from 'sonner';
 import { EdRealmLogo } from './EdRealmLogo';
-import { useIsMobile } from './ui/use-mobile';
 
 interface StudentModuleViewProps {
   course: Course;
@@ -55,7 +52,6 @@ interface MenuItem {
 }
 
 export function StudentModuleView({ course, selectedModule, onNavigate, onBack }: StudentModuleViewProps) {
-  const isMobile = useIsMobile();
   const [activeItemId, setActiveItemId] = useState('intro');
   const [completedItems, setCompletedItems] = useState<string[]>([]);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
@@ -77,7 +73,7 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
           {
             title: 'For Loop',
             text: 'The for loop is used when you know how many times you want to execute the code block. For instance, if you want to execute a code block 10 times',
-            image: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&auto=format&fit=crop&q=60', // Mock syntax diagram
+            image: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&auto=format&fit=crop&q=60',
           },
         ],
       },
@@ -122,218 +118,313 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
   const handleNext = () => {
     const currentIndex = menuItems.findIndex(item => item.id === activeItemId);
     const currentId = menuItems[currentIndex].id;
-
     if (!completedItems.includes(currentId)) {
       setCompletedItems([...completedItems, currentId]);
     }
-
     if (currentIndex < menuItems.length - 1) {
       const nextItem = menuItems[currentIndex + 1];
       setActiveItemId(nextItem.id);
       toast.success(`Navigating to ${nextItem.title}`);
     } else {
-      toast.success("Module Completed!");
+      toast.success('Module Completed!');
     }
   };
 
-  const isLocked = (item: MenuItem, index: number) => {
-    return false;
-  };
+  const isLocked = (item: MenuItem, index: number) => false;
+
+  // Shared chapter list — used in both desktop and mobile
+  const chapterList = (
+    <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
+      <button
+        onClick={() => setIsIterationsOpen(!isIterationsOpen)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          borderRadius: '12px',
+          background: isIterationsOpen ? '#fafafa' : 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          marginBottom: '4px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <CheckCircle2 style={{ width: '20px', height: '20px', color: '#22c55e', flexShrink: 0 }} />
+          <span style={{ fontSize: '14px', fontWeight: 700, color: '#171717' }}>Iterations</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#a3a3a3', fontFamily: 'monospace' }}>
+          <span>8h 25m</span>
+          {isIterationsOpen
+            ? <ChevronUp style={{ width: '12px', height: '12px' }} />
+            : <ChevronDown style={{ width: '12px', height: '12px' }} />
+          }
+        </div>
+      </button>
+
+      {isIterationsOpen && (
+        <div style={{ position: 'relative', paddingLeft: '16px' }}>
+          <div style={{ position: 'absolute', left: '24px', top: '8px', bottom: '8px', width: '1px', backgroundColor: '#e5e5e5' }} />
+          {menuItems.map((item) => {
+            const locked = isLocked(item, 0);
+            const isActive = activeItemId === item.id;
+            return (
+              <button
+                key={item.id}
+                disabled={locked}
+                onClick={() => { setActiveItemId(item.id); setIsMobileSidebarOpen(false); }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  background: isActive ? '#fff7ed' : 'transparent',
+                  border: 'none',
+                  cursor: locked ? 'not-allowed' : 'pointer',
+                  opacity: locked ? 0.4 : 1,
+                  textAlign: 'left',
+                  marginBottom: '2px',
+                  position: 'relative',
+                }}
+              >
+                <span style={{ marginTop: '2px', color: isActive ? '#ea580c' : '#a3a3a3', flexShrink: 0 }}>
+                  {item.type === 'content' && <FileText style={{ width: '16px', height: '16px' }} />}
+                  {item.type === 'practice' && <Code2 style={{ width: '16px', height: '16px' }} />}
+                  {item.type === 'assignment' && (
+                    locked
+                      ? <Lock style={{ width: '16px', height: '16px' }} />
+                      : <span style={{ fontSize: '12px', fontWeight: 900, fontFamily: 'monospace' }}>{'</>'}</span>
+                  )}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: '12px', fontWeight: 700, color: isActive ? '#7c2d12' : '#404040', lineHeight: 1.4, margin: 0 }}>
+                    {item.title}
+                  </p>
+                  <p style={{ fontSize: '11px', color: isActive ? '#fb923c' : '#a3a3a3', marginTop: '3px', fontWeight: 500 }}>
+                    {item.duration}
+                  </p>
+                </div>
+                {isActive && (
+                  <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#f97316' }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex h-screen w-full bg-white overflow-hidden font-sans text-neutral-900">
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', height: '100vh', width: '100%', backgroundColor: 'white', overflow: 'hidden', fontFamily: 'sans-serif', color: '#171717' }}>
 
-      {/* SIDEBAR - Fixed width, distinct separation */}
-      {/* Mobile sidebar overlay */}
-      {isMobile && isMobileSidebarOpen && (
-        <div
-          className="fixed inset-0 z-[55] bg-black/40"
-          onClick={() => setIsMobileSidebarOpen(false)}
-        />
-      )}
-
+      {/* ── DESKTOP SIDEBAR — never shows on mobile ── */}
       <aside
-        id="mobile-chapters-sidebar"
-        className={
-          isMobile
-            ? `fixed top-0 left-0 bottom-0 z-[60] w-[85vw] max-w-[340px] bg-white text-neutral-900 flex flex-col border-r border-neutral-100 shadow-2xl transform transition-transform duration-200 ${
-                isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-              }`
-            : `${sidebarMinimized ? 'w-24' : 'w-80'} shrink-0 bg-white text-neutral-900 flex flex-col transition-all duration-300 relative z-30 border-r-2 border-neutral-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)]`
-        }
+        className="hidden md:flex"
+        style={{
+          width: sidebarMinimized ? '96px' : '320px',
+          flexShrink: 0,
+          flexDirection: 'column',
+          backgroundColor: 'white',
+          borderRight: '2px solid #f5f5f5',
+          transition: 'width 0.3s ease',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
       >
+        {/* Collapse toggle */}
         <button
-          onClick={() => {
-            if (isMobile) setIsMobileSidebarOpen(false);
-            else setSidebarMinimized(!sidebarMinimized);
+          onClick={() => setSidebarMinimized(!sidebarMinimized)}
+          style={{
+            position: 'absolute',
+            right: '-12px',
+            top: '96px',
+            width: '24px',
+            height: '24px',
+            backgroundColor: 'white',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid #d4d4d4',
+            zIndex: 10,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
           }}
-          className={
-            isMobile
-              ? 'absolute right-3 top-3 w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-neutral-200 z-30 shadow-sm'
-              : 'absolute -right-3 top-24 w-6 h-6 bg-white rounded-full flex items-center justify-center border border-neutral-300 z-30 shadow-md transform hover:scale-105 transition-transform'
-          }
         >
-          {isMobile ? '×' : (sidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />)}
+          {sidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
 
-        <div className="p-8 pb-4 space-y-4">
-          <div className="flex items-center gap-3">
-            {!sidebarMinimized ? (
-              <EdRealmLogo size="small" />
-            ) : (
-              <div className="bg-black text-white px-2 py-1 rounded shadow-sm text-sm font-black">ED</div>
-            )}
-          </div>
-
+        {/* Logo + Back */}
+        <div style={{ padding: '24px 24px 16px', borderBottom: '1px solid #f5f5f5', flexShrink: 0 }}>
+          {!sidebarMinimized ? <EdRealmLogo size="small" /> : (
+            <div style={{ background: 'black', color: 'white', padding: '4px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: 900, display: 'inline-block' }}>ED</div>
+          )}
           {!sidebarMinimized && (
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 transition-colors text-sm font-medium"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#737373', fontSize: '14px', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: '16px' }}
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft style={{ width: '16px', height: '16px' }} />
               Back to Modules
             </button>
           )}
         </div>
 
+        {/* Course info */}
         {!sidebarMinimized && (
-          <div className="px-8 py-6 space-y-4">
-            <h2 className="text-xl font-bold leading-tight text-neutral-900">Problem-Solving with Iteration</h2>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm font-medium text-neutral-500">
-                <span>1 Chapters</span>
-                <span>100%</span>
-              </div>
-              <Progress value={100} className="h-2 bg-neutral-100" indicatorClassName="bg-neutral-900" />
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid #f5f5f5', flexShrink: 0 }}>
+            <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#171717', marginBottom: '10px', lineHeight: 1.4 }}>
+              Problem-Solving with Iteration
+            </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#737373', marginBottom: '6px' }}>
+              <span>1 Chapter</span><span>100%</span>
+            </div>
+            <div style={{ height: '6px', backgroundColor: '#f5f5f5', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: '100%', backgroundColor: '#171717', borderRadius: '3px' }} />
             </div>
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar pt-2">
-          <div className="px-4">
-            <div className="space-y-2">
-              <button
-                onClick={() => setIsIterationsOpen(!isIterationsOpen)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-neutral-50 transition-colors ${isIterationsOpen ? 'bg-neutral-50 text-neutral-900' : 'text-neutral-600'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  {!sidebarMinimized && <span className="text-sm font-bold">Iterations</span>}
-                </div>
-                {!sidebarMinimized && (
-                  <div className="flex items-center gap-2 font-mono text-[10px] text-neutral-400">
-                    <span>8h 25m</span>
-                    {isIterationsOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </div>
-                )}
-              </button>
-
-              {isIterationsOpen && (
-                <div className="space-y-1 relative pl-4">
-                  <div className="absolute left-6 top-2 bottom-2 w-px bg-neutral-200" />
-                  {menuItems.map((item, idx) => {
-                    const locked = isLocked(item, idx);
-                    const isActive = activeItemId === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        disabled={locked}
-                        onClick={() => setActiveItemId(item.id)}
-                        className={`w-full text-left px-4 py-3 flex items-start gap-4 transition-all relative rounded-xl z-10 ${isActive ? 'bg-orange-50 text-orange-700 shadow-sm' : 'text-neutral-600 hover:bg-neutral-50 hover:pl-5'
-                          } ${locked ? 'opacity-40 cursor-not-allowed' : ''}`}
-                      >
-                        <div className={`mt-0.5 ${isActive ? 'text-orange-600' : 'text-neutral-400'}`}>
-                          {item.type === 'content' && <FileText className="w-4 h-4" />}
-                          {item.type === 'practice' && <Code2 className="w-4 h-4" />}
-                          {item.type === 'assignment' && (locked ? <Lock className="w-4 h-4" /> : <span className="text-xs font-black font-mono">{'</>'}</span>)}
-                        </div>
-                        {!sidebarMinimized && (
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-[12px] font-bold leading-snug ${isActive ? 'text-orange-900' : 'text-neutral-700'}`}>
-                              {item.title}
-                            </p>
-                            <p className={`text-[10px] mt-1 font-medium ${isActive ? 'text-orange-400' : 'text-neutral-400'}`}>{item.duration}</p>
-                          </div>
-                        )}
-                        {isActive && !sidebarMinimized && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-orange-500" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        {chapterList}
       </aside>
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
-        <div className="flex-1 overflow-y-auto w-full custom-scrollbar">
+      {/* ── MOBILE DRAWER — never shows on desktop ── */}
+      <div className="md:hidden">
+        {/* Backdrop */}
+        {isMobileSidebarOpen && (
+          <div
+            onClick={() => setIsMobileSidebarOpen(false)}
+            style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 70 }}
+          />
+        )}
+        {/* Drawer panel */}
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            bottom: 0,
+            width: '300px',
+            backgroundColor: 'white',
+            zIndex: 80,
+            display: 'flex',
+            flexDirection: 'column',
+            borderRight: '2px solid #f5f5f5',
+            transform: isMobileSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+            transition: 'transform 0.3s ease',
+            boxShadow: isMobileSidebarOpen ? '4px 0 24px rgba(0,0,0,0.15)' : 'none',
+          }}
+        >
+          {/* Drawer header: logo + close */}
+          <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #f5f5f5', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <EdRealmLogo size="small" />
+              <button
+                onClick={() => setIsMobileSidebarOpen(false)}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '8px',
+                  background: '#f5f5f5',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: '#404040',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <button
+              onClick={() => { onBack(); setIsMobileSidebarOpen(false); }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#737373', fontSize: '14px', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <ArrowLeft style={{ width: '16px', height: '16px' }} />
+              Back to Modules
+            </button>
+          </div>
 
-          <div className={`w-full max-w-[1400px] mx-auto ${isMobile ? 'px-4 py-6' : 'px-16 py-12'} flex flex-col min-h-full`}>
+          {/* Course info */}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #f5f5f5', flexShrink: 0 }}>
+            <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#171717', marginBottom: '10px', lineHeight: 1.4 }}>
+              Problem-Solving with Iteration
+            </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#737373', marginBottom: '6px' }}>
+              <span>1 Chapter</span><span>100%</span>
+            </div>
+            <div style={{ height: '6px', backgroundColor: '#f5f5f5', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: '100%', backgroundColor: '#171717', borderRadius: '3px' }} />
+            </div>
+          </div>
 
-            {/* HEADER - Updated Breadcrumb & Date */}
-            <header className={`${isMobile ? 'mb-6' : 'mb-14'} flex items-center justify-between`}>
-              <div className="flex flex-col">
-                {/* Updated Breadcrumb */}
-                <div className="flex items-center gap-3 text-sm font-medium text-neutral-500">
-                  {isMobile && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 px-3 rounded-xl"
-                      type="button"
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsMobileSidebarOpen(true);
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsMobileSidebarOpen(true);
-                      }}
-                      aria-expanded={isMobileSidebarOpen}
-                      aria-controls="mobile-chapters-sidebar"
-                    >
-                      <Menu className="w-4 h-4 mr-2" />
-                      Chapters
-                    </Button>
-                  )}
-                  <button
-                    onClick={() => onNavigate('dashboard')}
-                    className="hover:text-neutral-900 transition-colors cursor-pointer underline-offset-2 hover:underline"
-                  >
-                    Dashboard
-                  </button>
-                  <ChevronRight className="w-4 h-4 text-neutral-300" />
-                  <button
-                    onClick={onBack}
-                    className="hover:text-neutral-900 transition-colors cursor-pointer underline-offset-2 hover:underline"
-                  >
-                    {course.title}
-                  </button>
-                  <ChevronRight className="w-4 h-4 text-neutral-300" />
-                  <span className="text-neutral-900 font-bold">{selectedModule.title}</span>
-                </div>
+          {chapterList}
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT ── */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', backgroundColor: 'white' }}>
+
+        {/* Mobile top bar */}
+        <div
+          className="md:hidden"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #f5f5f5', backgroundColor: 'white', flexShrink: 0 }}
+        >
+          <button
+            onClick={onBack}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: 500, color: '#525252', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            <ArrowLeft style={{ width: '16px', height: '16px' }} />
+            Back
+          </button>
+
+          <span style={{ fontSize: '14px', fontWeight: 600, color: '#171717', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>
+            {selectedModule.title}
+          </span>
+
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            style={{ width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            <Menu style={{ width: '20px', height: '20px', color: '#404040' }} />
+          </button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
+          <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto', padding: 'clamp(24px, 4vw, 48px) clamp(16px, 5vw, 64px)', display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+
+            {/* Desktop breadcrumb */}
+            <header className="hidden md:flex" style={{ marginBottom: '56px', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 500, color: '#737373' }}>
+                <button onClick={() => onNavigate('dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#737373', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                  Dashboard
+                </button>
+                <ChevronRight style={{ width: '16px', height: '16px', color: '#d4d4d4' }} />
+                <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#737373', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                  {course.title}
+                </button>
+                <ChevronRight style={{ width: '16px', height: '16px', color: '#d4d4d4' }} />
+                <span style={{ color: '#171717', fontWeight: 700 }}>{selectedModule.title}</span>
               </div>
-
-              {/* Date & Time */}
-              <div className="flex items-center gap-3 text-right">
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-neutral-900">Sunday, Nov 30</span>
-                  <span className="text-sm font-medium text-neutral-400">11:55 PM</span>
-                </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#171717' }}>Sunday, Nov 30</div>
+                <div style={{ fontSize: '14px', fontWeight: 500, color: '#a3a3a3' }}>11:55 PM</div>
               </div>
             </header>
 
-            <div className="flex-1">
+            <div style={{ flex: 1 }}>
 
               {/* Content Type */}
               {activeItem.type === 'content' && activeItem.content && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-20 items-start">
-
                     <div className="space-y-12">
                       <div className="space-y-6">
                         <h2 className="text-3xl font-bold text-neutral-800 tracking-tight">{activeItem.content.subtitle}</h2>
@@ -346,12 +437,10 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                           ))}
                         </ul>
                       </div>
-
                       {activeItem.content.sections.map((sec, i) => (
                         <div key={i} className="space-y-6">
                           <h3 className="text-2xl font-bold text-neutral-900">{sec.title}</h3>
                           <p className="text-lg leading-loose text-neutral-600 font-medium text-justify">{sec.text}</p>
-
                           <div className="pt-4">
                             <h4 className="text-sm font-black text-neutral-900 uppercase tracking-widest mb-4">Syntax</h4>
                             <Card className="bg-neutral-900 border-none shadow-2xl overflow-hidden rounded-2xl">
@@ -367,16 +456,13 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                                 <div className="pl-20">
                                   <span className="text-neutral-400 italic">// code_block to be executed</span>
                                 </div>
-                                <div className="pl-8">
-                                  {'}'}
-                                </div>
+                                <div className="pl-8">{'}'}</div>
                               </CardContent>
                             </Card>
                           </div>
                         </div>
                       ))}
                     </div>
-
                     <div className="space-y-8 sticky top-10">
                       {activeItem.content.sections.map((sec, i) => sec.image && (
                         <div key={i} className="rounded-2xl overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] border-4 border-white transform hover:scale-[1.02] transition-transform duration-500">
@@ -394,9 +480,7 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     <div className="space-y-6">
                       <h2 className="text-2xl font-bold text-neutral-900">Pattern Output Practice</h2>
-                      <p className="text-neutral-600 leading-relaxed">
-                        Analyze the code execution flow and predict the output.
-                      </p>
+                      <p className="text-neutral-600 leading-relaxed">Analyze the code execution flow and predict the output.</p>
                     </div>
                     <div className="font-mono text-lg space-y-6 p-10 bg-neutral-900 rounded-[32px] min-h-[500px] border border-neutral-800 shadow-2xl text-green-400">
                       {activeItem.practice.outputs.map((line, i) => (
@@ -421,7 +505,6 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                       {(() => {
                         const topics = activeItem.assignment!.topics;
                         const allSubmitted = topics.every(t => t.status === 'Submitted');
-                        const anyInProgress = topics.some(t => t.status === 'In Progress');
                         const submittedCount = topics.filter(t => t.status === 'Submitted').length;
                         return (
                           <div className="flex items-center gap-4">
@@ -430,7 +513,10 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                               <span className="text-sm font-bold text-neutral-900">{submittedCount}/{topics.length} Done</span>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-neutral-50 flex items-center justify-center relative">
-                              <span className={`absolute inset-0 rounded-2xl border-2 transition-all ${allSubmitted ? 'border-green-500' : 'border-blue-500'}`} style={{ clipPath: `inset(${100 - (submittedCount / topics.length) * 100}% 0 0 0)` }} />
+                              <span
+                                className={`absolute inset-0 rounded-2xl border-2 transition-all ${allSubmitted ? 'border-green-500' : 'border-blue-500'}`}
+                                style={{ clipPath: `inset(${100 - (submittedCount / topics.length) * 100}% 0 0 0)` }}
+                              />
                               {allSubmitted ? <Trophy className="w-6 h-6 text-green-500" /> : <Play className="w-6 h-6 text-blue-500" />}
                             </div>
                           </div>
@@ -438,7 +524,6 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                       })()}
                     </div>
                   </div>
-
                   <div className="grid grid-cols-1 gap-4">
                     {activeItem.assignment.topics.map((t, i) => {
                       const navigateToChallenge = () => onNavigate('student-coding', {
@@ -447,22 +532,18 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                           title: t.title,
                           question: t.title,
                           difficulty: t.difficulty,
-                          description: 'Solve the following algorithmic problem to demonstrate your understanding of the concepts discussed in this module. Ensure your solution handles Edge cases and passes all test scenarios.',
-                          examples: [
-                            { id: 'ex-1', input: 'Sample Input 1', output: 'Expected Output 1' },
-                          ],
+                          description: 'Solve the following algorithmic problem to demonstrate your understanding of the concepts discussed in this module.',
+                          examples: [{ id: 'ex-1', input: 'Sample Input 1', output: 'Expected Output 1' }],
                           testCases: [
                             { id: 'tc-1', input: 'Input 1', expectedOutput: 'Output 1', hidden: false },
                             { id: 'tc-2', input: 'Input 2', expectedOutput: 'Output 2', hidden: true },
-                          ]
+                          ],
                         },
                         module: selectedModule,
-                        course: course
+                        course: course,
                       });
-
                       const isSubmitted = t.status === 'Submitted';
                       const isInProgress = t.status === 'In Progress';
-
                       return (
                         <div
                           key={i}
@@ -470,14 +551,13 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                           className="group relative bg-white border border-neutral-100 p-6 rounded-[2rem] hover:shadow-2xl hover:border-neutral-200 transition-all duration-500 cursor-pointer overflow-hidden"
                         >
                           <div className="absolute top-0 right-0 w-32 h-32 bg-neutral-50 rounded-full -mr-16 -mt-16 transition-all group-hover:scale-150 duration-700 opacity-50" />
-
                           <div className="flex items-center justify-between relative z-10">
-                            <div className="flex items-center gap-6">
-                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-sm transition-all group-hover:scale-110 ${isSubmitted ? 'bg-green-50 text-green-600' : isInProgress ? 'bg-amber-50 text-amber-600' : 'bg-neutral-50 text-neutral-400'}`}>
+                            <div className="flex items-center gap-4 md:gap-6">
+                              <div className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-sm transition-all group-hover:scale-110 ${isSubmitted ? 'bg-green-50 text-green-600' : isInProgress ? 'bg-amber-50 text-amber-600' : 'bg-neutral-50 text-neutral-400'}`}>
                                 {i + 1}
                               </div>
                               <div className="space-y-1">
-                                <h4 className="text-xl font-bold text-neutral-800 group-hover:text-neutral-900 transition-colors">{t.title}</h4>
+                                <h4 className="text-base md:text-xl font-bold text-neutral-800 group-hover:text-neutral-900 transition-colors">{t.title}</h4>
                                 <div className="flex items-center gap-3">
                                   <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest px-2 py-0 border-none ${t.difficulty === 'Easy' ? 'text-green-500 bg-green-50' : t.difficulty === 'Medium' ? 'text-amber-500 bg-amber-50' : 'text-red-500 bg-red-50'}`}>
                                     {t.difficulty}
@@ -487,16 +567,15 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                                 </div>
                               </div>
                             </div>
-
-                            <div className="flex items-center gap-8">
+                            <div className="flex items-center gap-4 md:gap-8">
                               <div className="hidden md:flex flex-col items-center">
                                 <span className="text-[9px] font-black text-neutral-300 uppercase tracking-[0.2em] mb-1">Status</span>
                                 <Badge className={`text-[10px] font-black uppercase tracking-wider px-4 py-1.5 rounded-full shadow-sm ${isSubmitted ? 'bg-green-500 text-white hover:bg-green-600' : isInProgress ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-neutral-100 text-neutral-400 hover:bg-neutral-200'}`}>
                                   {t.status}
                                 </Badge>
                               </div>
-                              <Button variant="ghost" className="w-12 h-12 rounded-2xl bg-neutral-50 group-hover:bg-neutral-900 group-hover:text-white transition-all">
-                                <ChevronRight className="w-6 h-6" />
+                              <Button variant="ghost" className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-neutral-50 group-hover:bg-neutral-900 group-hover:text-white transition-all">
+                                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
                               </Button>
                             </div>
                           </div>
@@ -508,11 +587,11 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
               )}
             </div>
 
-            <div className="mt-20 flex justify-end pb-10 border-t border-neutral-50 pt-10">
+            <div style={{ marginTop: '80px', display: 'flex', justifyContent: 'flex-end', paddingBottom: '40px', borderTop: '1px solid #fafafa', paddingTop: '40px' }}>
               <Button
                 onClick={handleNext}
                 className="text-white text-base font-bold rounded-2xl px-10 py-7 h-auto shadow-2xl active:scale-95 transition-all flex items-center gap-3"
-                style={{ backgroundColor: '#000' }} // Vivid Purple (Indigo-600)
+                style={{ backgroundColor: '#000' }}
               >
                 <span className="text-white">Next Chapter</span>
                 <ArrowRight className="w-5 h-5 text-white" />

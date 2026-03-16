@@ -10,10 +10,8 @@ import Editor from '@monaco-editor/react';
 import { FileManager, SavedFile } from '../lib/fileManager';
 import { toast } from 'sonner';
 import { EdRealmLogo } from './EdRealmLogo';
-import { useIsMobile } from './ui/use-mobile';
 
 export function CodePracticeConsole({ onBack, className = "h-screen" }: { onBack?: () => void; className?: string }) {
-  const isMobile = useIsMobile();
   const templates: Record<string, string> = {
     python: `print("Hello, World!")\n\ndef add(a, b):\n    return a + b\n\nprint("2 + 3 =", add(2, 3))`,
     java: `public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, World!\");\n        System.out.println(\"2 + 3 = \" + add(2, 3));\n    }\n\n    static int add(int a, int b) {\n        return a + b;\n    }\n}\n`,
@@ -108,23 +106,22 @@ export function CodePracticeConsole({ onBack, className = "h-screen" }: { onBack
 
   return (
     <>
-      <Card className={`${className} flex flex-col overflow-hidden`}>
-        <CardHeader className="border-b border-neutral-200 px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+      <Card className={`${className} flex flex-col`}>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-4">
               <EdRealmLogo size="small" />
               {onBack && (
-                <Button onClick={onBack} variant="ghost" size="sm" className="w-full sm:w-auto justify-center sm:justify-start">
+                <Button onClick={onBack} variant="ghost" size="sm">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Back to Dashboard</span>
-                  <span className="sm:hidden">Back</span>
+                  Back to Dashboard
                 </Button>
               )}
-              <CardTitle className="text-lg sm:text-xl">Code Practice Console</CardTitle>
+              <CardTitle>Code Practice Console</CardTitle>
             </div>
-            <div className={isMobile ? 'grid grid-cols-2 gap-2' : 'flex flex-wrap items-center gap-2'}>
+            <div className="flex items-center gap-2">
               <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className={isMobile ? 'col-span-2 w-full' : 'w-full min-[420px]:w-32 sm:w-32'}>
+                <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -135,26 +132,26 @@ export function CodePracticeConsole({ onBack, className = "h-screen" }: { onBack
                 </SelectContent>
               </Select>
 
-              <Button onClick={runCode} disabled={isRunning} size="sm" className={isMobile ? 'col-span-2 w-full' : 'flex-1 min-[420px]:flex-none'}>
+              <Button onClick={runCode} disabled={isRunning} size="sm">
                 <Play className="w-4 h-4 mr-2" />
                 {isRunning ? 'Running...' : 'Run'}
               </Button>
 
-              <Button onClick={() => setShowSaveDialog(true)} variant="outline" size="sm" title="Save file" className={isMobile ? 'w-full' : 'flex-1 min-[420px]:flex-none'}>
+              <Button onClick={() => setShowSaveDialog(true)} variant="outline" size="sm" title="Save file">
                 <Save className="w-4 h-4 mr-2" />
                 Save
               </Button>
 
-              <Button onClick={() => setShowFilesDialog(true)} variant="outline" size="sm" title="Open saved files" className={isMobile ? 'w-full' : 'flex-1 min-[420px]:flex-none'}>
+              <Button onClick={() => setShowFilesDialog(true)} variant="outline" size="sm" title="Open saved files">
                 <FolderOpen className="w-4 h-4 mr-2" />
                 Files ({savedFiles.length})
               </Button>
 
-              <Button onClick={clearConsole} variant="outline" size="sm" className={isMobile ? 'w-full' : 'flex-1 min-[420px]:flex-none'}>
+              <Button onClick={clearConsole} variant="outline" size="sm">
                 Clear Console
               </Button>
 
-              <Button onClick={resetCode} variant="outline" size="sm" className={isMobile ? 'w-full' : 'flex-1 min-[420px]:flex-none'}>
+              <Button onClick={resetCode} variant="outline" size="sm">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
@@ -164,15 +161,15 @@ export function CodePracticeConsole({ onBack, className = "h-screen" }: { onBack
         <CardContent className="flex-1 flex flex-col gap-4 p-0">
           <div className="flex-1">
             <Editor
-              height={isMobile ? '320px' : '300px'}
+              height="300px"
               language={language}
               value={code}
               onChange={(value) => setCode(value || '')}
               theme="vs-dark"
               options={{
                 minimap: { enabled: false },
-                fontSize: isMobile ? 13 : 14,
-                lineNumbers: isMobile ? 'off' : 'on',
+                fontSize: 14,
+                lineNumbers: 'on',
                 roundedSelection: false,
                 scrollBeyondLastLine: false,
                 automaticLayout: true,
@@ -182,7 +179,7 @@ export function CodePracticeConsole({ onBack, className = "h-screen" }: { onBack
           <div className="border-t border-neutral-200">
             <div className="p-4">
               <h4 className="text-sm font-medium mb-2">Console Output</h4>
-              <ScrollArea className="h-28 sm:h-32 w-full rounded border bg-black text-green-400 p-2 font-mono text-sm">
+              <ScrollArea className="h-32 w-full rounded border bg-black text-green-400 p-2 font-mono text-sm">
                 <pre className="whitespace-pre-wrap">{output}</pre>
               </ScrollArea>
             </div>

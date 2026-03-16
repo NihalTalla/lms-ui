@@ -16,7 +16,6 @@ import { useAuth } from '../lib/auth-context';
 import { toast } from 'sonner';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { AttendanceSession, loadAttendanceSessions, saveAttendanceSessions } from '../lib/attendance-store';
-import { useIsMobile } from './ui/use-mobile';
 
 interface CoursesPageProps {
   onNavigate: (page: string, data?: any) => void;
@@ -25,9 +24,7 @@ interface CoursesPageProps {
 export function CoursesPage({ onNavigate }: CoursesPageProps) {
   const { currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
-  const isMobile = useIsMobile();
   const [courseList, setCourseList] = useState(courses);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
@@ -552,101 +549,6 @@ export function CoursesPage({ onNavigate }: CoursesPageProps) {
       return matchesSearch && matchesTag && matchesTopic;
     });
   }, [allQuestions, questionSearch, selectedTag, selectedTopic]);
-
-  if (isMobile && !isAdmin) {
-    return (
-      <div className="fixed inset-0 w-screen h-screen bg-neutral-50 text-neutral-900 flex flex-col overflow-hidden">
-        <header className="bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between gap-3 shrink-0">
-          <button
-            onClick={() => setIsMobileSidebarOpen(true)}
-            className="h-10 px-3 rounded-xl border border-neutral-200 bg-white font-bold text-sm"
-          >
-            My Courses
-          </button>
-          <div className="font-bold">Courses</div>
-          <div className="w-10" />
-        </header>
-
-        {/* Sidebar overlay */}
-        {isMobileSidebarOpen && (
-          <div
-            className="fixed inset-0 z-50 bg-black/40"
-            onClick={() => setIsMobileSidebarOpen(false)}
-          />
-        )}
-        {/* Sidebar panel */}
-        <aside
-          className={`fixed top-0 left-0 bottom-0 z-[60] w-[85vw] max-w-[320px] bg-white border-r border-neutral-200 shadow-2xl transform transition-transform duration-200 ${
-            isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          <div className="px-4 py-4 border-b border-neutral-200 flex items-center justify-between">
-            <div className="font-black">My Courses</div>
-            <button
-              className="h-9 w-9 rounded-lg border border-neutral-200"
-              onClick={() => setIsMobileSidebarOpen(false)}
-              aria-label="Close sidebar"
-            >
-              ×
-            </button>
-          </div>
-          <div className="p-3 overflow-y-auto h-full">
-            <div className="space-y-3">
-              {courseList.map((course: any) => (
-                <button
-                  key={course.id}
-                  className="w-full text-left p-4 rounded-2xl border border-neutral-200 bg-white hover:bg-neutral-50 transition"
-                  onClick={() => {
-                    setIsMobileSidebarOpen(false);
-                    onNavigate('course-modules', course);
-                  }}
-                >
-                  <div className="font-bold text-neutral-900">{course.title}</div>
-                  <div className="mt-1 text-xs text-neutral-500 line-clamp-2">{course.description}</div>
-                  <div className="mt-3 flex items-center justify-between text-xs text-neutral-500">
-                    <span className="capitalize">{course.level}</span>
-                    <span>{course.duration || ''}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </aside>
-
-        <main className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">Explore Courses</h2>
-            <p className="text-sm text-neutral-600">
-              Open the sidebar to pick a course.
-            </p>
-            <div className="grid grid-cols-1 gap-4">
-              {courseList.map((course: any) => (
-                <Card key={course.id} className="border-neutral-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="font-bold truncate">{course.title}</div>
-                        <div className="text-sm text-neutral-600 line-clamp-2 mt-1">{course.description}</div>
-                        <div className="mt-3 flex gap-2 flex-wrap">
-                          <Badge variant="outline" className="capitalize">{course.level}</Badge>
-                          {course.tags?.slice?.(0, 2)?.map((t: string) => (
-                            <Badge key={t} variant="secondary">{t}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                      <Button onClick={() => onNavigate('course-modules', course)} className="shrink-0">
-                        Open
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
 
   return (

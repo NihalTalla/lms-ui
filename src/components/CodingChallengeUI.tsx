@@ -33,7 +33,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useAuth } from '../lib/auth-context';
 import { recordSubmission } from '../lib/submission-store';
 import { EdRealmLogo } from './EdRealmLogo';
-import { useIsMobile } from './ui/use-mobile';
 
 interface CodingChallengeUIProps {
   topicTitle: string;
@@ -79,7 +78,6 @@ export function CodingChallengeUI({
   onBack,
 }: CodingChallengeUIProps) {
   const { currentUser } = useAuth();
-  const isMobile = useIsMobile();
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('java');
   const [activeTestCase, setActiveTestCase] = useState(0);
@@ -179,14 +177,12 @@ export function CodingChallengeUI({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto overflow-x-auto">
           <div className="hidden sm:flex items-center gap-2 bg-neutral-50 border border-neutral-100 px-4 py-2 rounded-xl shrink-0">
             <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Score</span>
             <span className="text-sm font-black text-neutral-900">10/10</span>
           </div>
-          <Button variant="outline" className="h-9 sm:h-10 rounded-xl px-3 sm:px-5 font-bold text-neutral-600 shrink-0 text-xs sm:text-sm whitespace-nowrap">
-            {isMobile ? 'Comments' : 'View Comments'}
-          </Button>
+          <Button variant="outline" className="h-9 sm:h-10 rounded-xl px-3 sm:px-5 font-bold text-neutral-600 shrink-0 text-xs sm:text-sm">View Comments</Button>
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold ring-4 ring-purple-50 shrink-0">T</div>
         </div>
       </header>
@@ -195,7 +191,7 @@ export function CodingChallengeUI({
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
 
         {/* === LEFT PANEL: PROBLEM === */}
-        <section className="w-full lg:w-[45%] h-[34dvh] sm:h-[45dvh] lg:h-auto flex flex-col border-b lg:border-b-0 lg:border-r border-neutral-200 bg-white overflow-hidden shrink-0">
+        <section className="w-full lg:w-[45%] h-[40dvh] sm:h-[45dvh] lg:h-auto flex flex-col border-b lg:border-b-0 lg:border-r border-neutral-200 bg-white overflow-hidden shrink-0">
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 space-y-6 sm:space-y-10 custom-scrollbar">
 
             {/* 🔴 4. SEPARATE CARDS FOR CONTENT */}
@@ -247,7 +243,7 @@ export function CodingChallengeUI({
         <section className="flex-1 flex flex-col min-w-0 bg-[#FAFAFA]">
 
           {/* 🔴 5. EDITOR HEADER */}
-          <div className="min-h-14 bg-white border-b border-neutral-200 px-3 sm:px-6 py-2 sm:py-0 flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <div className="h-14 bg-white border-b border-neutral-200 px-3 sm:px-6 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2 sm:gap-4">
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="w-24 sm:w-32 h-9 border-neutral-200 rounded-lg text-xs font-bold bg-white">
@@ -271,7 +267,7 @@ export function CodingChallengeUI({
           {/* CODE AREA */}
           <div className="flex-1 relative">
             <textarea
-              className={`w-full h-full p-3 sm:p-8 font-mono text-[13px] sm:text-sm leading-relaxed resize-none outline-none ${isDarkMode ? 'bg-[#1e1e1e] text-white' : 'bg-white text-neutral-800'}`}
+              className={`w-full h-full p-4 sm:p-8 font-mono text-xs sm:text-sm leading-relaxed resize-none outline-none ${isDarkMode ? 'bg-[#1e1e1e] text-white' : 'bg-white text-neutral-800'}`}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               spellCheck={false}
@@ -279,26 +275,26 @@ export function CodingChallengeUI({
           </div>
 
           {/* 🔴 6. TESTCASE MODULE (FIXED BOTTOM) */}
-          <div className="h-72 sm:h-80 bg-white border-t border-neutral-200 flex flex-col shadow-[0_-4px_20px_rgba(0,0,0,0.02)] z-10">
+          <div className="h-64 sm:h-80 bg-white border-t border-neutral-200 flex flex-col shadow-[0_-4px_20px_rgba(0,0,0,0.02)] z-10">
             {/* Testcase Header */}
-            <div className="border-b border-neutral-100 flex flex-col sm:h-12 sm:flex-row sm:items-center sm:justify-between px-3 sm:px-6 py-2 sm:py-0 bg-neutral-50/50 gap-2">
-              <div className="flex items-center gap-1 overflow-x-auto w-full pb-1 sm:pb-0">
+            <div className="h-12 border-b border-neutral-100 flex items-center justify-between px-3 sm:px-6 bg-neutral-50/50 gap-2">
+              <div className="flex items-center gap-1 overflow-x-auto">
                 <span className="text-xs font-black text-neutral-400 uppercase tracking-widest mr-4">Testcases</span>
                 {testCases.map((tc, idx) => (
                   <button
                     key={tc.id}
                     onClick={() => setActiveTestCase(idx)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all shrink-0 whitespace-nowrap ${activeTestCase === idx ? 'bg-neutral-900 text-white shadow-md' : 'text-neutral-500 hover:bg-neutral-100'}`}
+                    className={`px-4 py-1.5 rounded-lg text-[11px] font-bold transition-all ${activeTestCase === idx ? 'bg-neutral-900 text-white shadow-md' : 'text-neutral-500 hover:bg-neutral-100'}`}
                   >
                     Case {idx + 1}
                   </button>
                 ))}
-                <button className="h-7 w-7 rounded-lg flex items-center justify-center hover:bg-neutral-100 text-neutral-400 shrink-0"><Plus className="w-4 h-4" /></button>
+                <button className="h-7 w-7 rounded-lg flex items-center justify-center hover:bg-neutral-100 text-neutral-400"><Plus className="w-4 h-4" /></button>
               </div>
 
               {/* 🔴 ALIGNED RUN BUTTON */}
-              <div className="flex items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-auto">
-                <Button onClick={handleRunCode} disabled={isRunning} className="h-8 px-6 bg-white border border-neutral-200 text-neutral-700 font-bold hover:bg-neutral-50 rounded-lg text-xs shadow-sm w-full sm:w-auto">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <Button onClick={handleRunCode} disabled={isRunning} className="h-8 px-6 bg-white border border-neutral-200 text-neutral-700 font-bold hover:bg-neutral-50 rounded-lg text-xs shadow-sm">
                   <Play className="w-3 h-3 mr-2" />
                   Run
                 </Button>
@@ -309,7 +305,7 @@ export function CodingChallengeUI({
             <div className="flex-1 p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 overflow-y-auto">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Input (n)</label>
-                <div className="w-full p-3 sm:p-4 bg-neutral-50 border border-neutral-100 rounded-xl font-mono text-xs sm:text-sm font-bold text-neutral-800">
+                <div className="w-full p-4 bg-neutral-50 border border-neutral-100 rounded-xl font-mono text-sm font-bold text-neutral-800">
                   {testCases[activeTestCase]?.input}
                 </div>
               </div>
@@ -317,13 +313,13 @@ export function CodingChallengeUI({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Actual Output</label>
-                  <div className="w-full p-3 sm:p-4 bg-white border border-neutral-100 rounded-xl font-mono text-xs sm:text-sm text-neutral-400 italic min-h-[50px]">
+                  <div className="w-full p-4 bg-white border border-neutral-100 rounded-xl font-mono text-sm text-neutral-400 italic min-h-[50px]">
                     No output yet...
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Expected Output</label>
-                  <div className="w-full p-3 sm:p-4 bg-neutral-50 border border-green-100 bg-green-50/30 rounded-xl font-mono text-xs sm:text-sm font-bold text-green-700 min-h-[50px]">
+                  <div className="w-full p-4 bg-neutral-50 border border-green-100 bg-green-50/30 rounded-xl font-mono text-sm font-bold text-green-700 min-h-[50px]">
                     {testCases[activeTestCase]?.expectedOutput}
                   </div>
                 </div>

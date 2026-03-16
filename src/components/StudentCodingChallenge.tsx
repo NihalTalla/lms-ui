@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { useAuth } from '../lib/auth-context';
 import { recordSubmission } from '../lib/submission-store';
 import { EdRealmLogo } from './EdRealmLogo';
-import { useIsMobile } from './ui/use-mobile';
 
 interface StudentCodingChallengeProps {
   challenge: any;
@@ -47,7 +46,6 @@ export function StudentCodingChallenge({
   onBack,
 }: StudentCodingChallengeProps) {
   const { currentUser } = useAuth();
-  const isMobile = useIsMobile();
   const templates: Record<string, string> = {
     python: 'def solve():\n    # Write your solution here\n    pass\n',
     java: 'class Solution {\n    public static void main(String[] args) {\n        // Write your solution here\n    }\n}\n',
@@ -149,24 +147,24 @@ export function StudentCodingChallenge({
 
   return (
     <div className="fixed inset-0 z-[60] h-screen w-screen flex flex-col bg-white overflow-hidden font-sans uppercase-none">
-      <header className="bg-white border-b border-neutral-100 flex flex-col gap-3 px-4 py-3 sm:h-16 sm:flex-row sm:items-center sm:px-8 sm:py-0 sm:justify-between shrink-0 shadow-sm z-10 transition-all">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+      <header className="h-16 bg-white border-b border-neutral-100 flex items-center px-8 justify-between shrink-0 shadow-sm z-10 transition-all">
+        <div className="flex items-center gap-6">
           <EdRealmLogo size="small" />
-          <div className="hidden sm:block h-8 w-px bg-neutral-200" />
+          <div className="h-8 w-px bg-neutral-200" />
           <Button variant="ghost" className="text-neutral-500 hover:text-neutral-900 px-3 py-2 h-auto rounded-xl hover:bg-neutral-50 flex items-center transition-all bg-white" onClick={onBack}>
             <ArrowLeft className="w-5 h-5 mr-2" />
-            <span className="font-bold">{isMobile ? 'Back' : 'Back to Module'}</span>
+            <span className="font-bold">Back to Module</span>
           </Button>
-          <div className="hidden sm:block h-8 w-px bg-neutral-200" />
-          <div className="flex items-center gap-2 sm:gap-3 text-sm min-w-0">
+          <div className="h-8 w-px bg-neutral-200" />
+          <div className="flex items-center gap-3 text-sm">
             <span className="text-neutral-400 font-medium uppercase tracking-widest text-[10px]">{course?.name || 'Java Specialization'}</span>
             <ChevronRight className="w-3 h-3 text-neutral-300" />
-            <span className="font-black text-neutral-900 uppercase tracking-widest text-[10px] truncate">{challenge?.title || 'Assignment'}</span>
+            <span className="font-black text-neutral-900 uppercase tracking-widest text-[10px]">{challenge?.title || 'Assignment'}</span>
           </div>
         </div>
-        <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 w-full sm:w-auto">
+        <div className="flex items-center gap-6">
           {lastScore !== null && (
-            <div className="flex items-center gap-3 bg-neutral-900 text-white px-4 sm:px-6 py-2 rounded-2xl shadow-xl animate-in zoom-in duration-500">
+            <div className="flex items-center gap-3 bg-neutral-900 text-white px-6 py-2 rounded-2xl shadow-xl animate-in zoom-in duration-500">
               <Trophy className="w-4 h-4 text-amber-400" />
               <span className="text-sm font-black tracking-widest uppercase">Score: {lastScore}/100</span>
             </div>
@@ -177,23 +175,14 @@ export function StudentCodingChallenge({
         </div>
       </header>
 
-      <div className={`flex-1 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
+      <div className="flex-1 flex overflow-hidden">
         {/* LEFT: Problem */}
-        <div
-          style={isMobile ? undefined : { width: `${leftPanelWidth}%` }}
-          className={`bg-white overflow-y-auto flex flex-col relative shrink-0 ${
-            isMobile
-              ? 'w-full min-w-0 max-h-[34dvh] border-b border-neutral-200'
-              : 'min-w-[300px] border-r border-neutral-200 shadow-[10px_0_30px_rgba(0,0,0,0.02)]'
-          }`}
-        >
-          {!isMobile && (
-            <div onMouseDown={() => setIsResizingLeft(true)} className="absolute right-0 top-0 bottom-0 w-1.5 bg-transparent hover:bg-neutral-900/10 cursor-col-resize z-20 group">
-              <div className="w-0.5 h-full bg-neutral-100 group-hover:bg-neutral-400 transition-colors mx-auto" />
-            </div>
-          )}
+        <div style={{ width: `${leftPanelWidth}%` }} className="bg-white border-r border-neutral-200 overflow-y-auto flex flex-col min-w-[300px] relative shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.02)]">
+          <div onMouseDown={() => setIsResizingLeft(true)} className="absolute right-0 top-0 bottom-0 w-1.5 bg-transparent hover:bg-neutral-900/10 cursor-col-resize z-20 group">
+            <div className="w-0.5 h-full bg-neutral-100 group-hover:bg-neutral-400 transition-colors mx-auto" />
+          </div>
 
-          <div className="flex-1 p-4 sm:p-10 space-y-6 sm:space-y-10">
+          <div className="flex-1 p-10 space-y-10">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <Badge className="bg-neutral-900 text-white px-3 py-1 font-black text-[10px] uppercase tracking-wider">{challenge?.difficulty || 'Medium'}</Badge>
@@ -202,11 +191,11 @@ export function StudentCodingChallenge({
                   <span className="text-neutral-600 text-[10px] font-black uppercase tracking-widest">15 Mins</span>
                 </div>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-black text-neutral-900 leading-tight tracking-tight">{challenge?.title || 'Coding Challenge'}</h2>
+              <h2 className="text-4xl font-black text-neutral-900 leading-tight tracking-tight">{challenge?.title || 'Coding Challenge'}</h2>
             </div>
 
             <div className="prose prose-neutral max-w-none">
-              <div className="bg-neutral-50/50 rounded-3xl p-4 sm:p-8 border border-neutral-100 leading-relaxed text-neutral-600 font-medium text-sm sm:text-lg whitespace-pre-wrap">
+              <div className="bg-neutral-50/50 rounded-3xl p-8 border border-neutral-100 leading-relaxed text-neutral-600 font-medium text-lg whitespace-pre-wrap">
                 {challenge?.description || challenge?.question || 'Implement the solution according to the requirements.'}
               </div>
             </div>
@@ -214,7 +203,7 @@ export function StudentCodingChallenge({
             <div className="space-y-6">
               <h3 className="text-xs font-black text-neutral-400 uppercase tracking-[0.3em] pl-1">Example Cases</h3>
               {testCases.filter(tc => !tc.hidden).slice(0, 2).map((tc, idx) => (
-                <div key={idx} className="bg-white rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm space-y-4 group hover:border-neutral-900 transition-all duration-500">
+                <div key={idx} className="bg-white rounded-3xl p-6 border border-neutral-200 shadow-sm space-y-4 group hover:border-neutral-900 transition-all duration-500">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-lg bg-neutral-900 text-white flex items-center justify-center text-[10px] font-black">{idx + 1}</div>
                     <p className="font-black text-neutral-900 text-[11px] uppercase tracking-widest">Sample Instance</p>
@@ -237,8 +226,8 @@ export function StudentCodingChallenge({
 
         {/* RIGHT: Editor Area */}
         <div className="flex-1 flex flex-col bg-[#0A0A0A] min-w-0">
-          <div className="min-h-12 bg-[#1A1A1A] flex flex-col gap-2 px-4 py-2 sm:h-12 sm:flex-row sm:items-center sm:px-6 sm:py-0 sm:justify-between border-b border-white/5 shrink-0">
-            <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+          <div className="h-12 bg-[#1A1A1A] flex items-center px-6 justify-between border-b border-white/5 shrink-0">
+            <div className="flex items-center gap-6">
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="w-32 h-8 bg-[#252526] border-none text-neutral-300 text-[11px] font-black uppercase tracking-widest rounded-lg focus:ring-0">
                   <SelectValue />
@@ -265,35 +254,33 @@ export function StudentCodingChallenge({
             <textarea
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="w-full h-full bg-transparent text-neutral-300 font-mono text-sm sm:text-[15px] p-4 sm:p-10 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar selection:bg-blue-500/30"
+              className="w-full h-full bg-transparent text-neutral-300 font-mono text-[15px] p-10 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar selection:bg-blue-500/30"
               spellCheck={false}
               placeholder="// Write your elite solution here..."
             />
           </div>
 
-          {!isMobile && (
-            <div onMouseDown={() => setIsResizingBottom(true)} className="h-1 bg-[#252526] hover:bg-neutral-500 cursor-row-resize shrink-0 transition-colors flex items-center justify-center group">
-              <div className="w-12 h-0.5 bg-white/10 group-hover:bg-white/40 rounded-full" />
-            </div>
-          )}
+          <div onMouseDown={() => setIsResizingBottom(true)} className="h-1 bg-[#252526] hover:bg-neutral-500 cursor-row-resize shrink-0 transition-colors flex items-center justify-center group">
+            <div className="w-12 h-0.5 bg-white/10 group-hover:bg-white/40 rounded-full" />
+          </div>
 
-          <div style={isMobile ? undefined : { height: bottomPanelHeight }} className={`bg-[#141414] flex flex-col shrink-0 ${isMobile ? 'h-[38dvh]' : ''}`}>
-            <div className="min-h-12 bg-[#1A1A1A] flex flex-col gap-2 px-4 py-2 sm:h-12 sm:flex-row sm:items-center sm:px-8 sm:py-0 sm:justify-between border-b border-white/5 shrink-0">
-              <div className="flex items-center gap-6 sm:gap-10 overflow-x-auto">
+          <div style={{ height: bottomPanelHeight }} className="bg-[#141414] flex flex-col shrink-0">
+            <div className="h-12 bg-[#1A1A1A] flex items-center px-8 justify-between border-b border-white/5 shrink-0">
+              <div className="flex items-center gap-10">
                 <button className="text-[10px] font-black text-white uppercase tracking-[0.2em] border-b-2 border-white pb-4 mt-4 transition-all">Test Cases</button>
                 <button className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em] pb-4 mt-4 transition-all hover:text-white">Console</button>
               </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                <Button variant="outline" size="sm" onClick={handleRun} className="h-8 bg-white/5 border-white/10 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all w-full sm:w-auto">
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={handleRun} className="h-8 bg-white/5 border-white/10 text-neutral-400 hover:text-white hover:bg-white/10 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all">
                   <Play className="w-3 h-3 mr-2" /> Run Test
                 </Button>
-                <Button onClick={handleSubmit} className="h-8 px-6 bg-white text-black hover:bg-neutral-200 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-xl active:scale-95 w-full sm:w-auto">
+                <Button onClick={handleSubmit} className="h-8 px-6 bg-white text-black hover:bg-neutral-200 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-xl active:scale-95">
                   Submit
                 </Button>
               </div>
             </div>
 
-            <div className="flex-1 p-4 sm:p-10 overflow-y-auto custom-scrollbar-dark grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="flex-1 p-10 overflow-y-auto custom-scrollbar-dark grid grid-cols-1 md:grid-cols-2 gap-6">
               {testCases.map((tc, idx) => (
                 <div key={tc.id || idx} className="bg-[#1A1A1A] rounded-2xl p-6 border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all">
                   <div className="space-y-1">

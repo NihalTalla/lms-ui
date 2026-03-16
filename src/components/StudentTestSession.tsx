@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EdRealmLogo } from './EdRealmLogo';
-import { useIsMobile } from './ui/use-mobile';
 
 import { Test } from '../lib/test-store';
 
@@ -28,7 +27,6 @@ interface StudentTestSessionProps {
 }
 
 export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSessionProps) {
-  const isMobile = useIsMobile();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeRemaining, setTimeRemaining] = useState((test.duration || 90) * 60);
@@ -224,15 +222,15 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
       </Dialog>
 
       {/* HEADER */}
-      <header className="bg-white border-b border-neutral-200 px-4 py-3 sm:h-16 sm:px-6 sm:py-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 z-50">
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+      <header className="h-16 bg-white border-b border-neutral-200 px-6 flex items-center justify-between shrink-0 z-50">
+        <div className="flex items-center gap-4">
           <EdRealmLogo size="small" />
-          <h1 className="font-bold text-base sm:text-lg">{test.title}</h1>
-          <div className="hidden sm:block h-6 w-px bg-neutral-200 mx-2" />
+          <h1 className="font-bold text-lg">{test.title}</h1>
+          <div className="h-6 w-px bg-neutral-200 mx-2" />
           <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 border-none font-medium">Question {currentQuestionIndex + 1} / {test.questions.length}</Badge>
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 w-full sm:w-auto">
+        <div className="flex items-center gap-6">
           {/* Points */}
           <div className="flex items-center gap-2 bg-neutral-50 px-3 py-1.5 rounded-md border border-neutral-100">
             <Trophy className="w-4 h-4 text-orange-500" />
@@ -252,7 +250,7 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
       <div className="flex-1 flex overflow-hidden relative" onMouseUp={handleMouseUp} onMouseMove={(e) => handleMouseMove(e as any)}>
 
         {/* SIDEBAR - Displays for both MCQ and Coding so students can navigate between questions easily */}
-        <aside className={`${isCoding && isMobile ? 'hidden' : 'w-64 bg-neutral-50 border-r border-neutral-200 flex flex-col shrink-0'}`}>
+        <aside className="w-64 bg-neutral-50 border-r border-neutral-200 flex flex-col shrink-0">
           <div className="p-4 border-b border-neutral-200">
             <h3 className="font-bold text-neutral-500 text-xs uppercase tracking-widest flex items-center gap-2"><List className="w-4 h-4" /> Questions</h3>
           </div>
@@ -325,23 +323,16 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
 
           {/* CODING LAYOUT (Split 1/3 - 2/3) */}
           {isCoding && (
-            <div className={`flex-1 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
+            <div className="flex-1 flex overflow-hidden">
               {/* LEFT: Problem (Resizable) */}
-              <div
-                style={isMobile ? undefined : { width: `${leftPanelWidth}%` }}
-                className={`bg-white overflow-y-auto p-4 sm:p-6 space-y-6 relative shrink-0 ${
-                  isMobile ? 'w-full border-b border-neutral-200' : 'border-r border-neutral-200'
-                }`}
-              >
+              <div style={{ width: `${leftPanelWidth}%` }} className="bg-white border-r border-neutral-200 overflow-y-auto p-6 space-y-6 relative shrink-0">
                 {/* Drag Handle */}
-                {!isMobile && (
-                  <div
-                    onMouseDown={() => setIsResizingLeft(true)}
-                    className="absolute right-0 top-0 bottom-0 w-1 bg-transparent hover:bg-blue-400 cursor-col-resize z-20 group"
-                  >
-                    <div className="w-px h-full bg-neutral-200 group-hover:bg-blue-400 transition-colors mx-auto" />
-                  </div>
-                )}
+                <div
+                  onMouseDown={() => setIsResizingLeft(true)}
+                  className="absolute right-0 top-0 bottom-0 w-1 bg-transparent hover:bg-blue-400 cursor-col-resize z-20 group"
+                >
+                  <div className="w-px h-full bg-neutral-200 group-hover:bg-blue-400 transition-colors mx-auto" />
+                </div>
 
                 <div className="space-y-2">
                   <h2 className="text-2xl font-bold text-neutral-900">{currentQuestion.title}</h2>
@@ -368,7 +359,7 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
               <div className="flex-1 flex flex-col bg-[#1e1e1e] border-l border-neutral-800 min-w-0">
                 {/* Top: Editor */}
                 <div className="flex-1 flex flex-col min-h-0 relative">
-                  <div className="min-h-10 bg-[#252526] flex flex-col gap-2 px-4 py-2 sm:h-10 sm:flex-row sm:items-center sm:py-0 sm:justify-between border-b border-[#333] shrink-0">
+                  <div className="h-10 bg-[#252526] flex items-center px-4 justify-between border-b border-[#333] shrink-0">
                     <span className="text-neutral-400 text-xs font-mono">Solution.java</span>
                     <Badge variant="outline" className="border-green-800 text-green-500 bg-green-900/10 text-[10px]">Auto-Saved</Badge>
                   </div>
@@ -376,7 +367,7 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
                     <Textarea
                       value={answers[currentQuestion.id] || ''}
                       onChange={(e) => setAnswers({ ...answers, [currentQuestion.id]: e.target.value })}
-                      className="w-full h-full bg-[#1e1e1e] text-neutral-300 font-mono text-sm p-3 sm:p-4 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar"
+                      className="w-full h-full bg-[#1e1e1e] text-neutral-300 font-mono text-sm p-4 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar"
                       placeholder="// Write your solution here..."
                       spellCheck={false}
                     />
@@ -384,26 +375,24 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
                 </div>
 
                 {/* Resize Handle (Vertical) */}
-                {!isMobile && (
-                  <div
-                    onMouseDown={() => setIsResizingBottom(true)}
-                    className="h-1 bg-[#333] hover:bg-blue-500 cursor-row-resize shrink-0 z-20"
-                  />
-                )}
+                <div
+                  onMouseDown={() => setIsResizingBottom(true)}
+                  className="h-1 bg-[#333] hover:bg-blue-500 cursor-row-resize shrink-0 z-20"
+                />
 
                 {/* Bottom: Test Cases */}
-                <div style={isMobile ? undefined : { height: bottomPanelHeight }} className={`bg-[#1e1e1e] border-t border-[#333] flex flex-col shrink-0 ${isMobile ? 'h-[34dvh]' : ''}`}>
-                  <div className="min-h-10 bg-[#252526] flex flex-col gap-2 px-4 py-2 sm:h-10 sm:flex-row sm:items-center sm:py-0 sm:justify-between border-b border-[#333] shrink-0">
+                <div style={{ height: bottomPanelHeight }} className="bg-[#1e1e1e] border-t border-[#333] flex flex-col shrink-0">
+                  <div className="h-10 bg-[#252526] flex items-center px-4 justify-between border-b border-[#333] shrink-0">
                     <div className="flex items-center gap-4">
                       <span className="text-neutral-400 text-xs font-bold uppercase tracking-wider">Test Cases</span>
                       <span className="text-neutral-500 text-xs">|</span>
                       <span className="text-neutral-400 text-xs font-bold uppercase tracking-wider">Console</span>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-white hover:bg-[#333] w-full sm:w-auto"><Play className="w-3 h-3 mr-1" /> Run</Button>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" className="h-7 text-xs text-neutral-400 hover:text-white hover:bg-[#333]"><Play className="w-3 h-3 mr-1" /> Run</Button>
                       <Button
                         onClick={handleNext}
-                        className="h-7 px-4 rounded-md font-bold text-xs flex items-center justify-center gap-1 border-none w-full sm:w-auto"
+                        className="h-7 px-4 rounded-md font-bold text-xs flex items-center gap-1 border-none"
                         style={{ backgroundColor: '#000', color: '#fff' }}
                       >
                         {currentQuestionIndex < test.questions.length - 1 ? 'Next' : 'Finish'}
@@ -420,11 +409,11 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
                     </div>
                   </div>
                   {/* Footer Actions */}
-                  <div className="p-4 border-t border-[#333] flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-[#252526]">
+                  <div className="p-4 border-t border-[#333] flex justify-between bg-[#252526]">
                     <div className="text-neutral-500 text-xs flex items-center">
                       Test Cases: 0/2 Passed
                     </div>
-                    <Button onClick={handleQuestionSubmit} disabled={submittedQuestions.has(currentQuestion.id)} className="bg-white text-black hover:bg-neutral-200 font-bold px-8 h-9 text-xs uppercase tracking-wide w-full sm:w-auto">
+                    <Button onClick={handleQuestionSubmit} disabled={submittedQuestions.has(currentQuestion.id)} className="bg-white text-black hover:bg-neutral-200 font-bold px-8 h-9 text-xs uppercase tracking-wide">
                       {submittedQuestions.has(currentQuestion.id) ? 'Submitted' : 'Submit'}
                     </Button>
                   </div>
