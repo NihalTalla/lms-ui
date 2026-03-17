@@ -23,6 +23,7 @@ import {
 import { Course, Topic } from '../lib/data';
 import { toast } from 'sonner';
 import { EdRealmLogo } from './EdRealmLogo';
+import { useIsMobile } from './ui/use-mobile';
 
 interface StudentModuleViewProps {
   course: Course;
@@ -54,10 +55,12 @@ interface MenuItem {
 }
 
 export function StudentModuleView({ course, selectedModule, onNavigate, onBack }: StudentModuleViewProps) {
+  const isMobile = useIsMobile();
   const [activeItemId, setActiveItemId] = useState('intro');
   const [completedItems, setCompletedItems] = useState<string[]>([]);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
   const [isIterationsOpen, setIsIterationsOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const menuItems: MenuItem[] = [
     {
@@ -141,14 +144,36 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
     <div className="fixed inset-0 z-50 flex h-screen w-full bg-white overflow-hidden font-sans text-neutral-900">
 
       {/* SIDEBAR - Fixed width, distinct separation */}
+      {/* Mobile sidebar overlay */}
+      {isMobile && isMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-[55] bg-black/40"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
       <aside
-        className={`${sidebarMinimized ? 'w-24' : 'w-80'} shrink-0 bg-white text-neutral-900 flex flex-col transition-all duration-300 relative z-30 border-r-2 border-neutral-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)]`}
+        id="mobile-chapters-sidebar"
+        className={
+          isMobile
+            ? `fixed top-0 left-0 bottom-0 z-[60] w-[85vw] max-w-[340px] bg-white text-neutral-900 flex flex-col border-r border-neutral-100 shadow-2xl transform transition-transform duration-200 ${
+                isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+              }`
+            : `${sidebarMinimized ? 'w-24' : 'w-80'} shrink-0 bg-white text-neutral-900 flex flex-col transition-all duration-300 relative z-30 border-r-2 border-neutral-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)]`
+        }
       >
         <button
-          onClick={() => setSidebarMinimized(!sidebarMinimized)}
-          className="absolute -right-3 top-24 w-6 h-6 bg-white rounded-full flex items-center justify-center border border-neutral-300 z-30 shadow-md transform hover:scale-105 transition-transform"
+          onClick={() => {
+            if (isMobile) setIsMobileSidebarOpen(false);
+            else setSidebarMinimized(!sidebarMinimized);
+          }}
+          className={
+            isMobile
+              ? 'absolute right-3 top-3 w-9 h-9 bg-white rounded-lg flex items-center justify-center border border-neutral-200 z-30 shadow-sm'
+              : 'absolute -right-3 top-24 w-6 h-6 bg-white rounded-full flex items-center justify-center border border-neutral-300 z-30 shadow-md transform hover:scale-105 transition-transform'
+          }
         >
-          {sidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {isMobile ? '×' : (sidebarMinimized ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />)}
         </button>
 
         <div className="p-8 pb-4 space-y-4">
@@ -245,13 +270,36 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
         <div className="flex-1 overflow-y-auto w-full custom-scrollbar">
 
-          <div className="w-full max-w-[1400px] mx-auto px-16 py-12 flex flex-col min-h-full">
+          <div className={`w-full max-w-[1400px] mx-auto ${isMobile ? 'px-4 py-6' : 'px-16 py-12'} flex flex-col min-h-full`}>
 
             {/* HEADER - Updated Breadcrumb & Date */}
-            <header className="mb-14 flex items-center justify-between">
+            <header className={`${isMobile ? 'mb-6' : 'mb-14'} flex items-center justify-between`}>
               <div className="flex flex-col">
                 {/* Updated Breadcrumb */}
                 <div className="flex items-center gap-3 text-sm font-medium text-neutral-500">
+                  {isMobile && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 px-3 rounded-xl"
+                      type="button"
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsMobileSidebarOpen(true);
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsMobileSidebarOpen(true);
+                      }}
+                      aria-expanded={isMobileSidebarOpen}
+                      aria-controls="mobile-chapters-sidebar"
+                    >
+                      <Menu className="w-4 h-4 mr-2" />
+                      Chapters
+                    </Button>
+                  )}
                   <button
                     onClick={() => onNavigate('dashboard')}
                     className="hover:text-neutral-900 transition-colors cursor-pointer underline-offset-2 hover:underline"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -8,13 +8,13 @@ import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Input } from './ui/input';
-import { 
-  Play, 
-  Send, 
-  Settings, 
-  Moon, 
-  Sun, 
-  ChevronLeft, 
+import {
+  Play,
+  Send,
+  Settings,
+  Moon,
+  Sun,
+  ChevronLeft,
   ChevronRight,
   CheckCircle2,
   XCircle,
@@ -44,6 +44,9 @@ interface CodeEditorProps {
 export function CodeEditor({ problem, onBack }: CodeEditorProps) {
   const { currentUser } = useAuth();
   const isMobile = useIsMobile();
+  const mobileTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const mobileGutterRef = useRef<HTMLDivElement | null>(null);
+  const mobileEditorSectionRef = useRef<HTMLDivElement | null>(null);
   const [language, setLanguage] = useState('python');
   const [code, setCode] = useState(
     problem.starterCode[language] || problem.starterCode.python || '// Write your solution here'
@@ -76,68 +79,42 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
     loadSavedFiles();
   }, [language, problem]);
 
-  useEffect(() => {
-    setShowSidebar(!isMobile);
-  }, [isMobile]);
-
   const loadSavedFiles = () => {
     const files = FileManager.getFilesByProblem(problem.id);
     setSavedFiles(files);
   };
 
-  const buildSimulationMetrics = (sourceCode: string) => {
-    const normalizedLength = sourceCode.replace(/\s+/g, '').length;
-    return {
-      executionTime: Math.max(24, Math.min(180, 24 + Math.floor(normalizedLength / 10))),
-      memory: Math.max(18, Math.min(72, 18 + Math.floor(normalizedLength / 30))),
-    };
-  };
-
-  const buildTestCaseResults = (includeHidden: boolean) => {
-    const relevantCases = problem.testCases.filter((testCase) => includeHidden || !testCase.hidden);
-    const starterTemplate = getStarterCode(language).replace(/\s+/g, '');
-    const normalizedCode = code.replace(/\s+/g, '');
-    const wroteCustomSolution = normalizedCode.length > starterTemplate.length && normalizedCode !== starterTemplate;
-    const hasSolutionShape = /(return|print|cout|System\.out|printf)/.test(code);
-    const passedAll = wroteCustomSolution && hasSolutionShape;
-    const metrics = buildSimulationMetrics(code);
-
-    return {
-      metrics,
-      passedAll,
-      results: relevantCases.map((testCase, index) => ({
-        testCaseId: testCase.id,
-        passed: passedAll,
-        actualOutput: passedAll ? testCase.expectedOutput : 'No matching output',
-        executionTime: metrics.executionTime + index * 4,
-      })),
-    };
-  };
-
   const runCode = async () => {
     setIsRunning(true);
     setOutput('Running test cases...\n');
-    
+
     // Simulate code execution
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const simulation = buildTestCaseResults(false);
-    const results: TestCaseResult[] = simulation.results;
-    
+
+    // Simulate test results
+    const results: TestCaseResult[] = problem.testCases
+      .filter(tc => !tc.hidden)
+      .map(tc => ({
+        testCaseId: tc.id,
+        passed: Math.random() > 0.3, // Random pass/fail for demo
+        actualOutput: tc.expectedOutput,
+        executionTime: Math.floor(Math.random() * 100) + 10,
+      }));
+
     setTestResults(results);
     const passed = results.filter(r => r.passed).length;
     setOutput(
       `Executed ${results.length} test cases\n` +
       `✓ Passed: ${passed}\n` +
       `✗ Failed: ${results.length - passed}\n\n` +
-      results.map((r, i) => 
+      results.map((r, i) =>
         `Test Case ${i + 1}: ${r.passed ? '✓ Passed' : '✗ Failed'} (${r.executionTime}ms)`
       ).join('\n')
     );
-    setExecutionTime(simulation.metrics.executionTime);
-    setMemory(simulation.metrics.memory);
+    setExecutionTime(Math.floor(Math.random() * 100) + 50);
+    setMemory(Math.floor(Math.random() * 20) + 10);
     setIsRunning(false);
-    
+
     toast.success(`Ran ${results.length} test cases`);
   };
 
@@ -187,37 +164,41 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
     setIsSubmitting(true);
     setSubmissionStatus('queued');
     toast.info('Submission queued...');
-    
+
     await new Promise(resolve => setTimeout(resolve, 1000));
     setSubmissionStatus('running');
     toast.info('Running all test cases...');
-    
+
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const simulation = buildTestCaseResults(true);
-    const allPassed = simulation.passedAll;
+
+    // Simulate final result
+    const allPassed = Math.random() > 0.4;
     setSubmissionStatus(allPassed ? 'accepted' : 'wrong_answer');
-    
-    const allResults: TestCaseResult[] = simulation.results;
-    
+
+    // Simulate all test cases (including hidden)
+    const allResults: TestCaseResult[] = problem.testCases.map(tc => ({
+      testCaseId: tc.id,
+      passed: allPassed || Math.random() > 0.5,
+      actualOutput: tc.expectedOutput,
+      executionTime: Math.floor(Math.random() * 100) + 10,
+    }));
+
     setTestResults(allResults);
     const passed = allResults.filter(r => r.passed).length;
-    setExecutionTime(simulation.metrics.executionTime);
-    setMemory(simulation.metrics.memory);
-    
+
     setOutput(
       `Submission Results:\n` +
       `Status: ${allPassed ? '✓ ACCEPTED' : '✗ WRONG ANSWER'}\n` +
       `Test Cases: ${passed}/${allResults.length} passed\n` +
-      `Execution Time: ${simulation.metrics.executionTime}ms\n` +
-      `Memory: ${simulation.metrics.memory}MB\n\n` +
-      allResults.map((r, i) => 
+      `Execution Time: ${executionTime}ms\n` +
+      `Memory: ${memory}MB\n\n` +
+      allResults.map((r, i) =>
         `Test Case ${i + 1}: ${r.passed ? '✓ Passed' : '✗ Failed'} (${r.executionTime}ms)`
       ).join('\n')
     );
-    
+
     setIsSubmitting(false);
-    
+
     if (allPassed) {
       toast.success(`Accepted! +${problem.points} points`, {
         description: `All ${allResults.length} test cases passed`,
@@ -248,149 +229,229 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
     }
   };
 
+  const mobileLineNumbers = useMemo(() => {
+    const lines = Math.max(1, code.split('\n').length);
+    return Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+  }, [code]);
+
   return (
-    <div className="h-dvh flex flex-col">
+    <div className={isMobile ? 'min-h-[calc(100vh-80px)] flex flex-col overflow-y-auto' : 'h-[calc(100vh-80px)] flex flex-col'}>
       {/* Top Toolbar */}
-      <div className="bg-white border-b border-neutral-200 px-3 sm:px-4 py-2 sm:py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <div className="hidden sm:block">
-            <EdRealmLogo size="small" />
+      {isMobile ? (
+        <div className="bg-white border-b border-neutral-200 px-3 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <EdRealmLogo size="small" />
+              <Button variant="ghost" size="sm" onClick={onBack} className="px-2">
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Back
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSidebar(!showSidebar)}
+              title={showSidebar ? 'Hide question' : 'Show question'}
+            >
+              {showSidebar ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
           </div>
-          <Separator orientation="vertical" className="h-6 hidden sm:block" />
-          <Button variant="ghost" size="sm" onClick={onBack}>
-            <ChevronLeft className="w-4 h-4 sm:mr-1" />
-            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Back</span>
-          </Button>
-          <Separator orientation="vertical" className="h-6 hidden sm:block" />
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <h4 className="truncate text-sm sm:text-base">{problem.title}</h4>
-            <Badge className={`${getDifficultyColor()} shrink-0`}>
-              {problem.difficulty}
-            </Badge>
-            <span className="hidden sm:inline text-sm text-neutral-600">{problem.points} points</span>
-          </div>
-        </div>
 
-        <div className={isMobile ? 'grid grid-cols-2 gap-2 w-full' : 'flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end'}>
-          <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className={isMobile ? 'col-span-2 w-full shrink-0' : 'w-[110px] sm:w-32 shrink-0'}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="python">Python</SelectItem>
-              <SelectItem value="java">Java</SelectItem>
-              <SelectItem value="cpp">C++</SelectItem>
-              <SelectItem value="c">C</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className={isMobile ? 'h-9 w-full shrink-0' : 'h-9 w-9 shrink-0'}
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </Button>
-
-          <Button
-            variant={isMobile ? 'outline' : 'ghost'}
-            size={isMobile ? 'sm' : 'icon'}
-            onClick={() => setShowSidebar(!showSidebar)}
-            className={isMobile ? 'h-9 w-full shrink-0 text-xs' : 'h-9 w-9 shrink-0'}
-          >
-            {isMobile ? (
-              <>
-                <Info className="w-4 h-4 mr-1" />
-                {showSidebar ? 'Close' : 'Problem'}
-              </>
-            ) : (
-              showSidebar ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />
-            )}
-          </Button>
-
-          <Separator orientation="vertical" className="h-6 hidden sm:block" />
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowSaveDialog(true)}
-            title="Save your solution"
-            className={isMobile ? 'h-9 w-full shrink-0' : 'h-9 shrink-0'}
-          >
-            <Save className="w-4 h-4 sm:mr-2" />
-            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Save</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFilesDialog(true)}
-            title="View saved solutions"
-            className={isMobile ? 'h-9 w-full shrink-0' : 'h-9 shrink-0'}
-          >
-            <FolderOpen className="w-4 h-4 sm:mr-2" />
-            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Files ({savedFiles.length})</span>
-            <span className={isMobile ? 'hidden' : 'sm:hidden'}>{savedFiles.length}</span>
-          </Button>
-
-          <Separator orientation="vertical" className="h-6 hidden sm:block" />
-
-          <Button
-            variant="outline"
-            onClick={runCode}
-            disabled={isRunning || isSubmitting}
-            className={isMobile ? 'h-10 w-full shrink-0' : 'h-9 shrink-0'}
-          >
-            {isRunning ? (
-              <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
-            ) : (
-              <Play className="w-4 h-4 sm:mr-2" />
-            )}
-            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Run</span>
-          </Button>
-
-          <Button
-            onClick={submitCode}
-            disabled={isRunning || isSubmitting}
-            style={{ backgroundColor: 'var(--color-primary)' }}
-            className={isMobile ? 'h-10 w-full shrink-0 [grid-column:1/-1]' : 'h-9 shrink-0'}
-          >
-            {isSubmitting ? (
-              <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4 sm:mr-2" />
-            )}
-            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Submit</span>
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 relative">
-        {/* Problem Description Sidebar */}
-        {showSidebar && (
-          <div className={`${isMobile ? 'absolute inset-0 z-20 bg-white' : 'w-full md:w-[420px] lg:w-[500px] h-[40dvh] md:h-auto bg-white border-b md:border-b-0 md:border-r'} border-neutral-200 flex flex-col shrink-0 min-h-0`}>
-            {isMobile && (
-              <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
-                <div>
-                  <div className="text-sm font-semibold text-neutral-900">Problem Details</div>
-                  <div className="text-xs text-neutral-500 truncate">{problem.title}</div>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setShowSidebar(false)}>
-                  Done
-                </Button>
+          <div className="mt-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="leading-tight truncate">{problem.title}</h4>
+              <div className="mt-1 flex items-center gap-2">
+                <Badge className={getDifficultyColor()}>{problem.difficulty}</Badge>
+                <span className="text-sm text-neutral-600">{problem.points} pts</span>
               </div>
-            )}
-            <Tabs defaultValue="description" className="flex-1 flex flex-col">
-              <TabsList className={isMobile ? 'w-full grid grid-cols-3 rounded-none border-b h-11' : 'w-full justify-start rounded-none border-b overflow-x-auto flex-nowrap'}>
-                <TabsTrigger value="description">Description</TabsTrigger>
-                <TabsTrigger value="submissions">Submissions</TabsTrigger>
-                <TabsTrigger value="solutions">Solutions</TabsTrigger>
-              </TabsList>
+            </div>
 
-              <TabsContent value="description" className="flex-1 overflow-hidden m-0">
-                <ScrollArea className="h-full">
-                  <div className="p-6 space-y-6">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+          </div>
+
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="java">Java</SelectItem>
+                <SelectItem value="cpp">C++</SelectItem>
+                <SelectItem value="c">C</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button variant="outline" size="sm" onClick={() => setShowSaveDialog(true)}>
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+
+            <Button variant="outline" size="sm" onClick={() => setShowFilesDialog(true)}>
+              <FolderOpen className="w-4 h-4 mr-2" />
+              Files ({savedFiles.length})
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                mobileEditorSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // ensure focus after scroll for mobile keyboards
+                setTimeout(() => mobileTextareaRef.current?.focus(), 250);
+              }}
+            >
+              Write code
+            </Button>
+
+            <div className="flex-1" />
+
+            <Button variant="outline" size="sm" onClick={runCode} disabled={isRunning || isSubmitting}>
+              {isRunning ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4 mr-2" />
+              )}
+              Run
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={submitCode}
+              disabled={isRunning || isSubmitting}
+              style={{ backgroundColor: 'var(--color-primary)' }}
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              Submit
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <EdRealmLogo size="small" />
+            <Separator orientation="vertical" className="h-6" />
+            <Button variant="ghost" size="sm" onClick={onBack}>
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+            <Separator orientation="vertical" className="h-6" />
+            <div className="flex items-center gap-3">
+              <h4>{problem.title}</h4>
+              <Badge className={getDifficultyColor()}>
+                {problem.difficulty}
+              </Badge>
+              <span className="text-sm text-neutral-600">{problem.points} points</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="python">Python</SelectItem>
+                <SelectItem value="java">Java</SelectItem>
+                <SelectItem value="cpp">C++</SelectItem>
+                <SelectItem value="c">C</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSidebar(!showSidebar)}
+            >
+              {showSidebar ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSaveDialog(true)}
+              title="Save your solution"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilesDialog(true)}
+              title="View saved solutions"
+            >
+              <FolderOpen className="w-4 h-4 mr-2" />
+              Files ({savedFiles.length})
+            </Button>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            <Button
+              variant="outline"
+              onClick={runCode}
+              disabled={isRunning || isSubmitting}
+            >
+              {isRunning ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4 mr-2" />
+              )}
+              Run
+            </Button>
+
+            <Button
+              onClick={submitCode}
+              disabled={isRunning || isSubmitting}
+              style={{ backgroundColor: 'var(--color-primary)' }}
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              Submit
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isMobile ? (
+        <div className="flex flex-col">
+          {/* Question first (LeetCode-style) */}
+          {showSidebar && (
+            <div className="w-full bg-white border-b border-neutral-200">
+              <Tabs defaultValue="description" className="flex flex-col">
+                <TabsList className="w-full justify-start rounded-none border-b">
+                  <TabsTrigger value="description">Description</TabsTrigger>
+                  <TabsTrigger value="submissions">Submissions</TabsTrigger>
+                  <TabsTrigger value="solutions">Solutions</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="description" className="m-0">
+                  <div className="p-5 space-y-6">
                     <div>
                       <h4 className="mb-3">Problem Description</h4>
                       <p className="text-neutral-700 whitespace-pre-wrap">{problem.description}</p>
@@ -417,13 +478,13 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
                       <div className="space-y-3">
                         <div>
                           <p className="text-sm mb-2">Input:</p>
-                          <code className="block bg-neutral-100 p-3 rounded text-sm">
+                          <code className="block bg-neutral-100 p-3 rounded text-sm overflow-x-auto">
                             {problem.sampleInput}
                           </code>
                         </div>
                         <div>
                           <p className="text-sm mb-2">Output:</p>
-                          <code className="block bg-neutral-100 p-3 rounded text-sm">
+                          <code className="block bg-neutral-100 p-3 rounded text-sm overflow-x-auto">
                             {problem.sampleOutput}
                           </code>
                         </div>
@@ -447,68 +508,73 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
                       </div>
                     </div>
                   </div>
-                </ScrollArea>
-              </TabsContent>
+                </TabsContent>
 
-              <TabsContent value="submissions" className="flex-1 p-6">
-                <p className="text-sm text-neutral-600">Your previous submissions will appear here</p>
-              </TabsContent>
+                <TabsContent value="submissions" className="p-5">
+                  <p className="text-sm text-neutral-600">Your previous submissions will appear here</p>
+                </TabsContent>
 
-              <TabsContent value="solutions" className="flex-1 p-6">
-                <div className="flex items-start gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <Info className="w-4 h-4 text-blue-600 mt-0.5" />
-                  <p className="text-sm text-blue-900">
-                    Solutions will be unlocked after you solve the problem or make 3 submission attempts.
-                  </p>
+                <TabsContent value="solutions" className="p-5">
+                  <div className="flex items-start gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Info className="w-4 h-4 text-blue-600 mt-0.5" />
+                    <p className="text-sm text-blue-900">
+                      Solutions will be unlocked after you solve the problem or make 3 submission attempts.
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+
+          {/* Editor below question */}
+          <div ref={mobileEditorSectionRef} className="border-b border-neutral-200 scroll-mt-24">
+            <div className="bg-white px-4 py-3 border-b border-neutral-200">
+              <h4>Code</h4>
+              <p className="text-sm text-neutral-600">Write your solution below</p>
+            </div>
+            <div className="h-[70vh] min-h-[520px] bg-[#1e1e1e] flex flex-col">
+              <div className="h-10 shrink-0 flex items-center justify-end px-3">
+                <div className="flex items-center gap-2 bg-black/60 backdrop-blur px-3 py-1 rounded text-xs text-neutral-200">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                  Auto-saving
                 </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
+              </div>
 
-        {/* Editor and Console */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Monaco Editor */}
-          <div className={isMobile ? 'relative h-[38dvh] min-h-[18rem]' : 'flex-1 relative'}>
-            {!isMobile && (
-            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 flex items-center gap-2">
-              <div className="flex items-center gap-1.5 bg-neutral-900/90 px-2.5 py-1 rounded text-[10px] sm:text-xs text-neutral-400 shadow-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                Auto-saving
+              <div className="flex-1 min-h-0 w-full flex">
+                <div
+                  ref={mobileGutterRef}
+                  className="w-12 shrink-0 border-r border-white/10 bg-black/10 overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <pre className="text-right text-xs leading-6 text-white/40 px-2 py-3 select-none">
+                    {mobileLineNumbers}
+                  </pre>
+                </div>
+
+                <textarea
+                  ref={mobileTextareaRef}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  onScroll={(e) => {
+                    const top = (e.currentTarget as HTMLTextAreaElement).scrollTop;
+                    if (mobileGutterRef.current) {
+                      mobileGutterRef.current.scrollTop = top;
+                    }
+                  }}
+                  spellCheck={false}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  className="flex-1 min-h-0 bg-transparent text-neutral-100 font-mono text-sm leading-6 px-4 py-3 outline-none resize-none overflow-auto"
+                  style={{ fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}
+                />
               </div>
             </div>
-            )}
-            {isMobile ? (
-              <textarea
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className={`w-full h-full p-4 font-mono text-sm leading-relaxed resize-none outline-none ${theme === 'dark' ? 'bg-[#1e1e1e] text-white' : 'bg-white text-neutral-800'}`}
-                spellCheck={false}
-              />
-            ) : (
-              <Editor
-                height="100%"
-                language={language}
-                theme={theme === 'dark' ? 'vs-dark' : 'light'}
-                value={code}
-                onChange={(value) => setCode(value || '')}
-                options={{
-                  fontSize: 14,
-                  fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace',
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  lineNumbers: 'on',
-                  renderLineHighlight: 'all',
-                  automaticLayout: true,
-                }}
-              />
-            )}
           </div>
 
-          {/* Console/Output */}
-          <div className={isMobile ? 'h-[34dvh] min-h-[16rem] border-t border-neutral-200 bg-white' : 'h-56 sm:h-64 border-t border-neutral-200 bg-white'}>
+          {/* Console below editor */}
+          <div className="h-[30vh] min-h-[14rem] bg-white">
             <Tabs defaultValue="testcases" className="h-full flex flex-col">
-              <TabsList className={isMobile ? 'w-full grid grid-cols-3 rounded-none border-b h-11' : 'w-full justify-start rounded-none border-b overflow-x-auto flex-nowrap'}>
+              <TabsList className="w-full justify-start rounded-none border-b bg-white">
                 <TabsTrigger value="testcases">Test Cases</TabsTrigger>
                 <TabsTrigger value="output">Output</TabsTrigger>
                 <TabsTrigger value="results">
@@ -564,14 +630,12 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
               <TabsContent value="results" className="flex-1 overflow-auto m-0 p-4">
                 {submissionStatus ? (
                   <div className="space-y-4">
-                    {/* Status Header */}
-                    <div className={`p-4 rounded-lg border-2 ${
-                      submissionStatus === 'accepted' 
-                        ? 'bg-green-50 border-green-200' 
+                    <div className={`p-4 rounded-lg border-2 ${submissionStatus === 'accepted'
+                        ? 'bg-green-50 border-green-200'
                         : submissionStatus === 'wrong_answer'
-                        ? 'bg-red-50 border-red-200'
-                        : 'bg-blue-50 border-blue-200'
-                    }`}>
+                          ? 'bg-red-50 border-red-200'
+                          : 'bg-blue-50 border-blue-200'
+                      }`}>
                       <div className="flex items-center gap-3">
                         {submissionStatus === 'accepted' && (
                           <>
@@ -607,9 +671,8 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
                       </div>
                     </div>
 
-                    {/* Metrics */}
                     {executionTime && memory && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="p-3 bg-neutral-50 rounded-lg">
                           <div className="flex items-center gap-2 text-sm text-neutral-600 mb-1">
                             <Clock className="w-4 h-4" />
@@ -627,18 +690,16 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
                       </div>
                     )}
 
-                    {/* Test Results */}
                     {testResults.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-sm">Test Case Results</h4>
                         {testResults.map((result, i) => (
                           <div
                             key={i}
-                            className={`p-3 rounded-lg border ${
-                              result.passed
+                            className={`p-3 rounded-lg border ${result.passed
                                 ? 'bg-green-50 border-green-200'
                                 : 'bg-red-50 border-red-200'
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
@@ -672,7 +733,291 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
             </Tabs>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1 flex overflow-hidden">
+          {/* Problem Description Sidebar */}
+          {showSidebar && (
+            <div className="w-[500px] bg-white border-r border-neutral-200 flex flex-col">
+              <Tabs defaultValue="description" className="flex-1 flex flex-col">
+                <TabsList className="w-full justify-start rounded-none border-b">
+                  <TabsTrigger value="description">Description</TabsTrigger>
+                  <TabsTrigger value="submissions">Submissions</TabsTrigger>
+                  <TabsTrigger value="solutions">Solutions</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="description" className="flex-1 overflow-hidden m-0">
+                  <ScrollArea className="h-full">
+                    <div className="p-6 space-y-6">
+                      <div>
+                        <h4 className="mb-3">Problem Description</h4>
+                        <p className="text-neutral-700 whitespace-pre-wrap">{problem.description}</p>
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h4 className="mb-3">Constraints</h4>
+                        <ul className="space-y-2">
+                          {problem.constraints.map((constraint, i) => (
+                            <li key={i} className="flex gap-2 text-sm text-neutral-700">
+                              <span className="text-neutral-400">•</span>
+                              <span>{constraint}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h4 className="mb-3">Example</h4>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-sm mb-2">Input:</p>
+                            <code className="block bg-neutral-100 p-3 rounded text-sm">
+                              {problem.sampleInput}
+                            </code>
+                          </div>
+                          <div>
+                            <p className="text-sm mb-2">Output:</p>
+                            <code className="block bg-neutral-100 p-3 rounded text-sm">
+                              {problem.sampleOutput}
+                            </code>
+                          </div>
+                          <div>
+                            <p className="text-sm mb-2">Explanation:</p>
+                            <p className="text-sm text-neutral-700">{problem.explanation}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div>
+                        <h4 className="mb-3">Tags</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {problem.tags.map(tag => (
+                            <Badge key={tag} variant="outline">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="submissions" className="flex-1 p-6">
+                  <p className="text-sm text-neutral-600">Your previous submissions will appear here</p>
+                </TabsContent>
+
+                <TabsContent value="solutions" className="flex-1 p-6">
+                  <div className="flex items-start gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Info className="w-4 h-4 text-blue-600 mt-0.5" />
+                    <p className="text-sm text-blue-900">
+                      Solutions will be unlocked after you solve the problem or make 3 submission attempts.
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+
+          {/* Editor and Console */}
+          <div className="flex-1 flex flex-col">
+            {/* Monaco Editor */}
+            <div className="flex-1 relative">
+              <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-neutral-900 px-3 py-1 rounded text-xs text-neutral-400">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                  Auto-saving
+                </div>
+              </div>
+              <Editor
+                height="100%"
+                language={language}
+                theme={theme === 'dark' ? 'vs-dark' : 'light'}
+                value={code}
+                onChange={(value) => setCode(value || '')}
+                options={{
+                  fontSize: 14,
+                  fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace',
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  lineNumbers: 'on',
+                  renderLineHighlight: 'all',
+                  automaticLayout: true,
+                }}
+              />
+            </div>
+
+            {/* Console/Output */}
+            <div className="h-64 border-t border-neutral-200 bg-white">
+              <Tabs defaultValue="testcases" className="h-full flex flex-col">
+                <TabsList className="w-full justify-start rounded-none border-b">
+                  <TabsTrigger value="testcases">Test Cases</TabsTrigger>
+                  <TabsTrigger value="output">Output</TabsTrigger>
+                  <TabsTrigger value="results">
+                    Results
+                    {submissionStatus && (
+                      <div className="ml-2">
+                        {submissionStatus === 'accepted' && (
+                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        )}
+                        {submissionStatus === 'wrong_answer' && (
+                          <XCircle className="w-4 h-4 text-red-600" />
+                        )}
+                        {(submissionStatus === 'queued' || submissionStatus === 'running') && (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        )}
+                      </div>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="testcases" className="flex-1 overflow-auto m-0 p-4">
+                  <div className="space-y-3">
+                    {problem.testCases.filter(tc => !tc.hidden).map((tc, i) => (
+                      <Card key={tc.id}>
+                        <CardContent className="p-4">
+                          <div className="space-y-2">
+                            <p className="text-sm">Test Case {i + 1}</p>
+                            <div>
+                              <p className="text-xs text-neutral-600 mb-1">Input:</p>
+                              <code className="block text-xs bg-neutral-100 p-2 rounded">
+                                {tc.input}
+                              </code>
+                            </div>
+                            <div>
+                              <p className="text-xs text-neutral-600 mb-1">Expected Output:</p>
+                              <code className="block text-xs bg-neutral-100 p-2 rounded">
+                                {tc.expectedOutput}
+                              </code>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="output" className="flex-1 overflow-auto m-0 p-4">
+                  <pre className="text-sm font-mono whitespace-pre-wrap text-neutral-700">
+                    {output || 'Run your code to see the output...'}
+                  </pre>
+                </TabsContent>
+
+                <TabsContent value="results" className="flex-1 overflow-auto m-0 p-4">
+                  {submissionStatus ? (
+                    <div className="space-y-4">
+                      {/* Status Header */}
+                      <div className={`p-4 rounded-lg border-2 ${submissionStatus === 'accepted'
+                          ? 'bg-green-50 border-green-200'
+                          : submissionStatus === 'wrong_answer'
+                            ? 'bg-red-50 border-red-200'
+                            : 'bg-blue-50 border-blue-200'
+                        }`}>
+                        <div className="flex items-center gap-3">
+                          {submissionStatus === 'accepted' && (
+                            <>
+                              <CheckCircle2 className="w-8 h-8 text-green-600" />
+                              <div>
+                                <h4 className="text-green-900">Accepted!</h4>
+                                <p className="text-sm text-green-700">All test cases passed</p>
+                              </div>
+                            </>
+                          )}
+                          {submissionStatus === 'wrong_answer' && (
+                            <>
+                              <XCircle className="w-8 h-8 text-red-600" />
+                              <div>
+                                <h4 className="text-red-900">Wrong Answer</h4>
+                                <p className="text-sm text-red-700">
+                                  {testResults.filter(r => r.passed).length}/{testResults.length} test cases passed
+                                </p>
+                              </div>
+                            </>
+                          )}
+                          {(submissionStatus === 'queued' || submissionStatus === 'running') && (
+                            <>
+                              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                              <div>
+                                <h4 className="text-blue-900">
+                                  {submissionStatus === 'queued' ? 'Queued' : 'Running...'}
+                                </h4>
+                                <p className="text-sm text-blue-700">Please wait</p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Metrics */}
+                      {executionTime && memory && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3 bg-neutral-50 rounded-lg">
+                            <div className="flex items-center gap-2 text-sm text-neutral-600 mb-1">
+                              <Clock className="w-4 h-4" />
+                              Execution Time
+                            </div>
+                            <p className="font-mono">{executionTime}ms</p>
+                          </div>
+                          <div className="p-3 bg-neutral-50 rounded-lg">
+                            <div className="flex items-center gap-2 text-sm text-neutral-600 mb-1">
+                              <FileCode className="w-4 h-4" />
+                              Memory
+                            </div>
+                            <p className="font-mono">{memory}MB</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Test Results */}
+                      {testResults.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-sm">Test Case Results</h4>
+                          {testResults.map((result, i) => (
+                            <div
+                              key={i}
+                              className={`p-3 rounded-lg border ${result.passed
+                                  ? 'bg-green-50 border-green-200'
+                                  : 'bg-red-50 border-red-200'
+                                }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  {result.passed ? (
+                                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                  ) : (
+                                    <XCircle className="w-4 h-4 text-red-600" />
+                                  )}
+                                  <span className="text-sm">
+                                    Test Case {i + 1}
+                                    {i >= problem.testCases.filter(tc => !tc.hidden).length && (
+                                      <Badge variant="outline" className="ml-2 text-xs">Hidden</Badge>
+                                    )}
+                                  </span>
+                                </div>
+                                <span className="text-xs text-neutral-600">
+                                  {result.executionTime}ms
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-neutral-600">
+                      Submit your code to see detailed results
+                    </p>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Save Solution Dialog */}
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>

@@ -115,7 +115,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
   // Monitoring
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isMicEnabled, setIsMicEnabled] = useState(true);
-  const [cameraMinimized, setCameraMinimized] = useState(false);
+  const [cameraMinimized, setCameraMinimized] = useState(() => isMobile);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [warningCount, setWarningCount] = useState(0);
   const [warningMessage, setWarningMessage] = useState('');
@@ -123,6 +123,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
   // Dialogs
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+  const [showQuestionsDialog, setShowQuestionsDialog] = useState(false);
 
   // Progress
   const [score, setScore] = useState(0);
@@ -342,13 +343,65 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
         </DialogContent>
       </Dialog>
 
+      {/* Mobile: Questions list */}
+      <Dialog open={showQuestionsDialog} onOpenChange={setShowQuestionsDialog}>
+        <DialogContent className="w-[95vw] max-w-md p-0 overflow-hidden bg-white">
+          <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <List className="w-4 h-4 text-neutral-600" />
+              <DialogTitle className="text-sm font-bold">Questions</DialogTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setShowQuestionsDialog(false)}>Close</Button>
+          </div>
+          <div className="max-h-[70vh] overflow-y-auto p-2 space-y-1">
+            {questions.map((q, idx) => (
+              <button
+                key={q.id}
+                onClick={() => { setCurrentQuestionIndex(idx); setShowQuestionsDialog(false); }}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${
+                  currentQuestionIndex === idx
+                    ? 'bg-neutral-900 text-white'
+                    : 'text-neutral-700 hover:bg-neutral-100'
+                }`}
+              >
+                <span className="flex items-center gap-3">
+                  <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
+                    currentQuestionIndex === idx ? 'bg-white text-neutral-900' : 'bg-neutral-200 text-neutral-600'
+                  }`}>{idx + 1}</span>
+                  <span className="truncate w-40">{q.type === 'coding' ? 'Code' : 'MCQ'}</span>
+                </span>
+                {submittedQuestions.has(q.id) && (
+                  <CheckCircle2 className={`w-4 h-4 ${currentQuestionIndex === idx ? 'text-white' : 'text-green-500'}`} />
+                )}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* HEADER */}
       <header className="bg-white border-b border-neutral-200 px-4 py-3 sm:h-16 sm:px-6 sm:py-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 z-50">
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <EdRealmLogo size="small" />
           <h1 className="font-bold text-base sm:text-lg">{contestTitle}</h1>
+          {isMobile && (
+            <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-neutral-900 text-white">
+              mobile v2
+            </span>
+          )}
           <div className="hidden sm:block h-6 w-px bg-neutral-200 mx-2" />
           <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 border-none font-medium">Question {currentQuestionIndex + 1} / {questions.length}</Badge>
+          {!isCoding && isMobile && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={() => setShowQuestionsDialog(true)}
+            >
+              <List className="w-4 h-4 mr-2" />
+              Questions
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 w-full sm:w-auto">
@@ -371,7 +424,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
       <div className="flex-1 flex overflow-hidden relative" onMouseUp={handleMouseUp} onMouseMove={(e) => handleMouseMove(e as any)}>
 
         {/* SIDEBAR - Only for MCQ */}
-        {!isCoding && (
+        {!isCoding && !isMobile && (
           <aside className="w-64 bg-neutral-50 border-r border-neutral-200 flex flex-col shrink-0">
             <div className="p-4 border-b border-neutral-200">
               <h3 className="font-bold text-neutral-500 text-xs uppercase tracking-widest flex items-center gap-2"><List className="w-4 h-4" /> Questions</h3>
@@ -400,7 +453,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
           {/* MCQ LAYOUT */}
           {!isCoding && (
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="flex-1 overflow-y-auto p-12">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-12">
                 <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
@@ -426,16 +479,26 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                     >
                       {currentQuestion.options?.map((opt, idx) => {
                         const isSelected = answers[currentQuestion.id] === opt;
+                        const id = `mcq-${currentQuestion.id}-${idx}`;
                         return (
                           <div
-                            key={idx}
+                            key={id}
+                            className={`flex items-center space-x-2 border-2 rounded-[2rem] p-6 transition-all cursor-pointer group hover:shadow-lg ${
+                              isSelected
+                                ? 'border-neutral-900 bg-neutral-900 text-white ring-4 ring-neutral-100'
+                                : 'border-neutral-100 bg-white hover:border-neutral-200'
+                            }`}
                             onClick={() => setAnswers({ ...answers, [currentQuestion.id]: opt })}
-                            className={`flex items-center space-x-2 border-2 rounded-[2rem] p-6 transition-all cursor-pointer group hover:shadow-lg ${isSelected ? 'border-neutral-900 bg-neutral-900 text-white ring-4 ring-neutral-100' : 'border-neutral-100 bg-white hover:border-neutral-200'}`}
                           >
-                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${isSelected ? 'border-white bg-white text-neutral-900' : 'border-neutral-200 group-hover:border-neutral-400'}`}>
+                            <RadioGroupItem id={id} value={opt} className="sr-only" />
+                            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                              isSelected ? 'border-white bg-white text-neutral-900' : 'border-neutral-200 group-hover:border-neutral-400'
+                            }`}>
                               <span className="text-xs font-black">{String.fromCharCode(65 + idx)}</span>
                             </div>
-                            <Label htmlFor={`opt-${idx}`} className={`flex-1 cursor-pointer font-bold text-xl ml-4 pointer-events-none ${isSelected ? 'text-white' : 'text-neutral-700'}`}>{opt}</Label>
+                            <Label htmlFor={id} className={`flex-1 cursor-pointer font-bold text-xl ml-4 ${isSelected ? 'text-white' : 'text-neutral-700'}`}>
+                              {opt}
+                            </Label>
                             {isSelected && <CheckCircle2 className="w-6 h-6 text-white ml-2 animate-in zoom-in duration-300" />}
                           </div>
                         );
@@ -446,15 +509,17 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
               </div>
 
               {/* Fixed Footer for MCQ */}
-              <footer className="h-24 border-t border-neutral-100 bg-white px-12 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-4">
-                  <span className="text-xs font-black text-neutral-400 uppercase tracking-widest">Question {currentQuestionIndex + 1} of {questions.length}</span>
+              <footer className="border-t border-neutral-100 bg-white px-4 py-3 sm:h-24 sm:px-12 sm:py-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0">
+                <div className="flex items-center justify-between sm:justify-start gap-4">
+                  <span className="text-[10px] sm:text-xs font-black text-neutral-400 uppercase tracking-widest">
+                    Question {currentQuestionIndex + 1} of {questions.length}
+                  </span>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
                   <Button
                     onClick={handleQuestionSubmit}
                     disabled={submittedQuestions.has(currentQuestion.id) || !answers[currentQuestion.id]}
-                    className={`h-14 px-10 rounded-2xl font-black text-base shadow-xl transition-all active:scale-95 ${submittedQuestions.has(currentQuestion.id) ? 'bg-green-100 text-green-700' : 'bg-neutral-900 text-white hover:bg-neutral-800'}`}
+                    className={`h-12 sm:h-14 px-6 sm:px-10 rounded-2xl font-black text-sm sm:text-base shadow-xl transition-all active:scale-95 w-full sm:w-auto ${submittedQuestions.has(currentQuestion.id) ? 'bg-green-100 text-green-700' : 'bg-neutral-900 text-white hover:bg-neutral-800'}`}
                   >
                     {submittedQuestions.has(currentQuestion.id) ? (
                       <span className="flex items-center gap-2"><CheckCircle2 className="w-5 h-5" /> Submitted</span>
@@ -463,7 +528,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                   <Button
                     onClick={handleNext}
                     disabled={!submittedQuestions.has(currentQuestion.id) && currentQuestionIndex === questions.length - 1}
-                    className="h-14 px-10 rounded-2xl font-black text-base flex items-center gap-3 shadow-xl transition-all active:scale-95 bg-white border-2 border-neutral-900 text-neutral-900 hover:bg-neutral-50"
+                    className="h-12 sm:h-14 px-6 sm:px-10 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-3 shadow-xl transition-all active:scale-95 bg-white border-2 border-neutral-900 text-neutral-900 hover:bg-neutral-50 w-full sm:w-auto"
                   >
                     {currentQuestionIndex < questions.length - 1 ? (
                       <>Next Question <ChevronRight className="w-5 h-5" /></>
@@ -478,7 +543,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
 
           {/* CODING LAYOUT (Split 1/3 - 2/3) */}
           {isCoding && (
-            <div className={`flex-1 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
+            <div className={`flex-1 flex ${isMobile ? 'flex-col overflow-auto' : 'overflow-hidden'}`}>
               {/* LEFT: Problem (Resizable) */}
               <div
                 style={isMobile ? undefined : { width: `${leftPanelWidth}%` }}
@@ -536,7 +601,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
               </div>
 
               {/* RIGHT: Code + Tests */}
-              <div className="flex-1 flex flex-col bg-[#0F0F0F] min-w-0">
+              <div className={`flex-1 flex flex-col bg-[#0F0F0F] min-w-0 ${isMobile ? 'min-h-[70vh]' : ''}`}>
                 {/* Top: Editor Header */}
                 <div className="min-h-12 bg-[#1A1A1A] flex flex-col gap-2 px-4 py-2 sm:h-12 sm:flex-row sm:items-center sm:px-6 sm:py-0 sm:justify-between border-b border-white/5 shrink-0">
                   <div className="flex items-center gap-3">
@@ -553,7 +618,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                   <Textarea
                     value={answers[currentQuestion.id] || ''}
                     onChange={(e) => setAnswers({ ...answers, [currentQuestion.id]: e.target.value })}
-                    className="w-full h-full bg-transparent text-neutral-300 font-mono text-sm sm:text-[15px] p-4 sm:p-8 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar selection:bg-blue-500/30"
+                    className={`w-full h-full bg-transparent text-neutral-300 font-mono text-sm sm:text-[15px] p-4 sm:p-8 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar selection:bg-blue-500/30 ${isMobile ? 'min-h-[55vh]' : ''}`}
                     placeholder="// Implement your solution here..."
                     spellCheck={false}
                   />

@@ -13,6 +13,7 @@ import {
 } from './ui/dropdown-menu';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -617,25 +618,49 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
         </div>
       </main>
       <Dialog open={isIssueDialogOpen} onOpenChange={setIsIssueDialogOpen}>
-        <DialogContent className="sm:max-w-[1000px] w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden bg-white selection:bg-blue-100 selection:text-blue-900">
+        <DialogContent
+          onEscapeKeyDown={() => setIsIssueDialogOpen(false)}
+          className={
+            isMobile
+              ? 'dialog-fullscreen flex flex-col overflow-hidden bg-white selection:bg-blue-100 selection:text-blue-900'
+              : 'sm:max-w-[1000px] w-[95vw] h-[90vh] p-0 flex flex-col overflow-hidden bg-white selection:bg-blue-100 selection:text-blue-900'
+          }
+        >
           <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-neutral-50/50 block">
-            <DialogHeader className="mb-8 relative text-left space-y-2">
-              <DialogTitle className="text-2xl font-bold text-slate-900">Raise an Issue</DialogTitle>
+            <DialogHeader className={isMobile ? 'mb-5 text-left space-y-1 sticky top-0 z-10 bg-neutral-50/80 backdrop-blur border-b border-neutral-200 px-4 py-4 -mx-4 -mt-4' : 'mb-8 relative text-left space-y-2'}>
+              <div className="flex items-center gap-2">
+                <DialogTitle className="text-2xl font-bold text-slate-900">Raise an Issue</DialogTitle>
+              </div>
               <DialogDescription className="text-black">
                 Report bugs, platform issues, or support requests.
               </DialogDescription>
 
               <button
-                onClick={() => setIsIssueDialogOpen(false)}
-                className="absolute -top-2 right-0 p-2 text-neutral-400 hover:text-neutral-900 transition-colors"
+                type="button"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsIssueDialogOpen(false);
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsIssueDialogOpen(false);
+                }}
+                className={
+                  isMobile
+                    ? 'fixed top-4 right-4 z-[9999] h-10 w-10 rounded-xl border border-neutral-200 bg-white text-neutral-600 shadow-sm'
+                    : 'absolute -top-2 right-0 p-2 text-neutral-400 hover:text-neutral-900 transition-colors'
+                }
+                aria-label="Close raise issue dialog"
               >
-                X
+                ×
               </button>
             </DialogHeader>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+            <div className={isMobile ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8'}>
               {/* Left Column: Form */}
-              <div className="bg-white rounded-xl shadow-xs border border-neutral-200 p-6 flex flex-col gap-6">
+              <div className={isMobile ? 'bg-white rounded-xl shadow-xs border border-neutral-200 p-4 flex flex-col gap-4' : 'bg-white rounded-xl shadow-xs border border-neutral-200 p-6 flex flex-col gap-6'}>
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 mb-1">Submit New Issue</h3>
                   <p className="text-sm text-neutral-500">Share details so support can resolve it faster.</p>
@@ -698,7 +723,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
 
                 <Button
                   onClick={handleIssueSubmit}
-                  className="w-full mt-2 font-semibold h-11"
+                  className={isMobile ? 'w-full mt-1 font-semibold h-12' : 'w-full mt-2 font-semibold h-11'}
                   style={{ backgroundColor: '#111827', color: 'white' }}
                 >
                   <AlertCircle className="w-4 h-4 mr-2" />
@@ -707,7 +732,7 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
               </div>
 
               {/* Right Column: History */}
-              <div className="bg-white rounded-xl shadow-xs border border-neutral-200 p-6">
+              <div className={isMobile ? 'bg-white rounded-xl shadow-xs border border-neutral-200 p-4' : 'bg-white rounded-xl shadow-xs border border-neutral-200 p-6'}>
                 <div className="mb-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-1">My Issue History</h3>
                   <p className="text-sm text-neutral-500">Track your reported issues and statuses.</p>

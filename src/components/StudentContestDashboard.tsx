@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Zap,
 } from 'lucide-react';
+import { useIsMobile } from './ui/use-mobile';
 
 interface Question {
   id: string;
@@ -48,6 +49,7 @@ export function StudentContestDashboard({
 }: {
   onNavigate?: (page: string, data?: any) => void;
 }) {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<'live' | 'upcoming' | 'past'>('live');
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
@@ -163,8 +165,8 @@ export function StudentContestDashboard({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className={isMobile ? 'min-h-screen bg-slate-50 p-4 font-sans' : 'min-h-screen bg-slate-50 p-8 font-sans'}>
+      <div className={isMobile ? 'max-w-7xl mx-auto space-y-6' : 'max-w-7xl mx-auto space-y-8'}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Coding Contests</h1>

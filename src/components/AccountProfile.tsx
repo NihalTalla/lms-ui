@@ -7,6 +7,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
+import { useIsMobile } from './ui/use-mobile';
 
 interface ProfileDraft {
   displayName: string;
@@ -49,6 +50,7 @@ const saveDraft = (userId: string, draft: ProfileDraft) => {
 
 export function AccountProfile() {
   const { currentUser } = useAuth();
+  const isMobile = useIsMobile();
 
   const initialDraft = React.useMemo<ProfileDraft>(
     () => ({
@@ -79,6 +81,94 @@ export function AccountProfile() {
     saveDraft(currentUser.id, draft);
     toast.success('Profile details saved');
   };
+
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-bold text-neutral-900">Profile</h2>
+            <p className="text-sm text-neutral-600 truncate">{currentUser.email}</p>
+          </div>
+          <Badge variant="outline" className="w-fit capitalize shrink-0">
+            {currentUser.role}
+          </Badge>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{draft.displayName || currentUser.name}</CardTitle>
+            <CardDescription>{currentUser.email}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl bg-neutral-100 p-4">
+              <div className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Account role</div>
+              <div className="mt-2 text-lg font-semibold capitalize text-neutral-900">{currentUser.role}</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Account details</CardTitle>
+            <CardDescription>Update your profile details.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Display name</Label>
+                <Input
+                  id="displayName"
+                  value={draft.displayName}
+                  onChange={(event) => setDraft((prev) => ({ ...prev, displayName: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emailAddress">Email address</Label>
+                <Input
+                  id="emailAddress"
+                  value={draft.email}
+                  onChange={(event) => setDraft((prev) => ({ ...prev, email: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone</Label>
+                <Input
+                  id="phoneNumber"
+                  value={draft.phone}
+                  onChange={(event) => setDraft((prev) => ({ ...prev, phone: event.target.value }))}
+                  placeholder="Add a contact number"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="timeZone">Timezone</Label>
+                <Input
+                  id="timeZone"
+                  value={draft.timezone}
+                  onChange={(event) => setDraft((prev) => ({ ...prev, timezone: event.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bio">Bio</Label>
+              <Textarea
+                id="bio"
+                rows={6}
+                value={draft.bio}
+                onChange={(event) => setDraft((prev) => ({ ...prev, bio: event.target.value }))}
+                placeholder="Add a short introduction for your LMS profile"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleSave}>Save profile</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

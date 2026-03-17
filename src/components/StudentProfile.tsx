@@ -24,6 +24,7 @@ import { useAuth } from '../lib/auth-context';
 import { ResumeBuilder } from './ResumeBuilder';
 import { toast } from 'sonner';
 import { Star } from 'lucide-react';
+import { useIsMobile } from './ui/use-mobile';
 
 interface StudentProfileProps {
   onNavigate: (page: string, data?: any) => void;
@@ -31,6 +32,7 @@ interface StudentProfileProps {
 
 export function StudentProfile({ onNavigate }: StudentProfileProps) {
   const { currentUser } = useAuth();
+  const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState('personal-info');
 
   const [projects, setProjects] = useState<{ id: number, title: string, description: string, isActive: boolean, tags: string[] }[]>([]);
@@ -580,6 +582,53 @@ export function StudentProfile({ onNavigate }: StudentProfileProps) {
         return null;
     }
   };
+
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        <button
+          onClick={() => onNavigate('dashboard')}
+          className="inline-flex items-center gap-2 text-neutral-600 hover:text-neutral-900"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </button>
+
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-bold text-neutral-900">Profile</h2>
+            <p className="text-sm text-neutral-500 truncate">{currentUser?.name}</p>
+          </div>
+          <Avatar className="w-10 h-10 shrink-0">
+            <AvatarFallback className="text-white" style={{ backgroundColor: '#7C3AED' }}>
+              {currentUser?.name.split(' ').map(n => n[0]).join('') || 'S'}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+
+        <div className="bg-white border border-neutral-200 rounded-xl p-3">
+          <Label className="text-xs text-neutral-500">Section</Label>
+          <select
+            className="mt-2 w-full h-11 px-3 rounded-lg border border-neutral-200 bg-white text-sm font-medium"
+            value={activeSection}
+            onChange={(e) => setActiveSection(e.target.value)}
+          >
+            {menuItems.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            {renderContent()}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-6">
