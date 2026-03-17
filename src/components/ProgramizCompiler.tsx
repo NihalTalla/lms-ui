@@ -6,12 +6,14 @@ import { ScrollArea } from './ui/scroll-area';
 import { Play, RotateCcw, Copy, Trash2, ChevronRight, Terminal, Settings, Download, Monitor, Code2, ArrowLeft } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 import { toast } from 'sonner';
+import { useIsMobile } from './ui/use-mobile';
 
 interface ProgramizCompilerProps {
     onBack?: () => void;
 }
 
 export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
+    const isMobile = useIsMobile();
     const [language, setLanguage] = useState('python');
     const [code, setCode] = useState(`def greet(name):\n    print(f"Hello, {name}!")\n\ngreet("Programiz")\n\n# Try writing some more code here\nfor i in range(5):\n    print(f"Count: {i}")`);
     const [output, setOutput] = useState('Click "Run" to see the output here...');
@@ -67,12 +69,12 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
     return (
         <div className="flex flex-col w-full bg-white rounded-xl border border-neutral-200 shadow-xl overflow-hidden mb-6">
             {/* Professional White Header Toolbar */}
-            <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-neutral-200">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-3 px-4 py-4 sm:px-6 bg-white border-b border-neutral-200 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="bg-white text-black hover:bg-neutral-50 font-bold border-neutral-300 shadow-sm h-9 px-4 active:scale-95"
+                        className="bg-white text-black hover:bg-neutral-50 font-bold border-neutral-300 shadow-sm h-9 px-4 active:scale-95 w-full sm:w-auto"
                         onClick={onBack}
                         style={{ backgroundColor: 'white', color: 'black' }}
                     >
@@ -80,7 +82,7 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
                         Back
                     </Button>
 
-                    <div className="h-6 w-px bg-neutral-200 mx-2" />
+                    <div className="hidden sm:block h-6 w-px bg-neutral-200 mx-1" />
 
                     <div className="flex items-center gap-3">
                         <div className="p-1.5 bg-blue-600 rounded shadow-md">
@@ -92,7 +94,7 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
                     </div>
 
                     <Select value={language} onValueChange={setLanguage}>
-                        <SelectTrigger className="w-40 bg-white border-neutral-300 text-neutral-900 font-bold text-xs h-9 shadow-sm hover:bg-neutral-50 transition-all uppercase">
+                        <SelectTrigger className="w-full min-[420px]:w-40 bg-white border-neutral-300 text-neutral-900 font-bold text-xs h-9 shadow-sm hover:bg-neutral-50 transition-all uppercase">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-white border-neutral-200 text-neutral-900 font-bold">
@@ -104,11 +106,11 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
                     </Select>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="bg-white text-black hover:bg-neutral-50 font-bold border-neutral-300 shadow-sm h-9 px-4"
+                        className="bg-white text-black hover:bg-neutral-50 font-bold border-neutral-300 shadow-sm h-9 px-4 flex-1 sm:flex-none"
                         onClick={copyToClipboard}
                         style={{ backgroundColor: 'white', color: 'black' }}
                     >
@@ -118,7 +120,7 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="bg-white text-black hover:bg-neutral-50 font-bold border-neutral-300 shadow-sm h-9 px-4"
+                        className="bg-white text-black hover:bg-neutral-50 font-bold border-neutral-300 shadow-sm h-9 px-4 flex-1 sm:flex-none"
                         onClick={handleReset}
                         style={{ backgroundColor: 'white', color: 'black' }}
                     >
@@ -128,7 +130,7 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
                     <Button
                         onClick={handleRun}
                         disabled={isRunning}
-                        className="bg-[#238636] hover:bg-[#2ea043] text-white font-black px-6 h-9 shadow-md transition-all active:scale-95 flex items-center border-none rounded-md"
+                        className="bg-[#238636] hover:bg-[#2ea043] text-white font-black px-6 h-9 shadow-md transition-all active:scale-95 flex items-center justify-center border-none rounded-md flex-1 sm:flex-none"
                         style={{ backgroundColor: '#238636', color: 'white' }}
                     >
                         {isRunning ? (
@@ -149,7 +151,7 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
             {/* Main Content Area */}
             <div className="flex flex-col bg-white">
                 {/* File Explorer Tab Bar */}
-                <div className="flex items-center justify-between px-6 py-2 bg-[#f8f9fa] border-b border-neutral-200">
+                <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-[#f8f9fa] border-b border-neutral-200">
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2 text-[11px] font-bold text-neutral-600 uppercase tracking-wider bg-white px-4 py-1.5 rounded-full border border-neutral-200 shadow-sm">
                             <span>main.{language === 'javascript' ? 'js' : language === 'cpp' ? 'cpp' : language}</span>
@@ -158,23 +160,23 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
                 </div>
 
                 {/* The Editor Area - Fixed pixels to ensure it never collapses */}
-                <div className="h-[450px] relative border-b border-neutral-200 overflow-hidden">
+                <div className="h-[320px] sm:h-[450px] relative border-b border-neutral-200 overflow-hidden">
                     <Editor
-                        height="450px"
+                        height={isMobile ? '320px' : '450px'}
                         language={language === 'python' ? 'python' : language === 'javascript' ? 'javascript' : language === 'cpp' ? 'cpp' : 'java'}
                         value={code}
                         onChange={(value) => setCode(value || '')}
                         theme={theme}
                         options={{
                             minimap: { enabled: false },
-                            fontSize: 16,
-                            lineNumbers: 'on',
+                            fontSize: isMobile ? 13 : 16,
+                            lineNumbers: isMobile ? 'off' : 'on',
                             roundedSelection: true,
                             scrollBeyondLastLine: false,
                             automaticLayout: true,
-                            padding: { top: 20 },
+                            padding: { top: isMobile ? 12 : 20 },
                             fontFamily: "'Fira Code', 'Cascadia Code', Consolas, monospace",
-                            lineHeight: 26,
+                            lineHeight: isMobile ? 22 : 26,
                             cursorBlinking: 'smooth',
                         }}
                     />
@@ -182,8 +184,8 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
 
                 {/* Terminal / Console Area - Space-optimized */}
                 <div className="min-h-[200px] flex flex-col bg-white">
-                    <div className="flex items-center justify-between px-6 py-2.5 bg-[#f8f9fa] border-b border-neutral-200">
-                        <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-2.5 bg-[#f8f9fa] border-b border-neutral-200">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             <Terminal className="w-4 h-4 text-blue-600" />
                             <span className="text-[10px] font-black text-neutral-900 uppercase tracking-[0.2em]">Console Output</span>
                         </div>
@@ -203,7 +205,7 @@ export function ProgramizCompiler({ onBack }: ProgramizCompilerProps) {
                             </Button>
                         </div>
                     </div>
-                    <ScrollArea className="flex-1 px-8 py-5 font-mono text-sm leading-relaxed overflow-y-auto bg-white min-h-[150px]">
+                    <ScrollArea className="flex-1 px-4 sm:px-8 py-4 sm:py-5 font-mono text-xs sm:text-sm leading-relaxed overflow-y-auto bg-white min-h-[150px]">
                         <div className={`whitespace-pre-wrap ${isRunning ? 'text-blue-600 italic' : 'text-neutral-800'}`}>
                             {output}
                         </div>

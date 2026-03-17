@@ -35,6 +35,12 @@ interface LayoutProps {
 export function Layout({ children, currentPage, onNavigate, hideSidebar = false }: LayoutProps) {
   const { currentUser, logout } = useAuth();
   const isMobile = useIsMobile();
+  const profileMenuContentClass = isMobile
+    ? 'w-[calc(100vw-1rem)] max-w-[20rem] p-0 rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden'
+    : 'w-[220px] max-w-[calc(100vw-1rem)] p-0 rounded-xl shadow-lg border border-neutral-200 overflow-hidden';
+  const profileMenuItemClass = isMobile
+    ? 'flex items-center gap-3 cursor-pointer px-3 py-3 rounded-xl hover:bg-neutral-50 focus:bg-neutral-50'
+    : 'flex items-center gap-2.5 cursor-pointer px-2.5 py-2 rounded-md hover:bg-neutral-50 focus:bg-neutral-50';
 
   const [isInstitutionsOpen, setIsInstitutionsOpen] = React.useState(false);
   const [isAssessmentsOpen, setIsAssessmentsOpen] = React.useState(false);
@@ -488,50 +494,51 @@ export function Layout({ children, currentPage, onNavigate, hideSidebar = false 
                   <ChevronDown className="hidden sm:block w-4 h-4 text-neutral-600" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-0 rounded-lg shadow-lg border border-neutral-200">
-                <div className="p-1">
-                  <DropdownMenuItem
-                    onClick={() => setIsIssueDialogOpen(true)}
-                    className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50"
-                  >
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                    <span className="text-neutral-700 text-sm">Raise an Issue</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onNavigate('profile')}
-                    className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50"
-                  >
-                    <User className="w-4 h-4 text-neutral-600" />
-                    <span className="text-neutral-700 text-sm">View Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onNavigate('settings')}
-                    className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50"
-                  >
-                    <Settings className="w-4 h-4 text-neutral-600" />
-                    <span className="text-neutral-700 text-sm">Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-md hover:bg-neutral-50 focus:bg-neutral-50 text-neutral-700"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span className="text-sm">Logout</span>
-                  </DropdownMenuItem>
-                </div>
-                <DropdownMenuSeparator className="m-0" />
-                <div className="px-3 py-3 bg-neutral-100 rounded-b-lg">
+              <DropdownMenuContent align="end" sideOffset={isMobile ? 10 : 8} className={profileMenuContentClass}>
+                <div className="px-3 py-3 bg-neutral-50">
                   <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10">
+                    <Avatar className="w-10 h-10 shrink-0">
                       <AvatarFallback style={{ backgroundColor: currentUser.role === 'student' ? '#7C3AED' : 'var(--color-primary)', color: 'white' }}>
                         {currentUser.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate text-neutral-900">{currentUser.name.toUpperCase()}</div>
+                      <div className="truncate text-sm font-semibold text-neutral-900">{currentUser.name}</div>
+                      <div className="text-[11px] text-neutral-500 capitalize">{currentUser.role} account</div>
                     </div>
-                    <ChevronDown className="w-4 h-4 text-neutral-500" />
+                    <ChevronDown className="w-4 h-4 text-neutral-400" />
                   </div>
+                </div>
+                <DropdownMenuSeparator className="m-0" />
+                <div className="p-2">
+                  <DropdownMenuItem
+                    onClick={() => setIsIssueDialogOpen(true)}
+                    className={profileMenuItemClass}
+                  >
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                    <span className="text-sm text-neutral-700">Raise an Issue</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onNavigate('profile')}
+                    className={profileMenuItemClass}
+                  >
+                    <User className="w-4 h-4 shrink-0 text-neutral-600" />
+                    <span className="text-sm text-neutral-700">View Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onNavigate('settings')}
+                    className={profileMenuItemClass}
+                  >
+                    <Settings className="w-4 h-4 shrink-0 text-neutral-600" />
+                    <span className="text-sm text-neutral-700">Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className={`${profileMenuItemClass} text-neutral-700`}
+                  >
+                    <LogOut className="w-4 h-4 shrink-0" />
+                    <span className="text-sm">Logout</span>
+                  </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>

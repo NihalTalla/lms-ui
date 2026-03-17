@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EdRealmLogo } from './EdRealmLogo';
+import { useIsMobile } from './ui/use-mobile';
 
 interface Question {
   id: string;
@@ -49,6 +50,7 @@ interface ContestParticipationProps {
 }
 
 export function ContestParticipation({ contest, onSubmit, onExit }: ContestParticipationProps) {
+  const isMobile = useIsMobile();
   // --- MOCK DATA FOR DEMO ---
   const questions: Question[] = [
     {
@@ -341,15 +343,15 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
       </Dialog>
 
       {/* HEADER */}
-      <header className="h-16 bg-white border-b border-neutral-200 px-6 flex items-center justify-between shrink-0 z-50">
-        <div className="flex items-center gap-4">
+      <header className="bg-white border-b border-neutral-200 px-4 py-3 sm:h-16 sm:px-6 sm:py-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shrink-0 z-50">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <EdRealmLogo size="small" />
-          <h1 className="font-bold text-lg">{contestTitle}</h1>
-          <div className="h-6 w-px bg-neutral-200 mx-2" />
+          <h1 className="font-bold text-base sm:text-lg">{contestTitle}</h1>
+          <div className="hidden sm:block h-6 w-px bg-neutral-200 mx-2" />
           <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 border-none font-medium">Question {currentQuestionIndex + 1} / {questions.length}</Badge>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 w-full sm:w-auto">
           {/* Points */}
           <div className="flex items-center gap-2 bg-neutral-50 px-3 py-1.5 rounded-md border border-neutral-100">
             <Trophy className="w-4 h-4 text-orange-500" />
@@ -476,18 +478,27 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
 
           {/* CODING LAYOUT (Split 1/3 - 2/3) */}
           {isCoding && (
-            <div className="flex-1 flex overflow-hidden">
+            <div className={`flex-1 flex overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
               {/* LEFT: Problem (Resizable) */}
-              <div style={{ width: `${leftPanelWidth}%` }} className="bg-white border-r border-neutral-200 overflow-y-auto flex flex-col min-w-[300px] relative shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.02)]">
+              <div
+                style={isMobile ? undefined : { width: `${leftPanelWidth}%` }}
+                className={`bg-white overflow-y-auto flex flex-col relative shrink-0 ${
+                  isMobile
+                    ? 'w-full min-w-0 border-b border-neutral-200'
+                    : 'min-w-[300px] border-r border-neutral-200 shadow-[10px_0_30px_rgba(0,0,0,0.02)]'
+                }`}
+              >
                 {/* Drag Handle */}
-                <div
-                  onMouseDown={() => setIsResizingLeft(true)}
-                  className="absolute right-0 top-0 bottom-0 w-1.5 bg-transparent hover:bg-blue-500 cursor-col-resize z-20 group"
-                >
-                  <div className="w-0.5 h-full bg-neutral-100 group-hover:bg-blue-500 transition-colors mx-auto" />
-                </div>
+                {!isMobile && (
+                  <div
+                    onMouseDown={() => setIsResizingLeft(true)}
+                    className="absolute right-0 top-0 bottom-0 w-1.5 bg-transparent hover:bg-blue-500 cursor-col-resize z-20 group"
+                  >
+                    <div className="w-0.5 h-full bg-neutral-100 group-hover:bg-blue-500 transition-colors mx-auto" />
+                  </div>
+                )}
 
-                <div className="flex-1 p-8 space-y-8">
+                <div className="flex-1 p-4 sm:p-8 space-y-6 sm:space-y-8">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <Badge className="bg-neutral-900 text-white px-3 py-1 font-bold text-[10px] uppercase tracking-wider">{currentQuestion.difficulty}</Badge>
@@ -496,11 +507,11 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                         <span className="text-neutral-600 text-[10px] font-black uppercase tracking-widest">{currentQuestion.points} Points</span>
                       </div>
                     </div>
-                    <h2 className="text-3xl font-black text-neutral-900 leading-tight tracking-tight">{currentQuestion.title}</h2>
+                    <h2 className="text-2xl sm:text-3xl font-black text-neutral-900 leading-tight tracking-tight">{currentQuestion.title}</h2>
                   </div>
 
                   <div className="prose prose-neutral max-w-none">
-                    <div className="bg-neutral-50/50 rounded-2xl p-6 border border-neutral-100 leading-relaxed text-neutral-600 font-medium whitespace-pre-wrap">
+                    <div className="bg-neutral-50/50 rounded-2xl p-4 sm:p-6 border border-neutral-100 leading-relaxed text-neutral-600 font-medium whitespace-pre-wrap">
                       {currentQuestion.description}
                     </div>
                   </div>
@@ -508,7 +519,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                   <div className="space-y-4">
                     <h3 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest pl-1">Examples</h3>
                     {currentQuestion.examples?.map((ex, i) => (
-                      <div key={i} className="bg-white rounded-2xl p-5 border border-neutral-200 shadow-sm space-y-3 group hover:border-neutral-300 transition-all">
+                      <div key={i} className="bg-white rounded-2xl p-4 sm:p-5 border border-neutral-200 shadow-sm space-y-3 group hover:border-neutral-300 transition-all">
                         <div className="flex items-center gap-2">
                           <div className="w-5 h-5 rounded bg-neutral-900 text-white flex items-center justify-center text-[10px] font-bold">{i + 1}</div>
                           <p className="font-bold text-neutral-900 text-xs uppercase tracking-wider">Example Instance</p>
@@ -527,7 +538,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
               {/* RIGHT: Code + Tests */}
               <div className="flex-1 flex flex-col bg-[#0F0F0F] min-w-0">
                 {/* Top: Editor Header */}
-                <div className="h-12 bg-[#1A1A1A] flex items-center px-6 justify-between border-b border-white/5 shrink-0">
+                <div className="min-h-12 bg-[#1A1A1A] flex flex-col gap-2 px-4 py-2 sm:h-12 sm:flex-row sm:items-center sm:px-6 sm:py-0 sm:justify-between border-b border-white/5 shrink-0">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
                     <span className="text-neutral-300 text-xs font-black tracking-widest uppercase">Solution.java</span>
@@ -542,41 +553,43 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                   <Textarea
                     value={answers[currentQuestion.id] || ''}
                     onChange={(e) => setAnswers({ ...answers, [currentQuestion.id]: e.target.value })}
-                    className="w-full h-full bg-transparent text-neutral-300 font-mono text-[15px] p-8 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar selection:bg-blue-500/30"
+                    className="w-full h-full bg-transparent text-neutral-300 font-mono text-sm sm:text-[15px] p-4 sm:p-8 border-none resize-none focus:ring-0 focus-visible:ring-0 leading-relaxed custom-scrollbar selection:bg-blue-500/30"
                     placeholder="// Implement your solution here..."
                     spellCheck={false}
                   />
                 </div>
 
                 {/* Resize Handle (Vertical) */}
-                <div
-                  onMouseDown={() => setIsResizingBottom(true)}
-                  className="h-1.5 bg-[#1A1A1A] hover:bg-blue-500 cursor-row-resize shrink-0 z-20 transition-colors group flex items-center justify-center"
-                >
-                  <div className="w-12 h-0.5 bg-white/10 rounded-full group-hover:bg-white/40" />
-                </div>
+                {!isMobile && (
+                  <div
+                    onMouseDown={() => setIsResizingBottom(true)}
+                    className="h-1.5 bg-[#1A1A1A] hover:bg-blue-500 cursor-row-resize shrink-0 z-20 transition-colors group flex items-center justify-center"
+                  >
+                    <div className="w-12 h-0.5 bg-white/10 rounded-full group-hover:bg-white/40" />
+                  </div>
+                )}
 
                 {/* Bottom Panel: Tests & Console */}
-                <div style={{ height: bottomPanelHeight }} className="bg-[#141414] border-t border-white/5 flex flex-col shrink-0">
-                  <div className="h-12 bg-[#1A1A1A] flex items-center px-6 justify-between border-b border-white/5 shrink-0">
-                    <div className="flex items-center gap-8">
+                <div style={isMobile ? undefined : { height: bottomPanelHeight }} className={`bg-[#141414] border-t border-white/5 flex flex-col shrink-0 ${isMobile ? 'h-[36dvh]' : ''}`}>
+                  <div className="min-h-12 bg-[#1A1A1A] flex flex-col gap-2 px-4 py-2 sm:h-12 sm:flex-row sm:items-center sm:px-6 sm:py-0 sm:justify-between border-b border-white/5 shrink-0">
+                    <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto">
                       <button className="text-[10px] font-black text-white uppercase tracking-widest border-b-2 border-blue-500 h-12 flex items-center transition-all hover:text-white">Test Cases</button>
                       <button className="text-[10px] font-black text-neutral-500 uppercase tracking-widest h-12 flex items-center transition-all hover:text-white">Console</button>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Button variant="outline" size="sm" className="h-8 bg-transparent border-white/10 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg text-xs font-bold transition-all">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                      <Button variant="outline" size="sm" className="h-8 bg-transparent border-white/10 text-neutral-400 hover:text-white hover:bg-white/5 rounded-lg text-xs font-bold transition-all w-full sm:w-auto">
                         <Play className="w-3.5 h-3.5 mr-2" /> Run Code
                       </Button>
                       <Button
                         onClick={handleNext}
-                        className="h-8 px-6 rounded-lg font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 bg-white text-black hover:bg-neutral-200"
+                        className="h-8 px-6 rounded-lg font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 bg-white text-black hover:bg-neutral-200 w-full sm:w-auto"
                       >
                         {currentQuestionIndex < questions.length - 1 ? 'Next' : 'Finish'}
                       </Button>
                     </div>
                   </div>
 
-                  <div className="flex-1 p-8 overflow-y-auto custom-scrollbar-dark">
+                  <div className="flex-1 p-4 sm:p-8 overflow-y-auto custom-scrollbar-dark">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3 text-neutral-500">
                         <div className="w-1.5 h-1.5 rounded-full bg-neutral-700" />
@@ -589,7 +602,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                   </div>
 
                   {/* Submit Footer */}
-                  <div className="p-6 border-t border-white/5 flex justify-between items-center bg-[#1A1A1A]">
+                  <div className="p-4 sm:p-6 border-t border-white/5 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center bg-[#1A1A1A]">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-neutral-700" />
@@ -599,7 +612,7 @@ export function ContestParticipation({ contest, onSubmit, onExit }: ContestParti
                     <Button
                       onClick={handleQuestionSubmit}
                       disabled={submittedQuestions.has(currentQuestion.id) || !answers[currentQuestion.id]}
-                      className={`font-black uppercase tracking-widest h-12 px-10 rounded-2xl transition-all active:scale-95 shadow-2xl ${submittedQuestions.has(currentQuestion.id) ? 'bg-green-500 text-white cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                      className={`font-black uppercase tracking-widest h-12 px-10 rounded-2xl transition-all active:scale-95 shadow-2xl w-full sm:w-auto ${submittedQuestions.has(currentQuestion.id) ? 'bg-green-500 text-white cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
                     >
                       {submittedQuestions.has(currentQuestion.id) ? 'Submitted' : 'Final Submit'}
                     </Button>

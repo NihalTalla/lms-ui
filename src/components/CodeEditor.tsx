@@ -259,7 +259,7 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
           <Separator orientation="vertical" className="h-6 hidden sm:block" />
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ChevronLeft className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline">Back</span>
+            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Back</span>
           </Button>
           <Separator orientation="vertical" className="h-6 hidden sm:block" />
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -271,9 +271,9 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+        <div className={isMobile ? 'grid grid-cols-2 gap-2 w-full' : 'flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end'}>
           <Select value={language} onValueChange={setLanguage}>
-            <SelectTrigger className="w-24 sm:w-32 shrink-0">
+            <SelectTrigger className={isMobile ? 'col-span-2 w-full shrink-0' : 'w-[110px] sm:w-32 shrink-0'}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -288,16 +288,25 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className={isMobile ? 'h-9 w-full shrink-0' : 'h-9 w-9 shrink-0'}
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </Button>
 
           <Button
-            variant="ghost"
-            size="icon"
+            variant={isMobile ? 'outline' : 'ghost'}
+            size={isMobile ? 'sm' : 'icon'}
             onClick={() => setShowSidebar(!showSidebar)}
+            className={isMobile ? 'h-9 w-full shrink-0 text-xs' : 'h-9 w-9 shrink-0'}
           >
-            {showSidebar ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {isMobile ? (
+              <>
+                <Info className="w-4 h-4 mr-1" />
+                {showSidebar ? 'Close' : 'Problem'}
+              </>
+            ) : (
+              showSidebar ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />
+            )}
           </Button>
 
           <Separator orientation="vertical" className="h-6 hidden sm:block" />
@@ -307,10 +316,10 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
             size="sm"
             onClick={() => setShowSaveDialog(true)}
             title="Save your solution"
-            className="shrink-0"
+            className={isMobile ? 'h-9 w-full shrink-0' : 'h-9 shrink-0'}
           >
             <Save className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Save</span>
+            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Save</span>
           </Button>
 
           <Button
@@ -318,11 +327,11 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
             size="sm"
             onClick={() => setShowFilesDialog(true)}
             title="View saved solutions"
-            className="shrink-0"
+            className={isMobile ? 'h-9 w-full shrink-0' : 'h-9 shrink-0'}
           >
             <FolderOpen className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Files ({savedFiles.length})</span>
-            <span className="sm:hidden">{savedFiles.length}</span>
+            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Files ({savedFiles.length})</span>
+            <span className={isMobile ? 'hidden' : 'sm:hidden'}>{savedFiles.length}</span>
           </Button>
 
           <Separator orientation="vertical" className="h-6 hidden sm:block" />
@@ -331,38 +340,49 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
             variant="outline"
             onClick={runCode}
             disabled={isRunning || isSubmitting}
-            className="shrink-0"
+            className={isMobile ? 'h-10 w-full shrink-0' : 'h-9 shrink-0'}
           >
             {isRunning ? (
               <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
             ) : (
               <Play className="w-4 h-4 sm:mr-2" />
             )}
-            <span className="hidden sm:inline">Run</span>
+            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Run</span>
           </Button>
 
           <Button
             onClick={submitCode}
             disabled={isRunning || isSubmitting}
             style={{ backgroundColor: 'var(--color-primary)' }}
-            className="shrink-0"
+            className={isMobile ? 'h-10 w-full shrink-0 [grid-column:1/-1]' : 'h-9 shrink-0'}
           >
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 sm:mr-2 animate-spin" />
             ) : (
               <Send className="w-4 h-4 sm:mr-2" />
             )}
-            <span className="hidden sm:inline">Submit</span>
+            <span className={isMobile ? 'inline' : 'hidden sm:inline'}>Submit</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 relative">
         {/* Problem Description Sidebar */}
         {showSidebar && (
-          <div className="w-full md:w-[420px] lg:w-[500px] h-[45dvh] md:h-auto bg-white border-b md:border-b-0 md:border-r border-neutral-200 flex flex-col shrink-0 min-h-0">
+          <div className={`${isMobile ? 'absolute inset-0 z-20 bg-white' : 'w-full md:w-[420px] lg:w-[500px] h-[40dvh] md:h-auto bg-white border-b md:border-b-0 md:border-r'} border-neutral-200 flex flex-col shrink-0 min-h-0`}>
+            {isMobile && (
+              <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
+                <div>
+                  <div className="text-sm font-semibold text-neutral-900">Problem Details</div>
+                  <div className="text-xs text-neutral-500 truncate">{problem.title}</div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setShowSidebar(false)}>
+                  Done
+                </Button>
+              </div>
+            )}
             <Tabs defaultValue="description" className="flex-1 flex flex-col">
-              <TabsList className="w-full justify-start rounded-none border-b">
+              <TabsList className={isMobile ? 'w-full grid grid-cols-3 rounded-none border-b h-11' : 'w-full justify-start rounded-none border-b overflow-x-auto flex-nowrap'}>
                 <TabsTrigger value="description">Description</TabsTrigger>
                 <TabsTrigger value="submissions">Submissions</TabsTrigger>
                 <TabsTrigger value="solutions">Solutions</TabsTrigger>
@@ -447,37 +467,48 @@ export function CodeEditor({ problem, onBack }: CodeEditorProps) {
         )}
 
         {/* Editor and Console */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Monaco Editor */}
-          <div className="flex-1 relative">
-            <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
-              <div className="flex items-center gap-2 bg-neutral-900 px-3 py-1 rounded text-xs text-neutral-400">
+          <div className={isMobile ? 'relative h-[38dvh] min-h-[18rem]' : 'flex-1 relative'}>
+            {!isMobile && (
+            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 flex items-center gap-2">
+              <div className="flex items-center gap-1.5 bg-neutral-900/90 px-2.5 py-1 rounded text-[10px] sm:text-xs text-neutral-400 shadow-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
                 Auto-saving
               </div>
             </div>
-            <Editor
-              height="100%"
-              language={language}
-              theme={theme === 'dark' ? 'vs-dark' : 'light'}
-              value={code}
-              onChange={(value) => setCode(value || '')}
-              options={{
-                fontSize: 14,
-                fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace',
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                lineNumbers: 'on',
-                renderLineHighlight: 'all',
-                automaticLayout: true,
-              }}
-            />
+            )}
+            {isMobile ? (
+              <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className={`w-full h-full p-4 font-mono text-sm leading-relaxed resize-none outline-none ${theme === 'dark' ? 'bg-[#1e1e1e] text-white' : 'bg-white text-neutral-800'}`}
+                spellCheck={false}
+              />
+            ) : (
+              <Editor
+                height="100%"
+                language={language}
+                theme={theme === 'dark' ? 'vs-dark' : 'light'}
+                value={code}
+                onChange={(value) => setCode(value || '')}
+                options={{
+                  fontSize: 14,
+                  fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace',
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  lineNumbers: 'on',
+                  renderLineHighlight: 'all',
+                  automaticLayout: true,
+                }}
+              />
+            )}
           </div>
 
           {/* Console/Output */}
-          <div className="h-56 sm:h-64 border-t border-neutral-200 bg-white">
+          <div className={isMobile ? 'h-[34dvh] min-h-[16rem] border-t border-neutral-200 bg-white' : 'h-56 sm:h-64 border-t border-neutral-200 bg-white'}>
             <Tabs defaultValue="testcases" className="h-full flex flex-col">
-              <TabsList className="w-full justify-start rounded-none border-b">
+              <TabsList className={isMobile ? 'w-full grid grid-cols-3 rounded-none border-b h-11' : 'w-full justify-start rounded-none border-b overflow-x-auto flex-nowrap'}>
                 <TabsTrigger value="testcases">Test Cases</TabsTrigger>
                 <TabsTrigger value="output">Output</TabsTrigger>
                 <TabsTrigger value="results">
