@@ -337,6 +337,8 @@ export function CodingChallengeUI({
       {/* Result Dialog (Preserved functionality) */}
       <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>
         <DialogContent className="max-w-md rounded-[32px] border-none shadow-2xl p-0 overflow-hidden">
+          <DialogTitle className="sr-only">Submission Result</DialogTitle>
+          <DialogDescription className="sr-only">Your code execution results</DialogDescription>
           <div className="p-10 space-y-8">
             <header className="flex flex-col items-center gap-4 text-center">
               {submitResult?.passed ? (

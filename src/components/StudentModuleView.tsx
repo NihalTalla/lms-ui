@@ -283,21 +283,12 @@ export function StudentModuleView({ course, selectedModule, onNavigate, onBack }
                       size="sm"
                       className="h-9 px-3 rounded-xl"
                       type="button"
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsMobileSidebarOpen(true);
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsMobileSidebarOpen(true);
-                      }}
+                      onClick={() => setIsMobileSidebarOpen(true)}
                       aria-expanded={isMobileSidebarOpen}
                       aria-controls="mobile-chapters-sidebar"
+                      aria-label="Open chapters sidebar"
                     >
-                      <Menu className="w-4 h-4 mr-2" />
-                      Chapters
+                      <Menu className="w-4 h-4" />
                     </Button>
                   )}
                   <button
