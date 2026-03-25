@@ -51,7 +51,7 @@ function AppContent() {
     const { currentUser } = useAuth();
     const [currentPage, setCurrentPage] = useState<PageId>('dashboard');
     const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
-    const [pageData, setPageData] = useState<unknown>(null);
+    const [pageData, setPageData] = useState<any>(null);
 
     React.useEffect(() => {
         if (currentUser) {
@@ -94,7 +94,7 @@ function AppContent() {
         setSelectedProblem(null);
     };
 
-    const renderContent = () => {
+    const renderContent = (): React.ReactNode => {
         if (currentPage === 'editor' && selectedProblem) {
             return <CodeEditor problem={selectedProblem} onBack={() => handleNavigate('problems')} />;
         }

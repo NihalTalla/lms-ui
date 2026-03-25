@@ -33,6 +33,7 @@ export const pageIds = [
   'manage-institutions',
   'batch-years',
   'assessments-management',
+  'assessment',
   'test-monitoring',
   'trainer-compiler',
   'grading',

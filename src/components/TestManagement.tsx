@@ -521,6 +521,9 @@ export function TestManagement({ onNavigate }: TestManagementProps) {
                               <Search className="w-5 h-5 text-blue-400" />
                               Question Bank Library
                             </DialogTitle>
+                            <DialogDescription className="text-neutral-300">
+                              Browse and select questions from the question bank to add to your test.
+                            </DialogDescription>
                           </DialogHeader>
                           <div className="p-6 space-y-6 flex-1 overflow-y-auto bg-neutral-50/50">
                             <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-neutral-200 shadow-sm">

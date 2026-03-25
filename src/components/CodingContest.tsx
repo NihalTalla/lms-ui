@@ -477,6 +477,9 @@ export function CodingContest() {
                     <DialogContent className="w-screen h-[100dvh] max-w-none rounded-none overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle className="text-xl">{selectedContest?.name} - Questions</DialogTitle>
+                            <DialogDescription>
+                                View and manage questions for this contest.
+                            </DialogDescription>
                         </DialogHeader>
                         {selectedContest && (
                             <div className="space-y-3 mt-4">

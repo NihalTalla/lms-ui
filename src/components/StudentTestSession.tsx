@@ -205,7 +205,10 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
 
       <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
         <DialogContent className="bg-white border-2 border-black max-w-md">
-          <DialogHeader><DialogTitle>Exit Test?</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Exit Test?</DialogTitle>
+            <DialogDescription>Are you sure you want to exit the test? Your progress will be saved.</DialogDescription>
+          </DialogHeader>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowExitDialog(false)}>Stay</Button>
             <Button onClick={onCancel} className="bg-black text-white">Exit</Button>
@@ -215,7 +218,10 @@ export function StudentTestSession({ test, onCancel, onSubmit }: StudentTestSess
 
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <DialogContent className="bg-white border-2 border-black max-w-md">
-          <DialogHeader><DialogTitle>Submit All?</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Submit All?</DialogTitle>
+            <DialogDescription>Are you sure you want to submit all answers? This action cannot be undone.</DialogDescription>
+          </DialogHeader>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>Review</Button>
             <Button onClick={handleFinalSubmit} className="bg-green-600 text-white hover:bg-green-700">Finish Test</Button>
