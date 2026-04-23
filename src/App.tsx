@@ -285,8 +285,8 @@ function AppContent() {
                 {currentPage === 'leaderboard' && <Leaderboard />}
                 {currentPage === 'messages' && <Messages />}
                 {currentPage === 'profile' && currentUser.role === 'student' && <StudentProfile onNavigate={handleNavigate} />}
-                {currentPage === 'profile' && currentUser.role === 'trainer' && <TrainerProfile />}
-                {currentPage === 'profile' && currentUser.role !== 'student' && currentUser.role !== 'trainer' && <AccountProfile />}
+                {currentPage === 'profile' && currentUser.role === 'trainer' && <TrainerProfile onNavigate={handleNavigate} />}
+                {currentPage === 'profile' && currentUser.role !== 'student' && currentUser.role !== 'trainer' && <AccountProfile onNavigate={handleNavigate} />}
                 {currentPage === 'courses' && <CoursesPage onNavigate={handleNavigate} />}
                 {currentPage === 'batches' && <BatchManagement onNavigate={handleNavigate} role={currentUser.role} initialFilters={pageData as any} />}
                 {currentPage === 'manage-institutions' && <ManageInstitutions />}

@@ -191,8 +191,8 @@ export function ManageInstitutions() {
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 mb-4"><Shield className="w-5 h-5 text-blue-600" /><h3 className="text-lg font-semibold">Security</h3></div>
                             <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg"><p className="text-sm text-amber-800">This password is for institution admin login.</p></div>
-                            <div><label className="text-sm font-medium block mb-1">Password *</label><Input type="password" value={formData.password} onChange={(e) => setFormData(p => ({ ...p, password: e.target.value }))} /></div>
-                            <div><label className="text-sm font-medium block mb-1">Confirm Password *</label><Input type="password" value={formData.confirmPassword} onChange={(e) => setFormData(p => ({ ...p, confirmPassword: e.target.value }))} /></div>
+                            <div><label className="text-sm font-medium block mb-1">Password *</label><Input type="password" autoComplete="new-password" value={formData.password} onChange={(e) => setFormData(p => ({ ...p, password: e.target.value }))} /></div>
+                            <div><label className="text-sm font-medium block mb-1">Confirm Password *</label><Input type="password" autoComplete="new-password" value={formData.confirmPassword} onChange={(e) => setFormData(p => ({ ...p, confirmPassword: e.target.value }))} /></div>
                             {formData.password && formData.confirmPassword && (
                                 <div className={`flex items-center gap-2 text-sm ${formData.password === formData.confirmPassword ? 'text-green-600' : 'text-red-600'}`}>
                                     {formData.password === formData.confirmPassword ? <><CheckCircle2 className="w-4 h-4" />Match</> : <><XCircle className="w-4 h-4" />No match</>}

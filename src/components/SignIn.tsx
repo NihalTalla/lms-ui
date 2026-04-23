@@ -449,7 +449,7 @@ export function SignIn() {
                 <Label htmlFor="email" style={{ fontSize: isMobile ? 14 : 12, color: '#555', marginBottom: 3, display: 'block' }}>Email Address</Label>
                 <div style={{ position: 'relative' }}>
                   <Mail size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
-                  <Input id="email" type="email" placeholder="admin01@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} required
+                  <Input id="email" type="email" placeholder="admin01@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username"
                     style={{ paddingLeft: 34, height: isMobile ? 44 : 40, borderRadius: 8, border: '2px solid #e5e5e5', fontSize: isMobile ? 14 : 12, width: '100%' }} />
                 </div>
               </div>
@@ -463,6 +463,7 @@ export function SignIn() {
                     onFocus={() => setIsPasswordFocused(true)}
                     onBlur={() => setIsPasswordFocused(false)}
                     required
+                    autoComplete="current-password"
                     style={{ paddingLeft: 34, height: isMobile ? 44 : 40, borderRadius: 8, border: '2px solid #e5e5e5', fontSize: isMobile ? 14 : 12, width: '100%' }} />
                 </div>
               </div>

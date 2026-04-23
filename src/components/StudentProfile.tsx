@@ -24,6 +24,7 @@ import { useAuth } from '../lib/auth-context';
 import { ResumeBuilder } from './ResumeBuilder';
 import { toast } from 'sonner';
 import { Star } from 'lucide-react';
+import { useIsMobile } from './ui/use-mobile';
 
 interface StudentProfileProps {
   onNavigate: (page: string, data?: any) => void;
@@ -31,8 +32,8 @@ interface StudentProfileProps {
 
 export function StudentProfile({ onNavigate }: StudentProfileProps) {
   const { currentUser } = useAuth();
-const [activeSection, setActiveSection] = useState('personal-info');
-const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const [activeSection, setActiveSection] = useState('personal-info');
 
   const [projects, setProjects] = useState<{ id: number, title: string, description: string, isActive: boolean, tags: string[] }[]>([]);
   const [isAddingProject, setIsAddingProject] = useState(false);
@@ -582,102 +583,57 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     }
   };
 
- return (
-    <div className="flex gap-6 relative">
-
-      {/* Mobile overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-neutral-100 px-4 py-3 flex items-center justify-between">
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
         <button
           onClick={() => onNavigate('dashboard')}
-          className="flex items-center gap-1.5 text-sm font-medium text-neutral-600"
+          className="inline-flex items-center gap-2 text-neutral-600 hover:text-neutral-900"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          <span>Back</span>
         </button>
-        <span className="text-sm font-semibold text-neutral-800">
-          {menuItems.find(m => m.id === activeSection)?.label || 'Profile'}
-        </span>
-        <button
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-neutral-100"
-        >
-          {/* Hamburger icon */}
-          <div className="flex flex-col gap-1.5">
-            <span className="block w-5 h-0.5 bg-neutral-700 rounded" />
-            <span className="block w-5 h-0.5 bg-neutral-700 rounded" />
-            <span className="block w-5 h-0.5 bg-neutral-700 rounded" />
-          </div>
-        </button>
-      </div>
 
-      {/* Mobile drawer */}
-      <div
-        className="md:hidden"
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: '280px',
-          backgroundColor: 'white',
-          zIndex: 50,
-          display: 'flex',
-          flexDirection: 'column',
-          borderRight: '2px solid #f5f5f5',
-          transform: isMobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
-          transition: 'transform 0.3s ease',
-          boxShadow: isMobileMenuOpen ? '4px 0 24px rgba(0,0,0,0.15)' : 'none',
-          padding: '20px 16px',
-        }}
-      >
-        {/* Drawer header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-neutral-900">Profile</h2>
-          <button
-            onClick={() => setIsMobileMenuOpen(false)}
-            style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: '#f5f5f5', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '14px', color: '#404040' }}
-          >
-            ✕
-          </button>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-bold text-neutral-900">Profile</h2>
+            <p className="text-sm text-neutral-500 truncate">{currentUser?.name}</p>
+          </div>
+          <Avatar className="w-10 h-10 shrink-0">
+            <AvatarFallback className="text-white" style={{ backgroundColor: '#7C3AED' }}>
+              {currentUser?.name.split(' ').map(n => n[0]).join('') || 'S'}
+            </AvatarFallback>
+          </Avatar>
         </div>
 
-        <button
-          onClick={() => { onNavigate('dashboard'); setIsMobileMenuOpen(false); }}
-          className="flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 mb-5"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </button>
+        <div className="bg-white border border-neutral-200 rounded-xl p-3">
+          <Label className="text-xs text-neutral-500">Section</Label>
+          <select
+            className="mt-2 w-full h-11 px-3 rounded-lg border border-neutral-200 bg-white text-sm font-medium"
+            value={activeSection}
+            onChange={(e) => setActiveSection(e.target.value)}
+          >
+            {menuItems.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <nav className="space-y-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeSection === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => { setActiveSection(item.id); setIsMobileMenuOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'text-white shadow-md' : 'text-neutral-700 hover:bg-neutral-100'}`}
-                style={isActive ? { backgroundColor: '#000', color: 'white' } : {}}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            {renderContent()}
+          </CardContent>
+        </Card>
       </div>
+    );
+  }
 
-      {/* Desktop Left Sidebar — hidden on mobile */}
-      <div className="w-64 flex-shrink-0 hidden md:block">
+  return (
+    <div className="flex gap-6">
+      {/* Left Sidebar */}
+      <div className="w-64 flex-shrink-0">
         <button
           onClick={() => onNavigate('dashboard')}
           className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 mb-6"
@@ -696,7 +652,10 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'text-white shadow-md' : 'text-neutral-700 hover:bg-neutral-100'}`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
+                  ? 'text-white shadow-md'
+                  : 'text-neutral-700 hover:bg-neutral-100'
+                  }`}
                 style={isActive ? { backgroundColor: '#000', color: 'white' } : {}}
               >
                 <Icon className="w-5 h-5" />
@@ -708,9 +667,9 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
       </div>
 
       {/* Right Content */}
-      <div className="flex-1 mt-14 md:mt-0">
+      <div className="flex-1">
         <Card className="shadow-sm">
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="p-6">
             {renderContent()}
           </CardContent>
         </Card>
